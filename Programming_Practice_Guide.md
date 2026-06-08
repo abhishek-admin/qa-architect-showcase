@@ -945,7 +945,7 @@ The logical OR operator `||` is short-circuiting. If the first evaluation (`s ==
 ```java
 public class Repeats {
     public static void main(String[] args) {
-        String input = "Abhishek Srivasatava";
+        String input = "Jonathan Richardson";
         printrepeats(input);
     }
 

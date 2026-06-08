@@ -735,42 +735,9 @@ let currentSimStep = 0;
 
 // Initialize when DOM loads
 document.addEventListener("DOMContentLoaded", () => {
-  initAuth();
   initLauncher();
   initDashboard();
 });
-
-function initAuth() {
-  const overlay = document.getElementById("auth-overlay");
-  if (!overlay) return;
-
-  // Already authenticated on this device
-  if (localStorage.getItem("qa_auth") === "1") {
-    overlay.classList.add("hidden");
-    return;
-  }
-
-  const input = document.getElementById("auth-input");
-  const btn   = document.getElementById("auth-btn");
-  const err   = document.getElementById("auth-error");
-
-  function attempt() {
-    if (input.value === "7905379984") {
-      localStorage.setItem("qa_auth", "1");
-      overlay.classList.add("hidden");
-    } else {
-      err.textContent = "Incorrect password.";
-      input.value = "";
-      overlay.classList.remove("shake");
-      void overlay.offsetWidth; // reflow to restart animation
-      overlay.classList.add("shake");
-    }
-  }
-
-  btn.addEventListener("click", attempt);
-  input.addEventListener("keydown", e => { if (e.key === "Enter") attempt(); });
-  input.focus();
-}
 
 /**
  * LAUNCHER POPUP CONTEXT INITIALIZATION

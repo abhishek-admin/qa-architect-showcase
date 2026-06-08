@@ -248,7 +248,7 @@ Always strip whitespace before comparing user-visible text assertions — UI fra
 
 ```java
 // matches() — checks if ENTIRE string matches the regex
-String email = "abhishek7sriv@gmail.com";
+String email = "test.user@example.com";
 boolean isValidEmail = email.matches("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
 
 // Pattern + Matcher — better for extraction and reuse (compiled once)
@@ -282,7 +282,7 @@ String step = String.format(
 // "When user 'standard_user' navigates to the 'Dashboard' page"
 
 // Structured assertion message — always include actual value
-String expected = "Welcome, Abhishek";
+String expected = "Welcome, John";
 String actual   = page.locator(".welcome-header").innerText();
 
 Assert.assertEquals(actual.strip(), expected,
