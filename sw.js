@@ -1,4 +1,4 @@
-const CACHE = 'qa-architect-v1';
+const CACHE = 'qa-architect-v3';
 
 const CORE = [
   'fullpage.html',
@@ -51,15 +51,32 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache-first for everything — works fully offline after first load
+// Network-first for HTML/JS/CSS (always get latest), cache-first for .md docs (offline support)
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-      if (resp && resp.status === 200) {
-        const clone = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-      }
-      return resp;
-    }))
-  );
+  const url = new URL(e.request.url);
+  const isCore = ['.html', '.js', '.css', '.webmanifest'].some(ext => url.pathname.endsWith(ext));
+
+  if (isCore) {
+    // Network-first: fetch fresh, fall back to cache if offline
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first for .md docs — large files, rarely change mid-session
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }))
+    );
+  }
 });
