@@ -763,12 +763,36 @@ function initDashboard() {
   const sidebar = document.querySelector(".dashboard-sidebar");
   if (!sidebar) return;
 
+  // 0. Mobile hamburger sidebar toggle
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarEl = document.getElementById("dashboard-sidebar");
+
+  function closeSidebar() {
+    sidebarEl.classList.remove("open");
+    hamburgerBtn.classList.remove("open");
+    sidebarOverlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener("click", () => {
+      const isOpen = sidebarEl.classList.toggle("open");
+      hamburgerBtn.classList.toggle("open", isOpen);
+      sidebarOverlay.classList.toggle("active", isOpen);
+      document.body.style.overflow = isOpen ? "hidden" : "";
+    });
+  }
+
+  if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+
   // 1. Tab Switching Registration
   const navItems = document.querySelectorAll(".nav-item");
   navItems.forEach(item => {
     item.addEventListener("click", () => {
       const targetTab = item.getAttribute("data-tab");
       switchTab(targetTab);
+      closeSidebar(); // auto-close drawer on mobile after nav
     });
   });
 
@@ -996,8 +1020,17 @@ function wireTocScrolling(container) {
       // Bold section labels like "<strong>A. Flaky Tests</strong>"
       el.querySelectorAll("strong").forEach(strong => {
         const sectionText = strong.textContent.trim();
-        const norm = normalize(sectionText.replace(/^[A-Z]\.\s*/, ""));
-        const match = headingMap.get(normalize(sectionText)) || headingMap.get(norm);
+        // Strip letter prefix "A. " and any trailing "(N min)" annotation
+        const cleaned = sectionText.replace(/^[A-Z]\.\s*/, "").replace(/\s*\(\d+\s*min\)\s*$/i, "").trim();
+        const norm = normalize(cleaned);
+        const beforeDash = normalize(cleaned.split(/\s*[—\-]{1,2}\s*/)[0]);
+        let match = headingMap.get(normalize(sectionText)) || headingMap.get(norm) || headingMap.get(beforeDash);
+        if (!match) {
+          const first4 = norm.split(" ").slice(0, 4).join(" ");
+          for (const [key, h] of headingMap) {
+            if (key.includes(first4) && first4.length > 5) { match = h; break; }
+          }
+        }
         if (match) {
           strong.style.cursor = "pointer";
           strong.style.color = "var(--accent-cyan, #7dd3fc)";
@@ -1009,15 +1042,28 @@ function wireTocScrolling(container) {
     if (tag === "ol" || tag === "ul") {
       el.querySelectorAll("li").forEach(li => {
         const text = li.textContent.trim();
-        // Try matching by leading number
+        // Try matching by leading number (most reliable)
         const numMatch = text.match(/^(\d+)\.\s/);
         let targetHeading = numMatch ? numberMap.get(numMatch[1]) : null;
-        // Fallback: normalised text match (strip the number prefix)
+        // Fallback: normalised full text (strip number prefix)
         if (!targetHeading) {
           const stripped = normalize(text.replace(/^\d+\.\s*/, ""));
           targetHeading = headingMap.get(stripped);
           if (!targetHeading) {
-            // Partial match: find a heading whose normalised text contains the stripped query
+            // Strip trailing description after em-dash "—" and try again
+            // e.g. "Jenkins core concepts — job, pipeline, node, executor" → "jenkins core concepts"
+            const beforeDash = normalize(stripped.split(/\s*[—\-]{1,2}\s*/)[0]);
+            targetHeading = headingMap.get(beforeDash);
+          }
+          if (!targetHeading) {
+            // Partial match: heading text starts with / contains the first 4 words of stripped
+            const first4 = normalize(stripped.replace(/\s*[—\-]{1,2}.*$/, "")).split(" ").slice(0, 4).join(" ");
+            for (const [key, h] of headingMap) {
+              if (key.includes(first4) && first4.length > 5) { targetHeading = h; break; }
+            }
+          }
+          if (!targetHeading) {
+            // Legacy partial match
             for (const [key, h] of headingMap) {
               if (key.includes(stripped) || stripped.includes(key.split(" ").slice(0, 4).join(" "))) {
                 targetHeading = h;
