@@ -860,6 +860,18 @@ function initDashboard() {
   // 5. Root ELI20 toggle + Settings dropdown + Learning Docs (no persistence)
   initPresentationControls();
 
+  // Scroll-to-top button for docs-rendered panel
+  const docsPanel = document.getElementById("docs-rendered");
+  const scrollTopBtn = document.getElementById("docs-scroll-top");
+  if (docsPanel && scrollTopBtn) {
+    docsPanel.addEventListener("scroll", () => {
+      scrollTopBtn.classList.toggle("visible", docsPanel.scrollTop > 200);
+    });
+    scrollTopBtn.addEventListener("click", () => {
+      docsPanel.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   // 6. Interactive Flow Visualiser
   initFlowVisualiser();
 

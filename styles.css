@@ -2093,6 +2093,44 @@ body.eli-active .eli-toggle-text {
 }
 
 /* ============================================================
+   DOCS SCROLL-TO-TOP BUTTON
+   ============================================================ */
+.docs-scroll-top-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  background: rgba(22, 33, 54, 0.92);
+  color: var(--accent-indigo);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.docs-scroll-top-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.docs-scroll-top-btn:hover {
+  background: rgba(129, 140, 248, 0.18);
+  border-color: var(--accent-indigo);
+}
+
+/* ============================================================
    HAMBURGER BUTTON (hidden on desktop, visible on mobile)
    ============================================================ */
 .hamburger-btn {
