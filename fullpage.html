@@ -860,7 +860,29 @@
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
+      // updateViaCache:'none' — browser always fetches sw.js fresh, ignoring HTTP cache (max-age=600)
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then(reg => {
+          // Check for updates immediately on every page load
+          reg.update();
+
+          // When a new SW installs, auto-reload once it activates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'activated') {
+                window.location.reload();
+              }
+            });
+          });
+        });
+
+      // Also reload when a new SW takes control mid-session
+      let firstController = navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (firstController) window.location.reload();
+        firstController = true;
+      });
     }
   </script>
 </body>
