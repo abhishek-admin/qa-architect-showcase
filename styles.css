@@ -2145,13 +2145,12 @@ body.eli-active .eli-toggle-text {
    ============================================================ */
 @media (max-width: 768px) {
 
-  /* ---- Global overflow containment ---- */
-  /* This is the #1 fix: nothing should ever escape the viewport width */
+  /* ---- Global overflow containment (dashboard only, not extension popup) ---- */
   html {
     overflow-x: hidden;
   }
 
-  body {
+  body:not(.popup-page) {
     overflow-x: hidden;
     max-width: 100vw;
   }
