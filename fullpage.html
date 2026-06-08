@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f1117">
+  <title>QA Architect — Automation Showcase</title>
+  <link rel="manifest" href="app.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Fixed Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+      <div class="dashboard-brand">
+        <div class="brand-title">⚡ QA Architect</div>
+        <div class="brand-tagline">Automation Showcase</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="tab-overview">
+          <span class="nav-icon">📊</span> Dashboard Overview
+        </button>
+        <button class="nav-item" data-tab="tab-mindmap">
+          <span class="nav-icon">📐</span> Architecture Mindmap
+        </button>
+        <button class="nav-item" data-tab="tab-structure">
+          <span class="nav-icon">📂</span> Framework Structure
+        </button>
+        <button class="nav-item" data-tab="tab-simulator">
+          <span class="nav-icon">💻</span> Execution Simulator
+        </button>
+        <button class="nav-item nav-item-docs" data-tab="tab-docs" id="nav-docs" style="display:none;">
+          <span class="nav-icon">📚</span> Learning Docs
+        </button>
+        <button class="nav-item nav-item-docs" data-tab="tab-design-guide" id="nav-design-guide" style="display:none;">
+          <span class="nav-icon">🏗️</span> Design Guide
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status-tag">
+          <span class="status-dot"></span> System Loaded
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+
+      <!-- ROOT PRESENTATION TOOLBAR (controls explanation visibility) -->
+      <div class="root-toolbar" id="root-toolbar">
+        <div class="root-toolbar-left">
+          <span class="root-mode-badge" id="root-mode-badge">🎤 Presentation Mode</span>
+          <span class="root-mode-hint" id="root-mode-hint">Showing folder architecture &amp; boilerplate only — explanations hidden</span>
+        </div>
+        <div class="root-toolbar-right">
+          <div class="eli-toggle-group">
+            <span class="eli-toggle-text" id="eli-toggle-text">🎓 ELI20 Explanations</span>
+            <label class="study-switch-label" title="Toggle plain-English explanations">
+              <input type="checkbox" id="chk-eli20">
+              <span class="study-switch-slider"></span>
+            </label>
+          </div>
+          <div class="settings-wrapper">
+            <button class="settings-gear-btn" id="btn-settings" aria-label="Display settings">⚙️</button>
+            <div class="settings-dropdown" id="settings-dropdown">
+              <div class="settings-dd-title">Display Settings</div>
+              <div class="settings-row">
+                <span class="settings-row-text">
+                  <span class="settings-row-title">📚 Learning Docs</span>
+                  <span class="settings-row-desc">Show rendered .md guides as a tab</span>
+                </span>
+                <label class="study-switch-label">
+                  <input type="checkbox" id="chk-docs">
+                  <span class="study-switch-slider"></span>
+                </label>
+              </div>
+              <div class="settings-note">↻ Refreshing the page resets everything back to clean Presentation Mode.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="page-tab-content active">
+        <div class="tab-header">
+          <h1>Enterprise QA Automation Framework</h1>
+          <p class="eli-explain">BDD · Playwright · Java · TestNG · Cucumber · RestAssured · Maven</p>
+        </div>
+
+        <div class="overview-grid">
+          <div class="overview-card">
+            <div class="card-title-bar">
+              <h3>Core Framework Metrics</h3>
+            </div>
+            <div class="metrics-row">
+              <div class="metric-box">
+                <span class="metric-title">Framework Layers</span>
+                <span class="metric-val">7 Layers</span>
+                <span class="metric-desc eli-explain">Decoupled, modular architecture separation</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-title">Execution Mode</span>
+                <span class="metric-val green">Parallel</span>
+                <span class="metric-desc eli-explain">Thread-safe local/grid execution</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-title">Automation Stack</span>
+                <span class="metric-val cyan">Hybrid</span>
+                <span class="metric-desc eli-explain">Unified UI & API testing patterns</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-card stack-card">
+            <div class="card-title-bar">
+              <h3>Technology Stack</h3>
+            </div>
+            <div class="stack-grid">
+              <div class="stack-item">
+                <span class="stack-icon">☕</span>
+                <div class="stack-details">
+                  <h4>Java 17</h4>
+                  <p>Enterprise core</p>
+                </div>
+              </div>
+              <div class="stack-item">
+                <span class="stack-icon">🎭</span>
+                <div class="stack-details">
+                  <h4>Playwright</h4>
+                  <p>Fast browser engine</p>
+                </div>
+              </div>
+              <div class="stack-item">
+                <span class="stack-icon">🥒</span>
+                <div class="stack-details">
+                  <h4>Cucumber</h4>
+                  <p>Gherkin BDD specs</p>
+                </div>
+              </div>
+              <div class="stack-item">
+                <span class="stack-icon">📊</span>
+                <div class="stack-details">
+                  <h4>TestNG</h4>
+                  <p>Runner & parameters</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-card eli-explain">
+          <div class="card-title-bar">
+            <h3>Framework Engineering Highlights</h3>
+          </div>
+          <div class="highlights-panel">
+            <div class="highlight-row">
+              <span class="highlight-bullet">⚡</span>
+              <div class="highlight-content">
+                <h4>ThreadLocal Driver Sandbox Isolation</h4>
+                <p>Ensures absolute thread safety during high-concurrency parallel runs. Playwright BrowserContext, Page, and Playwright instances are completely isolated per execution thread to eliminate collisions and cross-session contamination.</p>
+              </div>
+            </div>
+            <div class="highlight-row">
+              <span class="highlight-bullet">🧩</span>
+              <div class="highlight-content">
+                <h4>Clean Page Object Model & Page Component Patterns</h4>
+                <p>Selectors and UI action methods are encapsulated strictly inside Page Objects. Complex repeating sections (e.g. navigation headers, side bars, data tables) are abstracted into modular Page Components, encouraging massive code reusability.</p>
+              </div>
+            </div>
+            <div class="highlight-row">
+              <span class="highlight-bullet">🔌</span>
+              <div class="highlight-content">
+                <h4>Dual-Purpose Hybrid Testing (RestAssured Sync)</h4>
+                <p>Combines RestAssured API calls directly inside UI test lifecycles to pre-seed database conditions, bypass lengthy onboarding screens, and perform instant state assertions, accelerating UI test runs up to 300%.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ARCHITECTURE MINDMAP -->
+      <section id="tab-mindmap" class="page-tab-content">
+        <div class="tab-header">
+          <h1>7-Layer Architecture Mindmap</h1>
+          <p class="eli-explain">Click on any layer to explore how Gherkin specifications flow down to test reports. Flip on ELI20 in the top bar to read deep-dive + plain-English explanations.</p>
+        </div>
+
+        <div class="mindmap-viewport">
+          <!-- Study Mode Hint (controlled by root ELI20 toggle) -->
+          <div class="study-mode-container">
+            <span class="study-switch-text">📖 Layer explanations are controlled by the <strong>ELI20</strong> toggle in the top bar. Click any node to focus it.</span>
+          </div>
+
+          <!-- Nodes Layout (Tier 1: Main Core Layers) -->
+          <div class="mindmap-flow-container">
+            <!-- Flow Line Backdrop -->
+            <div class="mindmap-connection-lines">
+              <div id="mindmap-path" class="mindmap-active-path"></div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="feature">
+              <div class="mindmap-node active-layer" id="node-feature">
+                <span class="mindmap-node-step">1</span>
+                📝
+              </div>
+              <div class="mindmap-node-label">Features</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="steps">
+              <div class="mindmap-node" id="node-steps">
+                <span class="mindmap-node-step">2</span>
+                🔗
+              </div>
+              <div class="mindmap-node-label">Step Defs</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="pages">
+              <div class="mindmap-node" id="node-pages">
+                <span class="mindmap-node-step">3</span>
+                📦
+              </div>
+              <div class="mindmap-node-label">Page Objects</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="base">
+              <div class="mindmap-node" id="node-base">
+                <span class="mindmap-node-step">4</span>
+                ⚙️
+              </div>
+              <div class="mindmap-node-label">Base Driver</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="utils">
+              <div class="mindmap-node" id="node-utils">
+                <span class="mindmap-node-step">5</span>
+                🛠️
+              </div>
+              <div class="mindmap-node-label">Utilities</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="config">
+              <div class="mindmap-node" id="node-config">
+                <span class="mindmap-node-step">6</span>
+                🔧
+              </div>
+              <div class="mindmap-node-label">Configuration</div>
+            </div>
+
+            <div class="mindmap-node-wrapper" data-layer="reporting">
+              <div class="mindmap-node" id="node-reporting">
+                <span class="mindmap-node-step">7</span>
+                📈
+              </div>
+              <div class="mindmap-node-label">Reporting</div>
+            </div>
+          </div>
+
+          <!-- Tier 2: Sub-Component Blueprint Modules -->
+          <div class="mindmap-sub-container">
+            <div class="mindmap-sub-column" data-parent-layer="feature">
+              <div class="mindmap-sub-node" id="sub-feature-1">login.feature</div>
+              <div class="mindmap-sub-node" id="sub-feature-2">Gherkin Syntax</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="steps">
+              <div class="mindmap-sub-node" id="sub-steps-1">LoginSteps.java</div>
+              <div class="mindmap-sub-node" id="sub-steps-2">PicoContainer</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="pages">
+              <div class="mindmap-sub-node" id="sub-pages-1">LoginPage.java</div>
+              <div class="mindmap-sub-node" id="sub-pages-2">BasePage.java</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="base">
+              <div class="mindmap-sub-node" id="sub-base-1">DriverManager</div>
+              <div class="mindmap-sub-node" id="sub-base-2">PlaywrightFactory</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="utils">
+              <div class="mindmap-sub-node" id="sub-utils-1">ApiHelper.java</div>
+              <div class="mindmap-sub-node" id="sub-utils-2">RestAssured API</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="config">
+              <div class="mindmap-sub-node" id="sub-config-1">FrameworkConfig</div>
+              <div class="mindmap-sub-node" id="sub-config-2">testng.xml</div>
+            </div>
+            <div class="mindmap-sub-column" data-parent-layer="reporting">
+              <div class="mindmap-sub-node" id="sub-reporting-1">Allure Reports</div>
+              <div class="mindmap-sub-node" id="sub-reporting-2">Playwright Traces</div>
+            </div>
+          </div>
+
+          <!-- Dynamic Info Card -->
+          <div class="mindmap-explanation-card" id="mindmap-detail-card">
+            <span class="layer-badge" id="mindmap-badge">Layer 1 of 7</span>
+            <h3 id="mindmap-title">Gherkin Feature Files</h3>
+            <p id="mindmap-desc">Feature files contain the pure, executable specifications written in user-friendly business terms (Gherkin syntax: Given, When, Then). They serve as the single source of truth aligning developers, product owners, and manual testers on framework scope and intended behaviors.</p>
+            <div class="eli20-callout">
+              <span class="eli20-callout-tag">🎓 ELI20 — In Plain English</span>
+              <p id="mindmap-eli20">Layer 1 is the test written in plain English.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: FRAMEWORK STRUCTURE SHOWCASE -->
+      <section id="tab-structure" class="page-tab-content">
+        <div class="tab-header">
+          <h1>Framework Directory Showcase</h1>
+          <p class="eli-explain">Explore the project workspace of our enterprise automation framework. Click on files or packages to inspect their architecture and dependency learnings.</p>
+        </div>
+
+        <div class="showcase-container">
+          <!-- Left Tree Column -->
+          <div class="panel-card">
+            <h3>Project Workspace</h3>
+            <div class="panel-header-desc eli-explain">Click items to inspect details. Folders can be expanded.</div>
+            
+            <div class="tree-container" id="project-tree">
+              <!-- Root Folder -->
+              <div class="tree-children expanded" style="display: block;">
+                <!-- pom.xml -->
+                <div class="tree-node" data-node="pom_xml">
+                  <span class="tree-indent"></span>
+                  <span class="node-icon file xml">📄</span>
+                  <span class="node-name">pom.xml</span>
+                </div>
+
+                <!-- src/ -->
+                <div class="tree-folder-group">
+                  <div class="tree-node" data-folder="src_folder">
+                    <span class="node-expander expanded">▶</span>
+                    <span class="node-icon folder">📁</span>
+                    <span class="node-name">src</span>
+                  </div>
+                  <div class="tree-children expanded" id="src_folder-children">
+                    <!-- src/main/ -->
+                    <div class="tree-folder-group">
+                      <div class="tree-node" data-folder="main_folder">
+                        <span class="tree-indent"></span>
+                        <span class="node-expander expanded">▶</span>
+                        <span class="node-icon folder">📁</span>
+                        <span class="node-name">main</span>
+                      </div>
+                      <div class="tree-children expanded" id="main_folder-children">
+                        <!-- src/main/java/ -->
+                        <div class="tree-folder-group">
+                          <div class="tree-node" data-folder="main_java_folder">
+                            <span class="tree-indent"></span>
+                            <span class="tree-indent"></span>
+                            <span class="node-expander expanded">▶</span>
+                            <span class="node-icon folder">📁</span>
+                            <span class="node-name">java</span>
+                          </div>
+                          <div class="tree-children expanded" id="main_java_folder-children">
+                            <!-- com.enterprise.framework/ -->
+                            <div class="tree-folder-group">
+                              <div class="tree-node" data-folder="package_folder">
+                                <span class="tree-indent"></span>
+                                <span class="tree-indent"></span>
+                                <span class="tree-indent"></span>
+                                <span class="node-expander expanded">▶</span>
+                                <span class="node-icon folder">📁</span>
+                                <span class="node-name">com.enterprise.framework</span>
+                              </div>
+                              <div class="tree-children expanded" id="package_folder-children">
+                                
+                                <!-- config/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="config_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">config</span>
+                                  </div>
+                                  <div class="tree-children" id="config_folder-children">
+                                    <div class="tree-node" data-node="framework_config">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">FrameworkConfig.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="config_factory">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">ConfigFactory.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- driver/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="driver_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">driver</span>
+                                  </div>
+                                  <div class="tree-children" id="driver_folder-children">
+                                    <div class="tree-node" data-node="driver_manager">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">DriverManager.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="playwright_factory">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">PlaywrightDriverFactory.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- pages/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="pages_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">pages</span>
+                                  </div>
+                                  <div class="tree-children" id="pages_folder-children">
+                                    <div class="tree-node" data-node="base_page">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">BasePage.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="login_page">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">LoginPage.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- steps/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="steps_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">steps</span>
+                                  </div>
+                                  <div class="tree-children" id="steps_folder-children">
+                                    <div class="tree-node" data-node="hooks">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">Hooks.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="login_steps">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">LoginSteps.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- utils/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="utils_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">utils</span>
+                                  </div>
+                                  <div class="tree-children" id="utils_folder-children">
+                                    <div class="tree-node" data-node="api_helper">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">ApiHelper.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="reporting_utils">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">ReportingUtils.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- runner/ -->
+                                <div class="tree-folder-group">
+                                  <div class="tree-node" data-folder="runner_folder">
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="tree-indent"></span>
+                                    <span class="node-expander">▶</span>
+                                    <span class="node-icon folder">📁</span>
+                                    <span class="node-name">runner</span>
+                                  </div>
+                                  <div class="tree-children" id="runner_folder-children">
+                                    <div class="tree-node" data-node="runner_test">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">RunnerTest.java</span>
+                                    </div>
+                                    <div class="tree-node" data-node="parallel_runner">
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="tree-indent"></span>
+                                      <span class="node-icon file">📄</span>
+                                      <span class="node-name">ParallelRunner.java</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- src/test/ -->
+                    <div class="tree-folder-group">
+                      <div class="tree-node" data-folder="test_folder">
+                        <span class="tree-indent"></span>
+                        <span class="node-expander expanded">▶</span>
+                        <span class="node-icon folder">📁</span>
+                        <span class="node-name">test</span>
+                      </div>
+                      <div class="tree-children expanded" id="test_folder-children">
+                        <!-- src/test/resources/ -->
+                        <div class="tree-folder-group">
+                          <div class="tree-node" data-folder="test_resources_folder">
+                            <span class="tree-indent"></span>
+                            <span class="tree-indent"></span>
+                            <span class="node-expander expanded">▶</span>
+                            <span class="node-icon folder">📁</span>
+                            <span class="node-name">resources</span>
+                          </div>
+                          <div class="tree-children expanded" id="test_resources_folder-children">
+                            
+                            <!-- features/ -->
+                            <div class="tree-folder-group">
+                              <div class="tree-node" data-folder="features_folder">
+                                <span class="tree-indent"></span>
+                                <span class="tree-indent"></span>
+                                <span class="tree-indent"></span>
+                                <span class="node-expander">▶</span>
+                                <span class="node-icon folder">📁</span>
+                                <span class="node-name">features</span>
+                              </div>
+                              <div class="tree-children" id="features_folder-children">
+                                <div class="tree-node" data-node="login_feature">
+                                  <span class="tree-indent"></span>
+                                  <span class="tree-indent"></span>
+                                  <span class="tree-indent"></span>
+                                  <span class="tree-indent"></span>
+                                  <span class="node-icon file feature">📄</span>
+                                  <span class="node-name">login.feature</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- configurations.properties -->
+                            <div class="tree-node" data-node="configurations_properties">
+                              <span class="tree-indent"></span>
+                              <span class="tree-indent"></span>
+                              <span class="node-icon file config">📄</span>
+                              <span class="node-name">configurations.properties</span>
+                            </div>
+
+                            <!-- testng.xml -->
+                            <div class="tree-node" data-node="testng_xml">
+                              <span class="tree-indent"></span>
+                              <span class="tree-indent"></span>
+                              <span class="node-icon file xml">📄</span>
+                              <span class="node-name">testng.xml</span>
+                            </div>
+
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Technical Details Column (Hidden by Default until node is selected) -->
+          <div class="panel-card">
+            <div id="details-empty" class="details-placeholder">
+              <div class="placeholder-icon">📂</div>
+              <h3>Select a file or package to inspect</h3>
+              <p>Click any directory or source file to preview its boilerplate code skeleton. Flip on <strong>ELI20</strong> in the top bar to also reveal architectural purpose, flows, and plain-English explanations.</p>
+            </div>
+
+            <div id="details-active" class="details-content">
+              <div class="details-title-bar">
+                <div class="details-node-info">
+                  <span class="details-node-name" id="selected-node-title">file_name.java</span>
+                  <span class="details-node-path" id="selected-node-path">src/main/java/com/...</span>
+                </div>
+                <span class="category-tag" id="selected-node-category">Category</span>
+              </div>
+
+              <div class="details-section eli-explain eli20-section">
+                <h4>🎓 ELI20 — In Plain English</h4>
+                <p id="details-eli20" class="eli20-text">Plain-English explanation appears here.</p>
+              </div>
+
+              <div class="details-section eli-explain">
+                <h4>What &amp; How it works</h4>
+                <p id="details-what-how">Explanation of what this item is and how it runs under the hood.</p>
+              </div>
+
+              <div class="details-section eli-explain">
+                <h4>Execution Lifecycle Flow</h4>
+                <p id="details-flow">Position in the framework setup/teardown execution cycle.</p>
+              </div>
+
+              <div class="details-section eli-explain">
+                <h4>Dependency Lessons Learned</h4>
+                <p id="details-learnings">Best-practice insights, configuration issues, or performance guidelines.</p>
+              </div>
+
+              <div class="details-section" id="code-preview-section">
+                <h4>Interface / Code Skeleton</h4>
+                <pre class="details-code-preview" id="details-code">public class CodeSkeleton {}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Framework Flow Visualiser -->
+        <div class="panel-card flow-visualiser-card" style="margin-top: 24px; min-height: auto;">
+          <div class="card-title-bar">
+            <h3>⚡ Interactive Framework Flow Visualiser</h3>
+            <div class="flow-controls-row">
+              <select id="flow-select" class="flow-select">
+                <option value="exec">Execution Path (RunnerTest → Browser Page)</option>
+                <option value="json">JSON Hydration Path (Locators/Data → Page Object)</option>
+              </select>
+              <select id="flow-speed" class="flow-select flow-speed-select" title="Speed Multiplier">
+                <option value="0.5">0.5x Speed</option>
+                <option value="1.0" selected>1.0x Speed</option>
+                <option value="1.5">1.5x Speed</option>
+                <option value="2.0">2.0x Speed</option>
+              </select>
+              <button id="btn-play-flow" class="flow-control-btn">▶ Play Flow</button>
+              <button id="btn-reset-flow" class="flow-control-btn flow-btn-secondary">↻ Reset</button>
+            </div>
+          </div>
+          
+          <div class="flow-visualiser-container">
+            <!-- Animated nodes and lines will be placed here -->
+            <div class="flow-diagram-canvas" id="flow-canvas"></div>
+            
+            <!-- Explanation sidebar inside the card -->
+            <div class="flow-explanation-box">
+              <div class="flow-step-badge" id="flow-step-badge">Step 1 of 8</div>
+              <h4 id="flow-step-title">TestNG Trigger</h4>
+              <p id="flow-step-desc">Test execution begins at testng.xml, which references the ParallelRunner test class.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: LIVE SIMULATOR -->
+      <section id="tab-simulator" class="page-tab-content">
+        <div class="tab-header">
+          <h1>Execution Flow Simulator</h1>
+          <p class="eli-explain">Launch virtual BDD suites, and trace execution paths through the file tree and framework mindmap dynamically.</p>
+        </div>
+
+        <div class="simulator-layout">
+          <!-- Control Panel -->
+          <div class="simulator-controls">
+            <div class="sim-run-card">
+              <h3>Run Configurations</h3>
+              <p class="panel-header-desc">Select a Gherkin scenario context and run.</p>
+              
+              <div class="test-scenarios-list">
+                <label class="scenario-radio-label">
+                  <input type="radio" name="sim-scenario" value="login" checked class="scenario-radio-input">
+                  <div class="scenario-info">
+                    <span class="scenario-name">Scenario 1: Happy Path Member Login</span>
+                    <span class="scenario-desc eli-explain">Tests Standard Auth, Page Load times, Dashboard redirection hooks.</span>
+                  </div>
+                </label>
+                <label class="scenario-radio-label">
+                  <input type="radio" name="sim-scenario" value="hybrid" class="scenario-radio-input">
+                  <div class="scenario-info">
+                    <span class="scenario-name">Scenario 2: API-Seed Dashboard Verification</span>
+                    <span class="scenario-desc eli-explain">Bypasses Login UI via RestAssured API seed, navigating to details screen instantly.</span>
+                  </div>
+                </label>
+              </div>
+
+              <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button id="btn-start-sim" class="sim-btn">⚡ Run Simulation Suite</button>
+                <button id="btn-stop-sim" class="sim-btn sim-btn-stop">🛑 Abort</button>
+              </div>
+            </div>
+
+            <div class="sim-progress-card">
+              <div class="progress-header">
+                <span class="progress-status-label" id="sim-status-label">Simulator Status: Ready</span>
+                <span class="progress-pct" id="sim-progress-text">0%</span>
+              </div>
+              <div class="progress-track-bar">
+                <div class="progress-fill-bar" id="sim-progress-bar"></div>
+              </div>
+
+              <div class="current-sim-node-display">
+                <span class="current-node-header">Active Execution File Scope</span>
+                <span class="current-node-value" id="sim-active-node-text">None (Idle)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Console Terminal Logs -->
+          <div class="terminal-console-card">
+            <div class="terminal-top-bar">
+              <div class="terminal-circles">
+                <span class="circle red"></span>
+                <span class="circle yellow"></span>
+                <span class="circle green"></span>
+              </div>
+              <div class="terminal-title">maven-surefire-runner - bash</div>
+              <button id="btn-clear-terminal" class="terminal-btn-clear">clear</button>
+            </div>
+            
+            <div class="terminal-output-body" id="terminal-logs">
+              <div class="console-log-row">
+                <span class="log-time">[14:36:00]</span>
+                <span class="log-level info">[INFO]</span>
+                <span class="log-text">QA Simulator terminal initialized. Select a scenario and click "Run Simulation Suite".</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: LEARNING DOCS (revealed via Settings) -->
+      <section id="tab-docs" class="page-tab-content">
+        <div class="tab-header">
+          <h1>📚 Learning Documentation</h1>
+          <p>Rendered markdown deep-dives — the study material behind this framework. Pick a document to preview it.</p>
+        </div>
+
+        <div class="docs-layout">
+          <div class="panel-card docs-list-panel">
+            <h3>Documents</h3>
+            <div class="panel-header-desc">Click a guide to render it.</div>
+            <div class="docs-file-list" id="docs-file-list"></div>
+          </div>
+
+          <div class="panel-card docs-content-panel">
+            <div class="docs-rendered" id="docs-rendered">
+              <div class="docs-empty">
+                <div class="placeholder-icon">📖</div>
+                <p>Select a document from the left to preview it here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: FRAMEWORK DESIGN GUIDE (revealed via Settings) -->
+      <section id="tab-design-guide" class="page-tab-content">
+        <div class="tab-header">
+          <h1>🏗️ Framework Design Guide</h1>
+          <p>A comprehensive masterclass on how this enterprise automation framework was architected and built from scratch.</p>
+        </div>
+
+        <div class="docs-layout">
+          <div class="panel-card docs-list-panel">
+            <h3>Chapters</h3>
+            <div class="panel-header-desc">Jump directly to any section.</div>
+            <div class="docs-file-list" id="design-guide-index">
+              <!-- Dynamic index will render here -->
+            </div>
+          </div>
+
+          <div class="panel-card docs-content-panel">
+            <div class="docs-rendered" id="design-guide-rendered">
+              <div class="docs-empty">
+                <div class="placeholder-icon">🏗️</div>
+                <p>Loading Framework Design Guide...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
