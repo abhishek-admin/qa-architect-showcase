@@ -2,7 +2,7 @@
   "name": "QA Architect — Automation Showcase",
   "short_name": "QA Architect",
   "description": "SDET interview prep, framework showcase & revision hub",
-  "start_url": "/fullpage.html",
+  "start_url": "/qa-architect-showcase/fullpage.html",
   "display": "standalone",
   "background_color": "#0f1117",
   "theme_color": "#0f1117",
