@@ -3,6 +3,7 @@ const CACHE = 'qa-architect-v5';
 const CORE = [
   'fullpage.html',
   'app.js',
+  'sw-register.js',
   'styles.css',
   'icons/icon32.png',
   'icons/icon48.png',
