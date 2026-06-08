@@ -2196,15 +2196,17 @@ body.eli-active .eli-toggle-text {
     margin: -64px -16px 20px -16px;
     padding: 10px 16px 10px 64px;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;   /* single row — no wrapping on mobile */
     box-sizing: border-box;
     max-width: calc(100vw);
   }
-  .root-mode-badge { font-size: 0.78rem; }
+  .root-toolbar-left { min-width: 0; flex-shrink: 1; }
+  .root-mode-badge { font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .root-mode-hint  { display: none; }
-  .root-toolbar-right { gap: 10px; }
-  .eli-toggle-text { font-size: 0.72rem; }
-  .eli-toggle-group { padding: 6px 10px; }
+  .root-toolbar-right { gap: 8px; flex-shrink: 0; }
+  /* Hide text label on mobile — keep toggle + gear only */
+  .eli-toggle-text { display: none; }
+  .eli-toggle-group { padding: 6px 8px; }
 
   /* ---- Tab header ---- */
   .tab-header { margin-bottom: 20px; }
@@ -2337,7 +2339,7 @@ body.eli-active .eli-toggle-text {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Interactive code block: contained scroll */
+  /* Interactive code block: horizontal scroll, no word-breaking */
   .code-block-wrapper {
     max-width: 100%;
     overflow: hidden;
@@ -2347,8 +2349,8 @@ body.eli-active .eli-toggle-text {
     max-width: 100%;
     -webkit-overflow-scrolling: touch;
   }
-  /* Allow code lines to wrap on mobile */
-  .line-content { white-space: pre-wrap; word-break: break-all; }
+  /* Keep code readable — scroll horizontally, never break mid-word */
+  .line-content { white-space: pre; word-break: normal; overflow-wrap: normal; }
 
   .md-body ul, .md-body ol { padding-left: 18px; }
   .md-body blockquote { padding: 8px 12px; }
