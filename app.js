@@ -979,23 +979,31 @@ function wireTocScrolling(container) {
   const mdBody = container.querySelector(".md-body");
   if (!mdBody) return;
 
-  // Find the TOC heading (h2 whose text is "Table of Contents")
   let tocHeading = null;
   mdBody.querySelectorAll("h2, h3").forEach(h => {
     if (/table of contents/i.test(h.textContent)) tocHeading = h;
   });
   if (!tocHeading) return;
 
-  // Collect all headings in the doc that could be scroll targets (skip the TOC heading itself)
   const allHeadings = Array.from(mdBody.querySelectorAll("h1, h2, h3, h4"));
   const contentHeadings = allHeadings.filter(h => h !== tocHeading);
 
-  // Build a normalised text → heading map for fuzzy matching
+  // normalize: lowercase, remove punctuation/symbols, collapse spaces
   const normalize = (s) => s.toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
+
+  // Map 1: full normalized heading text → element
   const headingMap = new Map();
   contentHeadings.forEach(h => headingMap.set(normalize(h.textContent), h));
 
-  // Find heading by number prefix (e.g. "1." or "14.")
+  // Map 2: heading text WITHOUT leading "N." number → element
+  // This is the key fix: <ol><li> strips numbers, so we must match against stripped headings
+  const headingMapNoNum = new Map();
+  contentHeadings.forEach(h => {
+    const noNum = normalize(h.textContent.replace(/^\s*\d+\.\s*/, ""));
+    headingMapNoNum.set(noNum, h);
+  });
+
+  // Map 3: number → element (for docs that render numbers in li text)
   const numberMap = new Map();
   contentHeadings.forEach(h => {
     const m = h.textContent.match(/^\s*(\d+)\.\s/);
@@ -1009,28 +1017,47 @@ function wireTocScrolling(container) {
     container.scrollTo({ top: offset, behavior: "smooth" });
   };
 
-  // Walk siblings after the TOC heading until we hit a non-TOC heading
+  // findHeading: robust multi-strategy lookup
+  // rawText = the raw (un-normalized) candidate string
+  function findHeading(rawText) {
+    // Strategy 1: exact full normalized match
+    let h = headingMap.get(normalize(rawText)) || headingMapNoNum.get(normalize(rawText));
+    if (h) return h;
+
+    // Strategy 2: split on em-dash/en-dash BEFORE normalizing, try the part before the dash
+    // e.g. "Jenkins core concepts — job, pipeline, node, executor" → "Jenkins core concepts"
+    const rawBeforeDash = rawText.split(/\s*[—–]\s*/)[0].trim();
+    if (rawBeforeDash !== rawText) {
+      h = headingMapNoNum.get(normalize(rawBeforeDash)) || headingMap.get(normalize(rawBeforeDash));
+      if (h) return h;
+    }
+
+    // Strategy 3: first 4 meaningful words (pre-dash) against no-num map
+    const first4 = normalize(rawBeforeDash).split(" ").slice(0, 4).join(" ");
+    if (first4.length > 6) {
+      for (const [key, heading] of headingMapNoNum) {
+        if (key.startsWith(first4)) return heading;
+      }
+      for (const [key, heading] of headingMapNoNum) {
+        if (key.includes(first4)) return heading;
+      }
+    }
+
+    return null;
+  }
+
   let el = tocHeading.nextElementSibling;
   while (el) {
     const tag = el.tagName.toLowerCase();
-    // Stop when we reach the first content section (h1/h2 that isn't a sub-TOC group)
     if ((tag === "h1" || tag === "h2") && !/<strong>/i.test(el.innerHTML) && !/table of contents/i.test(el.textContent)) break;
 
     if (tag === "p") {
-      // Bold section labels like "<strong>A. Flaky Tests</strong>"
       el.querySelectorAll("strong").forEach(strong => {
-        const sectionText = strong.textContent.trim();
-        // Strip letter prefix "A. " and any trailing "(N min)" annotation
-        const cleaned = sectionText.replace(/^[A-Z]\.\s*/, "").replace(/\s*\(\d+\s*min\)\s*$/i, "").trim();
-        const norm = normalize(cleaned);
-        const beforeDash = normalize(cleaned.split(/\s*[—\-]{1,2}\s*/)[0]);
-        let match = headingMap.get(normalize(sectionText)) || headingMap.get(norm) || headingMap.get(beforeDash);
-        if (!match) {
-          const first4 = norm.split(" ").slice(0, 4).join(" ");
-          for (const [key, h] of headingMap) {
-            if (key.includes(first4) && first4.length > 5) { match = h; break; }
-          }
-        }
+        const raw = strong.textContent.trim()
+          .replace(/^[A-Z]\.\s*/, "")           // strip "A. "
+          .replace(/\s*\(\d+\s*min\)\s*$/i, "") // strip "(4 min)"
+          .trim();
+        const match = findHeading(raw);
         if (match) {
           strong.style.cursor = "pointer";
           strong.style.color = "var(--accent-cyan, #7dd3fc)";
@@ -1041,36 +1068,13 @@ function wireTocScrolling(container) {
 
     if (tag === "ol" || tag === "ul") {
       el.querySelectorAll("li").forEach(li => {
-        const text = li.textContent.trim();
-        // Try matching by leading number (most reliable)
-        const numMatch = text.match(/^(\d+)\.\s/);
-        let targetHeading = numMatch ? numberMap.get(numMatch[1]) : null;
-        // Fallback: normalised full text (strip number prefix)
+        // Primary: use data-num set by renderMarkdown (most reliable)
+        const dataNum = li.dataset.num;
+        let targetHeading = dataNum ? numberMap.get(dataNum) : null;
+
+        // Fallback: text-based matching using raw li text content
         if (!targetHeading) {
-          const stripped = normalize(text.replace(/^\d+\.\s*/, ""));
-          targetHeading = headingMap.get(stripped);
-          if (!targetHeading) {
-            // Strip trailing description after em-dash "—" and try again
-            // e.g. "Jenkins core concepts — job, pipeline, node, executor" → "jenkins core concepts"
-            const beforeDash = normalize(stripped.split(/\s*[—\-]{1,2}\s*/)[0]);
-            targetHeading = headingMap.get(beforeDash);
-          }
-          if (!targetHeading) {
-            // Partial match: heading text starts with / contains the first 4 words of stripped
-            const first4 = normalize(stripped.replace(/\s*[—\-]{1,2}.*$/, "")).split(" ").slice(0, 4).join(" ");
-            for (const [key, h] of headingMap) {
-              if (key.includes(first4) && first4.length > 5) { targetHeading = h; break; }
-            }
-          }
-          if (!targetHeading) {
-            // Legacy partial match
-            for (const [key, h] of headingMap) {
-              if (key.includes(stripped) || stripped.includes(key.split(" ").slice(0, 4).join(" "))) {
-                targetHeading = h;
-                break;
-              }
-            }
-          }
+          targetHeading = findHeading(li.textContent.trim());
         }
         if (targetHeading) {
           li.style.cursor = "pointer";
@@ -1387,10 +1391,10 @@ function renderMarkdown(md) {
     }
 
     // Ordered list
-    const ol = line.match(/^\s*\d+\.\s+(.*)$/);
+    const ol = line.match(/^\s*(\d+)\.\s+(.*)$/);
     if (ol) {
       if (listType !== "ol") { closeList(); html += "<ol>"; listType = "ol"; }
-      html += `<li>${inline(ol[1])}</li>`; continue;
+      html += `<li data-num="${ol[1]}">${inline(ol[2])}</li>`; continue;
     }
     // Unordered list
     const ul = line.match(/^\s*[-*+]\s+(.*)$/);
