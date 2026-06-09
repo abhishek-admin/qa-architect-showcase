@@ -174,108 +174,230 @@ A constructor initialises a new object. It has the same name as the class and no
 
 **Q13. Reverse a String.**
 
-```java
-// Method 1: StringBuilder (cleanest)
-String reversed = new StringBuilder("hello").reverse().toString();
+```
+Input:  "hello"
+Output: "olleh"
 
-// Method 2: char array (shows understanding)
+Input:  "Java"
+Output: "avaJ"
+
+Input:  "a"
+Output: "a"      (single char — same)
+```
+
+```java
+// Method 1: StringBuilder (cleanest — say this first in interviews)
+String reversed = new StringBuilder("hello").reverse().toString();
+// "hello" → "olleh"
+
+// Method 2: char array two-pointer (shows understanding of mechanics)
 String s = "hello";
-char[] chars = s.toCharArray();
-int l = 0, r = chars.length - 1;
+char[] chars = s.toCharArray();          // ['h','e','l','l','o']
+int l = 0, r = chars.length - 1;        // l=0, r=4
 while (l < r) {
     char tmp = chars[l];
     chars[l++] = chars[r];
     chars[r--] = tmp;
 }
-return new String(chars);
+return new String(chars);               // "olleh"
 ```
 
 ---
 
 **Q14. Check if a String is a palindrome.**
 
-```java
-String s = "racecar";
-String rev = new StringBuilder(s).reverse().toString();
-boolean isPalindrome = s.equals(rev);  // true
+```
+Input:  "racecar"   → Output: true   (reads same forwards and backwards)
+Input:  "hello"     → Output: false
+Input:  "madam"     → Output: true
+Input:  "a"         → Output: true   (single char is always palindrome)
+Input:  ""          → Output: true   (empty string is palindrome)
+```
 
-// Or two-pointer (no extra space):
+```java
+// Method 1: StringBuilder reverse compare
+String s = "racecar";
+boolean isPalindrome = s.equals(new StringBuilder(s).reverse().toString());
+// "racecar".equals("racecar") → true
+
+// Method 2: Two-pointer (O(n/2) comparisons — faster, no extra string)
 int l = 0, r = s.length() - 1;
 while (l < r) {
-    if (s.charAt(l++) != s.charAt(r--)) return false;
+    if (s.charAt(l++) != s.charAt(r--)) return false; // mismatch found
 }
 return true;
+// "racecar": r==r ✓, a==a ✓, c==c ✓ → true
+// "hello":   h!=o  → false immediately
 ```
 
 ---
 
 **Q15. Count occurrences of a character in a String.**
 
-```java
-String s = "automation";
-long count = s.chars().filter(c -> c == 'a').count();  // 3
+```
+Input:  s="automation", char='a'   → Output: 3   (a-u-t-o-m-[a]-t-i-o-n... positions 0,5 + 'a' in 'ation')
+Input:  s="banana",     char='a'   → Output: 3
+Input:  s="hello",      char='z'   → Output: 0
+Input:  s="aaa",        char='a'   → Output: 3
+```
 
-// Or classic loop:
+```java
+String s = "banana";
+char target = 'a';
+
+// Java 8 streams (cleanest)
+long count = s.chars().filter(c -> c == target).count();
+// 'b','a','n','a','n','a' → filter 'a' → count = 3
+
+// Classic loop (more explicit in interviews)
 int cnt = 0;
-for (char c : s.toCharArray()) if (c == 'a') cnt++;
+for (char c : s.toCharArray()) {
+    if (c == target) cnt++;
+}
+// cnt = 3
 ```
 
 ---
 
-**Q16. Remove duplicates from a String.**
+**Q16. Remove duplicates from a String (preserve order).**
+
+```
+Input:  "programming"   → Output: "progamin"
+Input:  "aabbcc"        → Output: "abc"
+Input:  "abcabc"        → Output: "abc"
+Input:  "hello"         → Output: "helo"
+Input:  "aaaa"          → Output: "a"
+```
 
 ```java
 String s = "programming";
 StringBuilder sb = new StringBuilder();
-Set<Character> seen = new LinkedHashSet<>();
+Set<Character> seen = new LinkedHashSet<>();   // LinkedHashSet preserves insertion order
 for (char c : s.toCharArray()) {
-    if (seen.add(c)) sb.append(c);
+    if (seen.add(c)) sb.append(c);   // add() returns false if already exists
 }
-return sb.toString();  // "progamin"
+return sb.toString();
+
+// Walk: p→add ✓, r→add ✓, o→add ✓, g→add ✓, r→already seen ✗, a→add ✓,
+//       m→add ✓, m→already seen ✗, i→add ✓, n→add ✓, g→already seen ✗
+// Result: "progamin"
 ```
 
 ---
 
 **Q17. Check if two Strings are anagrams.**
 
+```
+Input:  s1="listen",  s2="silent"   → Output: true
+Input:  s1="hello",   s2="world"    → Output: false
+Input:  s1="triangle",s2="integral" → Output: true
+Input:  s1="abc",     s2="ab"       → Output: false  (different lengths)
+Input:  s1="Abc",     s2="abc"      → Output: false  (case-sensitive by default)
+```
+
 ```java
+// Step 1: early exit if lengths differ
+if (s1.length() != s2.length()) return false;
+
+// Step 2: sort both and compare
 char[] a = s1.toCharArray();
 char[] b = s2.toCharArray();
-Arrays.sort(a);
-Arrays.sort(b);
-return Arrays.equals(a, b);
+Arrays.sort(a);   // "listen" → "eilnst"
+Arrays.sort(b);   // "silent" → "eilnst"
+return Arrays.equals(a, b);  // "eilnst".equals("eilnst") → true
+
+// Case-insensitive version:
+char[] a = s1.toLowerCase().toCharArray();
+char[] b = s2.toLowerCase().toCharArray();
 ```
 
 ---
 
 **Q18. Find the first non-repeating character.**
 
+```
+Input:  "leetcode"       → Output: 'l'   (l appears once; e appears twice)
+Input:  "aabb"           → Output: '\0'  (no non-repeating char — return null/'\0')
+Input:  "abcabc"         → Output: '\0'
+Input:  "programming"    → Output: 'p'   (p=1, r=2, o=1... wait: p appears once)
+Input:  "aabbcd"         → Output: 'c'
+```
+
 ```java
+String s = "leetcode";
+
+// LinkedHashMap preserves insertion order — critical so we return FIRST unique
 Map<Character, Integer> freq = new LinkedHashMap<>();
 for (char c : s.toCharArray())
-    freq.merge(c, 1, Integer::sum);
+    freq.merge(c, 1, Integer::sum);   // merge: if key exists add 1, else put 1
+
+// Walk the map in insertion order, return first with count = 1
 for (Map.Entry<Character, Integer> e : freq.entrySet())
     if (e.getValue() == 1) return e.getKey();
-return '\0';
+
+return '\0';  // no non-repeating character found
+
+// "leetcode": l=1, e=3, t=1, c=1, o=1, d=1
+// First with count=1: 'l' ✓
 ```
 
 ---
 
 **Q19. Count words in a sentence.**
 
+```
+Input:  "Hello World"          → Output: 2
+Input:  "  Hello   World  "    → Output: 2   (leading/trailing/multiple spaces handled)
+Input:  "one"                  → Output: 1
+Input:  "  "                   → Output: 0   (only spaces)
+Input:  "a b c d e"            → Output: 5
+```
+
 ```java
 String sentence = "  Hello   World  ";
+
+// trim() removes leading/trailing spaces
+// split("\\s+") splits on one-or-more whitespace chars
 String[] words = sentence.trim().split("\\s+");
 int count = words.length;  // 2
+
+// Edge case: empty or blank string
+if (sentence == null || sentence.trim().isEmpty()) return 0;
+
+// "  Hello   World  ".trim() → "Hello   World"
+// .split("\\s+")             → ["Hello", "World"]
+// .length                    → 2
 ```
 
 ---
 
 **Q20. Check if a String contains only digits.**
 
+```
+Input:  "12345"     → Output: true
+Input:  "123a5"     → Output: false
+Input:  "0"         → Output: true
+Input:  ""          → Output: false  (empty string — no digits)
+Input:  " 123"      → Output: false  (space is not a digit)
+Input:  "-123"      → Output: false  (negative sign is not a digit)
+```
+
 ```java
+String s = "12345";
+
+// Method 1: regex (most concise)
 boolean allDigits = s.matches("\\d+");
-// Or: s.chars().allMatch(Character::isDigit)
+// \\d matches [0-9], + means one or more
+// "12345" → true, "123a" → false, "" → false (+ requires at least 1)
+
+// Method 2: streams
+boolean allDigits = !s.isEmpty() && s.chars().allMatch(Character::isDigit);
+
+// Method 3: loop (most explicit — good for interviews)
+boolean allDigits = !s.isEmpty();
+for (char c : s.toCharArray()) {
+    if (!Character.isDigit(c)) { allDigits = false; break; }
+}
 ```
 
 ---
