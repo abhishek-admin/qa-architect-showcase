@@ -235,8 +235,8 @@ return true;
 **Q15. Count occurrences of a character in a String.**
 
 ```
-Input:  s="automation", char='a'   → Output: 3   (a-u-t-o-m-[a]-t-i-o-n... positions 0,5 + 'a' in 'ation')
-Input:  s="banana",     char='a'   → Output: 3
+Input:  s="automation", char='a'   → Output: 2   (a-u-t-o-m-a-t-i-o-n → 'a' at index 0 and 5)
+Input:  s="banana",     char='a'   → Output: 3   (b-a-n-a-n-a → 'a' at index 1, 3, 5)
 Input:  s="hello",      char='z'   → Output: 0
 Input:  s="aaa",        char='a'   → Output: 3
 ```
