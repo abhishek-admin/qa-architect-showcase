@@ -673,3 +673,192 @@ public void testLogin(String user, String pass) { ... }
 
 - `priority` — controls execution order (lower number = earlier). Tests with same priority run in undefined order. Not a dependency — all tests still run independently.
 - `dependsOnMethods` — creates a hard dependency. If the parent test fails, the dependent test is SKIPPED, not failed. Use sparingly — test independence is a design goal.
+
+---
+
+## Section 8 — Real-World XPath: Tricky Scenarios
+
+> These are the exact XPath types that trip people up in interviews and live coding tests. Memorise the PATTERN, not the example.
+
+---
+
+**Q61. Real case: Write XPath for a button/link that contains special characters like "Programiz PRO ›"**
+
+When the text has a special character (`›`, `»`, `→`, `&`, `'`), `text()=` fails silently. Always use `contains()`.
+
+```xpath
+<!-- The element in DevTools:
+     <a id="ad-link" href="https://programiz.pro...">Programiz PRO ›</a>
+     inside <div id="feedback-desktop"> -->
+
+<!-- Strategy 1: By ID (BEST — IDs are unique) -->
+//a[@id='ad-link']
+
+<!-- Strategy 2: By contains text (handles special chars safely) -->
+//a[contains(text(),'Programiz PRO')]
+
+<!-- Strategy 3: By parent ID + tag (when no ID on element itself) -->
+//div[@id='feedback-desktop']//a
+
+<!-- Strategy 4: By parent ID + text (most specific without relying on ID) -->
+//div[@id='feedback-desktop']//a[contains(text(),'Programiz')]
+
+<!-- Strategy 5: By href content (when text may change but URL is stable) -->
+//a[contains(@href,'programiz.pro')]
+
+<!-- Strategy 6: Combined attribute + text (most robust) -->
+//a[@id='ad-link' and contains(text(),'Programiz')]
+
+<!-- Strategy 7: By target attribute (when it's the only external link) -->
+//a[@target='_blank' and contains(text(),'Programiz')]
+```
+
+**Why `text()='Programiz PRO ›'` often fails:**
+The `›` is a Unicode character (`›` / U+203A). Some browsers render it differently or add whitespace. `contains()` is tolerant of both.
+
+---
+
+**Q62. XPath for an element with DYNAMIC ID (id changes every page load)**
+
+```html
+<!-- BAD: id changes every time -->
+<button id="btn_1749832">Submit</button>
+<button id="btn_1749833">Submit</button>
+
+<!-- NEVER write: //button[@id='btn_1749832']  — breaks next run -->
+
+<!-- GOOD: use stable attributes -->
+//button[text()='Submit']
+//button[@type='submit']
+//button[contains(@class,'submit-btn')]
+//form[@id='login-form']//button   <!-- parent context is stable -->
+```
+
+---
+
+**Q63. XPath when the element has multiple classes**
+
+```html
+<button class="btn btn-primary large active">Click Me</button>
+
+<!-- WRONG: exact match fails if class order changes or new class added -->
+//*[@class='btn btn-primary large active']
+
+<!-- RIGHT: contains for one specific class -->
+//*[contains(@class,'btn-primary')]
+
+<!-- RIGHT: both classes present -->
+//*[contains(@class,'btn') and contains(@class,'primary')]
+```
+
+---
+
+**Q64. XPath to find a label and then click its associated input**
+
+```html
+<label for="email">Email Address</label>
+<input id="email" type="text" />
+```
+
+```xpath
+<!-- Option 1: find input by its ID matching the label's 'for' attribute -->
+//input[@id=//label[text()='Email Address']/@for]
+
+<!-- Option 2: simpler — just find the input by its own attributes -->
+//input[@id='email']
+//input[@placeholder='Email Address']
+
+<!-- Option 3: find sibling input after the label -->
+//label[text()='Email Address']/following-sibling::input[1]
+```
+
+---
+
+**Q65. XPath for a table cell — find a row by one column's value**
+
+```html
+<table>
+  <tr><td>John</td><td>Developer</td><td>London</td></tr>
+  <tr><td>Jane</td><td>QA</td>      <td>Paris</td></tr>
+</table>
+```
+
+```xpath
+<!-- Find the ROLE cell for the person named "Jane" -->
+//tr[td[text()='Jane']]/td[2]
+
+<!-- Find the entire row for Jane -->
+//tr[td[contains(text(),'Jane')]]
+
+<!-- Find any cell in Jane's row -->
+//tr[td[text()='Jane']]/td
+
+<!-- Find the row where ANY cell contains "QA" -->
+//tr[td[text()='QA']]
+```
+
+---
+
+**Q66. XPath for a button INSIDE a specific card/section (when same button text appears multiple times)**
+
+```html
+<div class="card" id="pricing-card">
+  <h3>Pro Plan</h3>
+  <button class="cta">Get Started</button>
+</div>
+<div class="card" id="free-card">
+  <h3>Free Plan</h3>
+  <button class="cta">Get Started</button>  <!-- same text! -->
+</div>
+```
+
+```xpath
+<!-- WRONG: matches BOTH buttons -->
+//button[text()='Get Started']
+
+<!-- RIGHT: scope to the specific parent -->
+//div[@id='pricing-card']//button[text()='Get Started']
+
+<!-- RIGHT: using heading as context -->
+//div[.//h3[text()='Pro Plan']]//button[text()='Get Started']
+```
+
+---
+
+**Q67. XPath using `normalize-space()` — handles leading/trailing whitespace in text**
+
+```html
+<!-- Common in real apps — text nodes have whitespace -->
+<button>
+    Submit
+</button>
+```
+
+```xpath
+<!-- FAILS: text() includes the whitespace -->
+//button[text()='Submit']
+
+<!-- WORKS: normalize-space strips whitespace before comparing -->
+//button[normalize-space()='Submit']
+
+<!-- Also works for contains -->
+//button[contains(normalize-space(),'Submit')]
+```
+
+---
+
+**Q68. The 5 XPath axes you must know cold**
+
+```xpath
+/parent::div              <!-- direct parent element -->
+/ancestor::form           <!-- any ancestor that is a form -->
+/child::input             <!-- direct children that are inputs -->
+/following-sibling::td    <!-- siblings after this element at same level -->
+/preceding-sibling::label <!-- siblings before this element at same level -->
+/descendant::input        <!-- any input anywhere below this element -->
+/following::button        <!-- any button anywhere after this element in DOM -->
+
+<!-- Real use: click the delete button in the same row as "John" -->
+//tr[td[text()='John']]/descendant::button[text()='Delete']
+//tr[td[text()='John']]/following-sibling::td/button
+```
