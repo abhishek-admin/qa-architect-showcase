@@ -598,6 +598,8 @@ const docsRegistry = [
   { file: "Interview_Introduction_Guide.md", title: "🎤 Interview Introduction Guide", icon: "🎤" },
   { file: "Java_Testing_Basics_QuickFire.md", title: "🔥 Java & Testing Basics — Quick Fire", icon: "🔥" },
   { file: "RestAssured_JSON_QuickFire.md", title: "🌐 RestAssured & JSON Quick Fire", icon: "🌐" },
+  { file: "Senior_SDET_RapidFire.md", title: "🚀 Senior SDET Rapid Fire", icon: "🚀" },
+  { file: "Programming_Logic_RapidFire.md", title: "🧠 Programming Logic Rapid Fire", icon: "🧠" },
   // Master Prep Bank
   { file: "Master_Interview_QA_Bank.md", title: "Master Interview Q&A Bank", icon: "🏆" },
   { file: "Programming_Practice_Guide.md", title: "Programming Practice (145 Qs)", icon: "💻" },
