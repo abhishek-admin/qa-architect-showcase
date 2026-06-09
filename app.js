@@ -597,6 +597,7 @@ const docsRegistry = [
   { file: "Last_45min_Revision_Set.md", title: "⚡ Last 45-Min Revision Set", icon: "⚡" },
   { file: "Interview_Introduction_Guide.md", title: "🎤 Interview Introduction Guide", icon: "🎤" },
   { file: "Java_Testing_Basics_QuickFire.md", title: "🔥 Java & Testing Basics — Quick Fire", icon: "🔥" },
+  { file: "RestAssured_JSON_QuickFire.md", title: "🌐 RestAssured & JSON Quick Fire", icon: "🌐" },
   // Master Prep Bank
   { file: "Master_Interview_QA_Bank.md", title: "Master Interview Q&A Bank", icon: "🏆" },
   { file: "Programming_Practice_Guide.md", title: "Programming Practice (145 Qs)", icon: "💻" },

@@ -1,4 +1,4 @@
-const CACHE = 'qa-architect-v7';
+const CACHE = 'qa-architect-v8';
 
 const CORE = [
   'fullpage.html',
@@ -14,6 +14,7 @@ const DOCS = [
   'Last_45min_Revision_Set.md',
   'Interview_Introduction_Guide.md',
   'Java_Testing_Basics_QuickFire.md',
+  'RestAssured_JSON_QuickFire.md',
   'Master_Interview_QA_Bank.md',
   'Programming_Practice_Guide.md',
   'Java_Strings_Interview_Questions.md',
