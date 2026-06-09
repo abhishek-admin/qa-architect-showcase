@@ -57,6 +57,9 @@ self.addEventListener('activate', e => {
 
 // Network-first for HTML/JS/CSS (always get latest), cache-first for .md docs (offline support)
 self.addEventListener('fetch', e => {
+  // Ignore non-http requests (chrome-extension://, data:, etc.)
+  if (!e.request.url.startsWith('http')) return;
+
   const url = new URL(e.request.url);
   const isCore = ['.html', '.js', '.css', '.webmanifest'].some(ext => url.pathname.endsWith(ext));
 

@@ -1,4 +1,5 @@
-if ('serviceWorker' in navigator) {
+// Only register SW on https:// (GitHub Pages PWA) — never inside the chrome-extension:// context
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
     .then(reg => {
       reg.update();
