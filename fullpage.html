@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -43,6 +43,18 @@
         </button>
         <button class="nav-item nav-item-docs" data-tab="tab-design-guide" id="nav-design-guide" style="display:none;">
           <span class="nav-icon">🏗️</span> Design Guide
+        </button>
+        <button class="nav-item" data-tab="tab-whatis" id="nav-whatis">
+          <span class="nav-icon">📋</span> What Is
+        </button>
+        <button class="nav-item" data-tab="tab-interview-prep" id="nav-interview-prep">
+          <span class="nav-icon">🎯</span> Interview Prep
+        </button>
+        <button class="nav-item" data-tab="tab-quiz" id="nav-quiz">
+          <span class="nav-icon">🧠</span> Quiz Arena
+        </button>
+        <button class="nav-item" data-tab="tab-learn" id="nav-learn">
+          <span class="nav-icon">📖</span> Learning Lab
         </button>
       </nav>
 
@@ -855,10 +867,1285 @@
         </div>
       </section>
 
+      <!-- TAB: WHAT IS — Interview Q&A Bank -->
+      <section id="tab-whatis" class="page-tab-content">
+        <div id="wi-root"></div>
+      </section>
+
+      <!-- TAB 7: INTERVIEW PREP -->
+      <section id="tab-interview-prep" class="page-tab-content">
+        <div class="tab-header">
+          <h1>🎯 Interview Prep</h1>
+          <p>Company-specific Q&amp;A sets — click a company to switch. Expand each category to review answers.</p>
+        </div>
+
+        <!-- Company Switcher -->
+        <div class="interview-company-switcher">
+          <button class="company-btn active" data-company="innovationm">
+            🏢 InnovationM — SDET &nbsp;<span class="interview-time-badge">12:00 PM</span>
+          </button>
+          <button class="company-btn" data-company="ltm">
+            🏢 LTM — Playwright Lead &nbsp;<span class="interview-time-badge">3:00 PM</span>
+          </button>
+        </div>
+
+        <!-- ─────────── INNOVATIONM SECTION ─────────── -->
+        <div id="interview-innovationm" class="interview-section">
+          <div class="interview-company-header">
+            <h2>InnovationM · SDET · 5–6 Yrs · Bangalore</h2>
+            <p>EdTech platform · Playwright/Cypress · REST Assured · SQL · Jenkins · GenAI · JavaScript/TypeScript</p>
+          </div>
+
+          <!-- Category: Playwright / Cypress -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🎭 Playwright &amp; Cypress <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q1. What is the difference between Playwright and Cypress?</div>
+                <div class="qa-a">Playwright supports all major browsers (Chromium, Firefox, WebKit) including cross-browser in a single run, runs tests out-of-process for true multi-tab/multi-origin testing, and supports multiple languages (JS, Java, Python, C#). Cypress is JS-only, runs inside the browser making it faster for single-origin tests but limiting for multi-tab or multi-domain flows. Playwright's auto-wait is built into every action; Cypress uses retryable commands with a fixed timeout chain.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q2. How do you implement the Page Object Model (POM) in Playwright with JavaScript?</div>
+                <div class="qa-a">Create a class per page, inject `page` via constructor, expose typed action methods and assertion methods. Locators are defined as class properties using `page.locator()`. Tests import the page class and call its methods — never access locators directly from the test. This keeps selectors in one place and tests readable.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q3. Explain Playwright's auto-waiting mechanism.</div>
+                <div class="qa-a">Before every action (click, fill, etc.), Playwright waits for the target element to be: attached to DOM, visible, stable (not animating), enabled, and ready to receive events. This eliminates manual `waitForSelector` in most cases. For navigation-heavy flows use `waitForLoadState('networkidle')` or `waitForURL()`.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q4. How do you handle iframes in Playwright?</div>
+                <div class="qa-a">Use `page.frameLocator('iframe-selector')` to get a FrameLocator, then chain locators on it exactly like on the main page. For dynamically created iframes, use `page.waitForSelector('iframe')` first, then `page.frame({ url: /pattern/ })` or `page.frames()` to locate by URL or name.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q5. How do you run Playwright tests in parallel and control worker count?</div>
+                <div class="qa-a">In `playwright.config.js`, set `workers: N` (e.g., `workers: 4`) or `workers: '50%'` for half the CPU cores. Each worker is an isolated browser context. Tests within a spec file run serially by default; use `test.describe.parallel()` for intra-file parallelism. Ensure tests are stateless — no shared login state without `storageState`.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q6. How do you handle dynamic elements or flaky locators in Playwright?</div>
+                <div class="qa-a">Prefer semantic locators: `getByRole()`, `getByLabel()`, `getByText()` over CSS/XPath. For dynamic IDs, use `data-testid` attributes. Use `locator.filter()` to narrow down a list. For race conditions, use `page.waitForResponse()` or `page.waitForSelector()` instead of fixed sleeps.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q7. How do you capture screenshots and traces on failure in Playwright?</div>
+                <div class="qa-a">In `playwright.config.js`: set `screenshot: 'only-on-failure'`, `video: 'retain-on-failure'`, `trace: 'on-first-retry'`. On failure, run `npx playwright show-trace trace.zip` to replay the full timeline of actions, DOM snapshots, and network calls.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q8. What is Cypress's intercept feature and what's its Playwright equivalent?</div>
+                <div class="qa-a">Cypress `cy.intercept()` stubs or spies on network requests. In Playwright, use `page.route('**/api/endpoint', route => route.fulfill({ json: mockData }))` to mock, or `page.waitForResponse('**/api/**')` to assert a real response. Playwright routes are more flexible — they support aborting, modifying, and continuing requests.</div>
+              </div>
+
+              <div class="qa-section-label green">🎯 Scenario-Based — Write the Code</div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q9. A skeleton loader spins until the API responds. You must click "Enroll" only after data loads. Write it.</div>
+                <div class="qa-a"><pre class="qa-code">// Strategy 1 — wait for the API that populates the page
+await Promise.all([
+  page.waitForResponse(r => r.url().includes('/api/courses') && r.status() === 200),
+  page.goto('/courses')
+]);
+await page.getByRole('button', { name: 'Enroll' }).click();
+
+// Strategy 2 — wait for the skeleton to disappear
+await page.locator('.skeleton-loader').waitFor({ state: 'hidden' });
+await page.getByRole('button', { name: 'Enroll' }).click();</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q10. A dropdown options are loaded via AJAX on focus. How do you select an option reliably?</div>
+                <div class="qa-a"><pre class="qa-code">// Click/focus the dropdown trigger to fire AJAX
+await page.getByLabel('Select Course').click();
+
+// Wait for the options list to appear in the DOM
+await page.locator('[role="listbox"]').waitFor({ state: 'visible' });
+
+// Now pick the option — Playwright retries the locator automatically
+await page.getByRole('option', { name: 'JavaScript Fundamentals' }).click();
+
+// Assert selection reflected in the field
+await expect(page.getByLabel('Select Course')).toHaveValue('JavaScript Fundamentals');</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q11. Test a drag-and-drop reordering of a course module list in Playwright.</div>
+                <div class="qa-a"><pre class="qa-code">const source = page.locator('.module-item').nth(0);
+const target = page.locator('.module-item').nth(2);
+
+// Playwright drag via mouse events
+await source.hover();
+await page.mouse.down();
+const targetBox = await target.boundingBox();
+await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + targetBox!.height / 2, { steps: 10 });
+await page.mouse.up();
+
+// Assert order changed
+await expect(page.locator('.module-item').nth(0)).toHaveText('Module 3');</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q12. A form submits, then a toast notification appears for 3 seconds. Assert the toast text without a fixed sleep.</div>
+                <div class="qa-a"><pre class="qa-code">// Submit the form
+await page.getByRole('button', { name: 'Save' }).click();
+
+// Assert toast appears — Playwright auto-retries until visible (default 5s timeout)
+const toast = page.locator('.toast-notification');
+await expect(toast).toBeVisible();
+await expect(toast).toHaveText(/Saved successfully/);
+
+// Assert it disappears without sleep — use waitFor with state hidden + increased timeout
+await toast.waitFor({ state: 'hidden', timeout: 5000 });</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q13. How do you test a file upload input in Playwright?</div>
+                <div class="qa-a"><pre class="qa-code">// Standard file input
+await page.getByLabel('Upload Certificate').setInputFiles('test-data/cert.pdf');
+await expect(page.locator('.file-name-display')).toHaveText('cert.pdf');
+
+// Drag-and-drop upload zone (no input element)
+const buffer = Buffer.from('fake pdf content');
+const dataTransfer = await page.evaluateHandle((data) => {
+  const dt = new DataTransfer();
+  const file = new File([data], 'cert.pdf', { type: 'application/pdf' });
+  dt.items.add(file);
+  return dt;
+}, buffer);
+await page.locator('.upload-dropzone').dispatchEvent('drop', { dataTransfer });</pre></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: API Testing -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🔌 API Testing — REST Assured &amp; Postman <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q9. How do you validate JSON schema in REST Assured?</div>
+                <div class="qa-a">Use `.body(matchesJsonSchemaInClasspath("schema.json"))` from the `rest-assured-json-schema-validator` dependency. The JSON Schema file (draft-04 or draft-07) defines required fields, types, and constraints. This catches contract breaks even if individual field assertions pass.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q10. How do you handle OAuth 2.0 token-based auth in REST Assured?</div>
+                <div class="qa-a">Make a POST to the token endpoint with client credentials/password grant, extract the `access_token` from the response, then pass it as a Bearer header: `.header("Authorization", "Bearer " + token)`. Cache the token per test class using `@BeforeClass` and refresh when a 401 is returned.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q11. What is Postman's Collection Runner and how do you use it in CI?</div>
+                <div class="qa-a">Collection Runner runs a saved collection in sequence with environment variables and data files. For CI, export the collection and environment JSON, then run via Newman: `newman run collection.json -e env.json --reporters junit` which outputs JUnit XML for Jenkins to parse.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q12. How do you chain API requests (use response of one as input to the next) in REST Assured?</div>
+                <div class="qa-a">Extract the value: `String id = given().post("/create").then().extract().path("id");`. Then inject: `given().pathParam("id", id).get("/item/{id}")`. For Postman, use `pm.environment.set("id", pm.response.json().id)` in the Tests tab of request 1, then reference `{{id}}` in request 2.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q13. How do you test negative/error scenarios in API automation?</div>
+                <div class="qa-a">Send requests with: missing required fields, invalid data types, out-of-range values, expired tokens, duplicate payloads, and injection payloads. Assert correct HTTP status codes (400, 401, 403, 422) and validate the error response body schema matches the documented contract.</div>
+              </div>
+
+              <div class="qa-section-label green">🎯 Scenario-Based — REST Assured Context</div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q14. Chain two REST Assured calls: create a course, then enroll a user into that courseId.</div>
+                <div class="qa-a"><pre class="qa-code">@Test
+public void enrollUserInNewCourse() {
+  // Step 1: Create course, extract courseId
+  String courseId =
+    given()
+      .contentType(ContentType.JSON)
+      .header("Authorization", "Bearer " + getToken())
+      .body("{\"title\":\"Playwright Mastery\",\"category\":\"QA\"}")
+    .when()
+      .post("/api/courses")
+    .then()
+      .statusCode(201)
+      .extract().path("courseId");
+
+  // Step 2: Enroll user using extracted courseId
+  given()
+    .contentType(ContentType.JSON)
+    .header("Authorization", "Bearer " + getToken())
+    .body("{\"userId\":\"user-42\",\"courseId\":\"" + courseId + "\"}")
+  .when()
+    .post("/api/enroll")
+  .then()
+    .statusCode(200)
+    .body("status", equalTo("ENROLLED"))
+    .body("courseId", equalTo(courseId));
+}</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q15. API returns paginated data — how do you fetch all pages in REST Assured and assert total count?</div>
+                <div class="qa-a"><pre class="qa-code">List&lt;Map&lt;String, Object&gt;&gt; allRecords = new ArrayList&lt;&gt;();
+int page = 1;
+boolean hasMore = true;
+
+while (hasMore) {
+  Response resp = given()
+    .queryParam("page", page)
+    .queryParam("size", 50)
+    .header("Authorization", "Bearer " + getToken())
+    .get("/api/courses");
+
+  List&lt;Map&lt;String, Object&gt;&gt; items = resp.jsonPath().getList("data");
+  allRecords.addAll(items);
+  hasMore = resp.jsonPath().getBoolean("pagination.hasNextPage");
+  page++;
+}
+
+// Assert total matches API-reported count
+int totalReported = given().get("/api/courses/count").then().extract().path("total");
+Assert.assertEquals(allRecords.size(), totalReported, "Paginated total mismatch");</pre></div>
+              </div>
+
+              <div class="qa-card scenario-card">
+                <div class="qa-q">🎯 Scenario Q16. Test rate limiting: assert the API returns 429 after 5 rapid identical requests in REST Assured.</div>
+                <div class="qa-a"><pre class="qa-code">@Test
+public void apiReturns429AfterRateLimit() {
+  String endpoint = "/api/search";
+  String body = "{\"q\":\"playwright\"}";
+  int hitCount = 0;
+
+  for (int i = 0; i &lt; 6; i++) {
+    Response resp = given()
+      .contentType(ContentType.JSON)
+      .body(body)
+      .post(endpoint);
+
+    if (resp.statusCode() == 429) {
+      hitCount++;
+      // Assert the Retry-After header is present
+      Assert.assertNotNull(resp.getHeader("Retry-After"), "Retry-After header missing");
+      break;
+    }
+  }
+  Assert.assertTrue(hitCount &gt; 0, "Rate limit (429) never triggered in 6 calls");
+}</pre></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: SQL / DB Testing -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🗄️ Database Testing — SQL <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q14. How do you verify data integrity after an API call using SQL?</div>
+                <div class="qa-a">After calling the POST/PUT API, query the database directly: `SELECT * FROM orders WHERE order_id = ?` using the ID returned in the API response. Assert that every field persisted correctly — amounts, statuses, timestamps, foreign keys. This catches cases where the API returns 200 but the write silently fails or truncates data.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q15. Write a query to find duplicate email records in a users table.</div>
+                <div class="qa-a"><pre class="qa-code">SELECT email, COUNT(*) AS cnt
+FROM users
+GROUP BY email
+HAVING COUNT(*) > 1;</pre>
+To see the full rows: wrap with a JOIN back to the table on email. Use this as a pre-test data-quality check to avoid false positives from dirty test data.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q16. What is the difference between INNER JOIN, LEFT JOIN, and FULL OUTER JOIN?</div>
+                <div class="qa-a">INNER JOIN returns only matching rows from both tables. LEFT JOIN returns all rows from the left table and matched rows from the right (nulls where no match). FULL OUTER JOIN returns all rows from both tables, nulls on unmatched sides. For QA: LEFT JOIN is useful to find orphan records (right side is NULL means missing reference).</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q17. How do you handle test data setup and teardown with SQL in automation?</div>
+                <div class="qa-a">Use `@BeforeEach`: INSERT test-specific rows with unique IDs (UUID or timestamp-prefixed). Use `@AfterEach`: DELETE WHERE id IN (collected IDs) or use transactions rolled back after each test. Never rely on pre-existing data in a shared DB — tests must be self-contained and order-independent.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: JavaScript / TypeScript -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              📜 JavaScript &amp; TypeScript <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q18. What is the difference between `==` and `===` in JavaScript?</div>
+                <div class="qa-a">`==` performs type coercion (`"5" == 5` is true). `===` is strict equality — no coercion (`"5" === 5` is false). In test assertions always use `===` or framework matchers (Jest's `toBe`, Playwright's `expect`) to avoid false positives from coercion.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q19. Explain Promises vs async/await and how they apply to Playwright tests.</div>
+                <div class="qa-a">Promises are objects representing eventual values. `async/await` is syntactic sugar that makes asynchronous code look synchronous, making it easier to read and debug. All Playwright actions return Promises, so every action must be `await`-ed in an `async` test function. Forgetting `await` means the action is never executed — the test passes vacuously.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q20. How do TypeScript interfaces help in Playwright POM?</div>
+                <div class="qa-a">Define interfaces for test data (`interface LoginData { username: string; password: string; }`) and page return types. TypeScript catches typos at compile time, enforces data shapes in data-driven tests, and makes refactoring safe — rename a property and the compiler shows every broken reference.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q21. What is a closure and how can it cause issues in test automation?</div>
+                <div class="qa-a">A closure is a function that captures variables from its surrounding scope. In test loops, closures capturing `let i` or `let item` in an `async` callback may capture stale references if the iteration variable changes before the async completes. Fix with `for...of` loops (each iteration has its own binding) or destructuring inside the loop body.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: Jenkins CI/CD -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              ⚙️ Jenkins &amp; CI/CD <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q22. How do you integrate Playwright tests into a Jenkins pipeline?</div>
+                <div class="qa-a">In your `Jenkinsfile`: (1) `npm ci` to install deps, (2) `npx playwright install --with-deps` to install browsers, (3) `npx playwright test --reporter=junit` to run and output JUnit XML, (4) use `junit 'test-results/*.xml'` to publish results, (5) `archiveArtifacts 'playwright-report/**'` for the HTML report.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q23. How do you run tests in parallel across Jenkins agents?</div>
+                <div class="qa-a">Use Jenkins `parallel` step in a declarative pipeline to split test suites across multiple agents (each running a subset of specs). Alternatively, use Playwright's built-in `--shard=1/4` flag: four Jenkins jobs each run one shard, merge the `.last-run.json` files for unified reporting.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q24. How do you handle environment-specific configs in Jenkins for test runs?</div>
+                <div class="qa-a">Use Jenkins environment variables or credentials store for secrets. In Playwright config, read `process.env.BASE_URL`, `process.env.ENV` etc. Pass them at run time: `BASE_URL=https://staging.app.com npx playwright test`. Never hardcode URLs or credentials in the test code or commit `.env` files.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q25. Explain your approach to release validation in CI/CD.</div>
+                <div class="qa-a">Run smoke suite (critical-path tests, ~5-10 min) on every PR merge. Run full regression suite nightly. Gate releases on smoke suite pass. On failure: build is marked unstable, team is notified via Slack webhook. Maintain a "release readiness dashboard" aggregating smoke, regression, and API test results with trend graphs.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: GenAI in QA -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🤖 GenAI in QA <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q26. How have you used GenAI tools to accelerate QA activities?</div>
+                <div class="qa-a">I use GitHub Copilot to generate Playwright boilerplate (POM classes, fixture setups) and suggest assertions. For test case generation, I prompt an LLM with the user story + acceptance criteria to get an initial test case matrix, then review and prune. For defect analysis, I paste stack traces into the chat to get root cause hypotheses faster. This cuts initial drafting time by ~40%.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q27. What are the risks of relying on AI-generated test cases?</div>
+                <div class="qa-a">AI may miss domain-specific edge cases, generate redundant tests, or hallucinate incorrect assertions. It has no knowledge of your actual system behavior. Mitigation: use AI output as a first draft only, always review against requirements, run generated tests to confirm they fail correctly before trusting them as valid coverage.</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q28. How do you use AI for defect analysis beyond just "copying the error message"?</div>
+                <div class="qa-a">Provide full context: stack trace + recent code diff + test scenario + environment details. Ask the AI to identify the root cause pattern (not just symptoms), suggest the minimal reproduction case, and list similar historical bugs to check. Then validate the AI's hypothesis by manual reproduction before filing the bug report.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: Manual Testing / STLC / Leadership -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              📋 STLC · Manual Testing · Team Handling <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">Q29. Walk me through your STLC process for a new feature.</div>
+                <div class="qa-a">Requirement Analysis → Test Planning (scope, timelines, tools, risks) → Test Case Design (boundary values, equivalence partitioning, decision tables) → Test Environment Setup → Test Execution (smoke first, then functional, then regression) → Defect Reporting &amp; Re-testing → Test Closure (metrics: pass%, defect density, automation coverage).</div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">Q30. How do you onboard a new automation engineer to your framework?</div>
+                <div class="qa-a">Week 1: framework architecture walkthrough (layers, conventions, how to run tests locally). Week 2: assign a small feature to automate end-to-end with a buddy reviewer. Week 3: independent contribution with PR review. Document "framework guide" in the repo wiki covering: setup, naming conventions, how to add a new POM, how to run subsets via tags, and how to read trace reports.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- XPath Finder Section -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle" style="background:rgba(237,137,54,0.08);">
+              🔎 XPath &amp; Locator Strategy Masterclass <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+
+              <div class="qa-section-label orange">Basic XPath Patterns</div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find a button containing the text "Submit"</div>
+                <div class="qa-a"><pre class="qa-code">// XPath
+//button[contains(text(),'Submit')]
+
+// Playwright equivalent (always prefer this)
+page.getByRole('button', { name: 'Submit' })
+
+// XPath with normalize-space (handles extra whitespace)
+//button[normalize-space()='Submit']</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find an input field by its placeholder text</div>
+                <div class="qa-a"><pre class="qa-code">// XPath
+//input[@placeholder='Enter your email']
+
+// Playwright
+page.getByPlaceholder('Enter your email')
+
+// Partial placeholder match
+//input[contains(@placeholder,'email')]</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find the 3rd row in a data table</div>
+                <div class="qa-a"><pre class="qa-code">// XPath - absolute position
+//table/tbody/tr[3]
+
+// XPath - nth child
+//tbody/tr[position()=3]
+
+// Playwright
+page.locator('table tbody tr').nth(2)  // 0-indexed
+
+// Get text of 2nd cell in 3rd row
+page.locator('table tbody tr:nth-child(3) td:nth-child(2)')</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find a label's associated input using for/id relationship</div>
+                <div class="qa-a"><pre class="qa-code">// Get the input whose id matches a label's "for" attribute
+//input[@id=//label[text()='Username']/@for]
+
+// Playwright (cleanest — traverses for/id automatically)
+page.getByLabel('Username')
+
+// CSS equivalent
+label:has-text("Username") + input
+// or
+input#username</pre></div>
+              </div>
+
+              <div class="qa-section-label orange">Intermediate — Axes &amp; Relationships</div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find a sibling element — click "Edit" button next to the row containing "Alice"</div>
+                <div class="qa-a"><pre class="qa-code">// following-sibling axis
+//tr[td[text()='Alice']]//button[text()='Edit']
+
+// Or using contains for partial match
+//tr[td[contains(text(),'Alice')]]/td//button[@data-action='edit']
+
+// Playwright filter approach (much more readable)
+page.locator('tr').filter({ hasText: 'Alice' }).getByRole('button', { name: 'Edit' })</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find a parent element from a child — navigate up from an error message to its form</div>
+                <div class="qa-a"><pre class="qa-code">// ancestor axis — go up to form from error span
+//span[@class='error-msg'][text()='Required']/ancestor::form
+
+// parent axis — go up one level
+//span[@class='error-msg']/parent::div
+
+// Playwright — locator chaining (no XPath needed)
+page.locator('form').filter({ has: page.locator('.error-msg') })</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find an element by multiple attributes (AND condition)</div>
+                <div class="qa-a"><pre class="qa-code">// AND: button that is both type=submit AND has class=primary
+//button[@type='submit' and contains(@class,'primary')]
+
+// OR: input that is either email or text type
+//input[@type='email' or @type='text']
+
+// NOT: all inputs except hidden
+//input[not(@type='hidden')]
+
+// CSS equivalent of AND
+button[type="submit"].primary</pre></div>
+              </div>
+
+              <div class="qa-section-label orange">Advanced — Dynamic IDs &amp; React/Angular</div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Element has dynamic ID like "btn-12345-submit". How do you locate it?</div>
+                <div class="qa-a"><pre class="qa-code">// starts-with for prefix pattern
+//button[starts-with(@id,'btn-') and contains(@id,'-submit')]
+
+// Better: use data-testid (negotiate with dev to add it)
+//button[@data-testid='submit-btn']
+
+// Playwright — semantic locators avoid dynamic ID problem entirely
+page.getByRole('button', { name: 'Submit' })
+page.getByTestId('submit-btn')  // uses data-testid attribute</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Find the last item in a list dynamically</div>
+                <div class="qa-a"><pre class="qa-code">// last() function
+//ul[@class='course-list']/li[last()]
+
+// second to last
+//ul[@class='course-list']/li[last()-1]
+
+// Playwright
+page.locator('.course-list li').last()
+page.locator('.course-list li').nth(-1)  // negative index = from end</pre></div>
+              </div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">XPath</span> Locate elements inside a Shadow DOM — what breaks and how do you fix it?</div>
+                <div class="qa-a">XPath cannot pierce Shadow DOM boundaries — it stops at the shadow root and returns nothing. Solutions:
+<pre class="qa-code">// Playwright — automatically pierces open shadow roots
+page.locator('my-component >> button[type="submit"]')
+// or chain locators
+page.locator('my-component').locator('button[type="submit"]')
+
+// For closed shadow DOM: inject script
+await page.evaluate(() => {
+  const host = document.querySelector('my-component');
+  return host.shadowRoot.querySelector('button').click();
+});</pre></div>
+              </div>
+
+              <div class="qa-section-label orange">Real Interview Challenge</div>
+
+              <div class="qa-card xpath-card">
+                <div class="qa-q"><span class="xpath-tag">Live Challenge</span> Given this HTML, write XPath to find the "Enroll" button for the course rated 4.5 stars only.</div>
+                <div class="qa-a"><pre class="qa-code">/* HTML Structure:
+&lt;div class="course-card"&gt;
+  &lt;h3&gt;JavaScript Basics&lt;/h3&gt;
+  &lt;span class="rating"&gt;4.5&lt;/span&gt;
+  &lt;button class="enroll-btn"&gt;Enroll&lt;/button&gt;
+&lt;/div&gt;
+&lt;div class="course-card"&gt;
+  &lt;h3&gt;Python Advanced&lt;/h3&gt;
+  &lt;span class="rating"&gt;3.8&lt;/span&gt;
+  &lt;button class="enroll-btn"&gt;Enroll&lt;/button&gt;
+&lt;/div&gt; */
+
+// XPath answer
+//div[@class='course-card'][.//span[@class='rating' and text()='4.5']]//button[@class='enroll-btn']
+
+// Playwright answer (cleaner)
+page.locator('.course-card')
+  .filter({ has: page.locator('.rating', { hasText: '4.5' }) })
+  .getByRole('button', { name: 'Enroll' })</pre></div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Coding Q&A for InnovationM -->
+          <div class="interview-category">
+            <button class="category-accordion-btn coding-btn" data-accordion="toggle">
+              💻 Coding Questions &amp; Answers <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card">
+                <div class="qa-q">C1. Write a Playwright POM test for login with username, password, and redirection assert.</div>
+                <div class="qa-a"><pre class="qa-code">// pages/LoginPage.js
+class LoginPage {
+  constructor(page) {
+    this.page = page;
+    this.username = page.getByLabel('Username');
+    this.password = page.getByLabel('Password');
+    this.submitBtn = page.getByRole('button', { name: 'Login' });
+  }
+  async login(user, pass) {
+    await this.username.fill(user);
+    await this.password.fill(pass);
+    await this.submitBtn.click();
+  }
+}
+
+// tests/login.spec.js
+test('login redirects to dashboard', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.goto('/login');
+  await loginPage.login('admin@test.com', 'Secret123');
+  await expect(page).toHaveURL(/dashboard/);
+});</pre></div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">C2. Write a Playwright test that mocks an API response.</div>
+                <div class="qa-a"><pre class="qa-code">test('shows mocked course list', async ({ page }) => {
+  await page.route('**/api/courses', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: 1, title: 'Mock Course' }])
+    })
+  );
+  await page.goto('/courses');
+  await expect(page.getByText('Mock Course')).toBeVisible();
+});</pre></div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">C3. Write a SQL query to find the 2nd highest salary from an employees table.</div>
+                <div class="qa-a"><pre class="qa-code">SELECT MAX(salary) AS second_highest
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+-- Or using DENSE_RANK for top-N generalization:
+SELECT salary FROM (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+  FROM employees
+) ranked WHERE rnk = 2 LIMIT 1;</pre></div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">C4. Write a REST Assured test (Java) to POST a new user and assert the response.</div>
+                <div class="qa-a"><pre class="qa-code">@Test
+public void createUserReturns201() {
+  String body = "{\"name\":\"Alice\",\"email\":\"alice@test.com\"}";
+
+  given()
+    .contentType(ContentType.JSON)
+    .header("Authorization", "Bearer " + getToken())
+    .body(body)
+  .when()
+    .post("/api/users")
+  .then()
+    .statusCode(201)
+    .body("email", equalTo("alice@test.com"))
+    .body("id", notNullValue());
+}</pre></div>
+              </div>
+              <div class="qa-card">
+                <div class="qa-q">C5. Write a TypeScript Playwright data-driven test using test.each for multiple login scenarios.</div>
+                <div class="qa-a"><pre class="qa-code">const credentials = [
+  { user: 'admin@app.com', pass: 'Admin@123', expectedUrl: '/admin' },
+  { user: 'user@app.com',  pass: 'User@123',  expectedUrl: '/dashboard' },
+];
+
+for (const { user, pass, expectedUrl } of credentials) {
+  test(`login as ${user} goes to ${expectedUrl}`, async ({ page }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(user);
+    await page.getByLabel('Password').fill(pass);
+    await page.getByRole('button', { name: 'Login' }).click();
+    await expect(page).toHaveURL(new RegExp(expectedUrl));
+  });
+}</pre></div>
+              </div>
+            </div>
+          </div>
+        </div><!-- end innovationm -->
+
+        <!-- ─────────── LTIM SECTION (UPDATED JD) ─────────── -->
+        <div id="interview-ltm" class="interview-section" style="display:none;">
+          <div class="interview-company-header ltm-header">
+            <h2>LTIM · Automation Engineer · 3+ Yrs · Digital Testing</h2>
+            <p>Playwright JS · BDD · Cucumber · Mocha · Chai · Postman · REST Assured · Hybrid Framework · GitLab · Jenkins · DB Testing</p>
+          </div>
+
+          <!-- PLAYWRIGHT JS -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🎭 Playwright JavaScript — Core &amp; Scenarios <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q1. What is Playwright and how does it differ from Selenium?</div><div class="qa-a">Playwright is async-first, supports Chromium/Firefox/WebKit, has built-in auto-wait on every action, native network interception, and isolated browser contexts for parallelism. Selenium needs explicit waits, has no built-in API layer. Playwright's single fixture covers both UI and API testing via the <code>request</code> fixture — no extra library needed.</div></div>
+              <div class="qa-card"><div class="qa-q">Q2. Explain Playwright auto-waiting and how it prevents flakiness.</div><div class="qa-a">Before every actionable call (click, fill, check) Playwright checks the element is: attached, visible, stable (not animating), enabled, editable. No Thread.sleep needed. For navigation use <code>waitForURL()</code> or <code>waitForLoadState('networkidle')</code>. Custom waits: <code>expect(locator).toBeVisible()</code> retries until timeout.</div></div>
+              <div class="qa-card"><div class="qa-q">Q3. How do you implement Page Object Model in Playwright JavaScript?</div><div class="qa-a"><pre class="qa-code">// pages/LoginPage.js
+class LoginPage {
+  constructor(page) {
+    this.page     = page;
+    this.email    = page.getByLabel('Email');
+    this.password = page.getByLabel('Password');
+    this.loginBtn = page.getByRole('button', { name: 'Login' });
+    this.errorMsg = page.locator('.error-banner');
+  }
+  async navigate() { await this.page.goto('/login'); }
+  async login(email, pass) {
+    await this.email.fill(email);
+    await this.password.fill(pass);
+    await this.loginBtn.click();
+  }
+}
+module.exports = { LoginPage };
+
+// tests/login.spec.js
+const { test, expect } = require('@playwright/test');
+const { LoginPage }    = require('../pages/LoginPage');
+test('valid login', async ({ page }) => {
+  const lp = new LoginPage(page);
+  await lp.navigate();
+  await lp.login('user@test.com', 'Pass@123');
+  await expect(page).toHaveURL(/dashboard/);
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q4. How do you reuse authentication state across all tests?</div><div class="qa-a"><pre class="qa-code">// global-setup.js
+const { chromium } = require('@playwright/test');
+module.exports = async () => {
+  const browser = await chromium.launch();
+  const page    = await browser.newPage();
+  await page.goto(process.env.BASE_URL + '/login');
+  await page.getByLabel('Email').fill(process.env.TEST_USER);
+  await page.getByLabel('Password').fill(process.env.TEST_PASS);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.waitForURL('**/dashboard');
+  await page.context().storageState({ path: 'auth.json' });
+  await browser.close();
+};
+// playwright.config.js  →  use: { storageState: 'auth.json' }</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q5. How do you intercept and mock network calls?</div><div class="qa-a"><pre class="qa-code">// Mock response
+await page.route('**/api/policies', route =>
+  route.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify([{ id: 'POL-001', status: 'Active' }]) }));
+// Abort analytics
+await page.route('**google-analytics**', route => route.abort());
+// Modify real response in-flight
+await page.route('**/api/user', async route => {
+  const resp = await route.fetch();
+  const json = await resp.json();
+  json.role = 'ADMIN';
+  await route.fulfill({ response: resp, json });
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q6. How do you tag tests and run only smoke vs full regression?</div><div class="qa-a"><pre class="qa-code">test('@smoke login works', async ({ page }) => { ... });
+test('@regression premium recalculates', async ({ page }) => { ... });
+// npx playwright test --grep "@smoke"
+// npx playwright test --grep "@regression"
+// playwright.config.js:
+projects: [
+  { name: 'smoke',      grep: /@smoke/ },
+  { name: 'regression', grep: /@regression/ }
+]</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q7. How do you capture traces, screenshots, videos for CI debugging?</div><div class="qa-a"><pre class="qa-code">// playwright.config.js
+use: {
+  screenshot: 'only-on-failure',
+  video:      'retain-on-failure',
+  trace:      'on-first-retry',
+}
+// View: npx playwright show-trace test-results/trace.zip</pre></div></div>
+              <div class="qa-section-label green">🎯 Playwright Scenario Questions</div>
+              <div class="qa-card scenario-card"><div class="qa-q">🎯 Scenario Q8. Async table loads via API. Wait for API then assert row count.</div><div class="qa-a"><pre class="qa-code">test('table shows 5 rows', async ({ page }) => {
+  const [resp] = await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/policies') && r.status() === 200),
+    page.goto('/policies')
+  ]);
+  const data = await resp.json();
+  expect(data.length).toBe(5);
+  await expect(page.locator('table tbody tr')).toHaveCount(5);
+});</pre></div></div>
+              <div class="qa-card scenario-card"><div class="qa-q">🎯 Scenario Q9. Assert API request payload when a form field change triggers recalculation.</div><div class="qa-a"><pre class="qa-code">test('premium recalculates on age change', async ({ page }) => {
+  await page.goto('/quote/step-2');
+  const [req] = await Promise.all([
+    page.waitForRequest(r => r.url().includes('/api/rating') && r.method() === 'POST'),
+    page.getByLabel('Driver Age').fill('25'),
+    page.getByLabel('Driver Age').press('Tab')
+  ]);
+  const payload = JSON.parse(req.postData() ?? '{}');
+  expect(payload.driverAge).toBe(25);
+});</pre></div></div>
+            </div>
+          </div>
+
+          <!-- BDD: CUCUMBER + MOCHA + CHAI -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🥒 BDD — Cucumber · Mocha · Chai <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q10. What is BDD and how does Cucumber implement it?</div><div class="qa-a">BDD writes tests in plain English (Gherkin: Given/When/Then) so business and QE share a common language. Cucumber parses .feature files, matches each step to a JS step definition, and executes them. Tests map directly to business acceptance criteria — readable by POs and BAs, not just developers.</div></div>
+              <div class="qa-card"><div class="qa-q">Q11. Show a complete Cucumber + Playwright + Chai BDD login flow.</div><div class="qa-a"><pre class="qa-code">// features/login.feature
+Feature: User Login
+  Scenario: Valid login redirects to dashboard
+    Given I am on the login page
+    When I enter email "user@test.com" and password "Pass@123"
+    And I click Login
+    Then I should see the dashboard
+
+// step-definitions/loginSteps.js
+const { Given, When, Then } = require('@cucumber/cucumber');
+const { expect } = require('chai');
+Given('I am on the login page', async function() {
+  await this.page.goto(process.env.BASE_URL + '/login');
+});
+When('I enter email {string} and password {string}', async function(email, pass) {
+  await this.page.getByLabel('Email').fill(email);
+  await this.page.getByLabel('Password').fill(pass);
+});
+When('I click Login', async function() {
+  await this.page.getByRole('button', { name: 'Login' }).click();
+});
+Then('I should see the dashboard', async function() {
+  await this.page.waitForURL('**/dashboard');
+  expect(this.page.url()).to.include('dashboard');
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q12. What is Mocha and how does it differ from Cucumber?</div><div class="qa-a">Mocha is a JS test runner using describe()/it()/before()/after() — code-first, not Gherkin. Use Mocha when the team is developer-led and prefers code. Use Cucumber when BAs/POs author or review test scenarios. Both work with Playwright as the browser driver and Chai as assertions. Mocha is faster to write; Cucumber generates living documentation.</div></div>
+              <div class="qa-card"><div class="qa-q">Q13. Explain Chai's three assertion styles.</div><div class="qa-a"><pre class="qa-code">const { assert, expect, should } = require('chai');
+// Assert style (classic TDD)
+assert.equal(status, 200);
+assert.isArray(data);
+// Expect style (BDD - most common, most readable)
+expect(status).to.equal(200);
+expect(data).to.be.an('array').with.lengthOf(5);
+expect(obj).to.have.property('id').that.is.a('string');
+// Should style (extends Object.prototype - avoid in modules)
+status.should.equal(200);
+// Recommendation: always use expect style in Playwright+Mocha projects</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q14. How do you data-drive a Cucumber test using Scenario Outline?</div><div class="qa-a"><pre class="qa-code">Scenario Outline: Login with multiple roles
+  Given I am on the login page
+  When I login as "&lt;email&gt;" with "&lt;password&gt;"
+  Then I land on "&lt;expectedUrl&gt;"
+  Examples:
+    | email           | password  | expectedUrl   |
+    | admin@test.com  | Admin@123 | /admin        |
+    | user@test.com   | User@123  | /dashboard    |
+    | agent@test.com  | Agent@123 | /agent-portal |
+// Cucumber runs scenario 3x — once per Examples row</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q15. How do you share page state between step definitions safely?</div><div class="qa-a"><pre class="qa-code">// world.js
+const { setWorldConstructor } = require('@cucumber/cucumber');
+const { chromium } = require('@playwright/test');
+class CustomWorld {
+  async init() {
+    this.browser = await chromium.launch();
+    this.context = await this.browser.newContext({ storageState: 'auth.json' });
+    this.page    = await this.context.newPage();
+  }
+  async destroy() { await this.browser.close(); }
+}
+setWorldConstructor(CustomWorld);
+// hooks.js
+const { Before, After } = require('@cucumber/cucumber');
+Before(async function() { await this.init(); });
+After(async function()  { await this.destroy(); });
+// Step defs: access page via this.page - no global state needed</pre></div></div>
+            </div>
+          </div>
+
+          <!-- API + MICROSERVICES -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🔌 API &amp; Microservices — Postman · REST Assured <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q16. What is your strategy for testing microservices vs monolith APIs?</div><div class="qa-a">Microservices: (1) Contract testing per service (Pact/OpenAPI). (2) Stub unavailable services. (3) API gateway integration tests. (4) Chaos testing — latency, 503 responses. Monolith: one contract, comprehensive CRUD + business rules. Test pyramid: 60% API, 30% integration, 10% E2E UI.</div></div>
+              <div class="qa-card"><div class="qa-q">Q17. How do you test APIs in Playwright without opening a browser?</div><div class="qa-a"><pre class="qa-code">test('POST /api/policies returns 201', async ({ request }) => {
+  const response = await request.post('/api/policies', {
+    headers: { 'Authorization': `Bearer ${process.env.TOKEN}` },
+    data: { name: 'AutoPolicy', type: 'Home' }
+  });
+  expect(response.status()).toBe(201);
+  const body = await response.json();
+  expect(body).toHaveProperty('policyId');
+});
+// Hybrid: seed via API then verify on UI
+test('seeded policy appears in UI', async ({ page, request }) => {
+  const resp = await request.post('/api/policies', { data: { name: 'UITest' } });
+  const { policyId } = await resp.json();
+  await page.goto('/policies/' + policyId);
+  await expect(page.locator('h1')).toHaveText('UITest');
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q18. Show a full CRUD REST Assured chain test.</div><div class="qa-a"><pre class="qa-code">// CREATE
+String id = given().contentType(ContentType.JSON)
+  .header("Authorization","Bearer "+token)
+  .body("{\"name\":\"TestPolicy\",\"type\":\"Auto\"}")
+.when().post("/api/policies")
+.then().statusCode(201).extract().path("policyId");
+// READ
+given().pathParam("id",id).get("/api/policies/{id}")
+  .then().statusCode(200).body("name",equalTo("TestPolicy"));
+// UPDATE
+given().contentType(ContentType.JSON).pathParam("id",id)
+  .body("{\"name\":\"UpdatedPolicy\"}")
+.when().put("/api/policies/{id}")
+.then().statusCode(200).body("name",equalTo("UpdatedPolicy"));
+// DELETE
+given().pathParam("id",id).delete("/api/policies/{id}")
+  .then().statusCode(204);</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q19. How do you structure a Postman Collection for microservice regression?</div><div class="qa-a">One collection per microservice. Environments for Dev/QA/Staging URLs. Collection Variables for shared IDs. Pre-request scripts fetch auth tokens. Tests tab (Chai-style) asserts status, schema, body values. CI: <code>newman run PolicyService.json -e qa.json --reporters junit</code>. Each service collection runs independently or chained.</div></div>
+              <div class="qa-section-label green">🎯 API Scenario Questions</div>
+              <div class="qa-card scenario-card"><div class="qa-q">🎯 Scenario Q20. Test 422 error when mandatory vehicleVIN is missing — Postman + REST Assured.</div><div class="qa-a"><pre class="qa-code">// Postman Tests tab
+pm.test("422 when VIN missing", () => {
+  pm.response.to.have.status(422);
+  const json = pm.response.json();
+  pm.expect(json.errors[0].field).to.equal('vehicleVIN');
+  pm.expect(json.errors[0].message).to.include('required');
+});
+// REST Assured
+given().contentType(ContentType.JSON).body("{\"policyType\":\"Auto\"}")
+.when().post("/api/policies")
+.then().statusCode(422)
+  .body("errors[0].field", equalTo("vehicleVIN"))
+  .body("errors[0].message", containsString("required"));</pre></div></div>
+              <div class="qa-card scenario-card"><div class="qa-q">🎯 Scenario Q21. Test an async job API that requires polling for completion.</div><div class="qa-a"><pre class="qa-code">test('async PDF generation completes', async ({ request }) => {
+  const start = await request.post('/api/documents/generate',
+    { data: { policyId: 'POL-001', type: 'PDF' } });
+  expect(start.status()).toBe(202);
+  const { jobId } = await start.json();
+
+  let status = 'PENDING', attempts = 0;
+  while (status !== 'COMPLETE' && attempts < 15) {
+    await new Promise(r => setTimeout(r, 2000));
+    const poll = await request.get(`/api/jobs/${jobId}`);
+    status = (await poll.json()).status;
+    attempts++;
+  }
+  expect(status).toBe('COMPLETE');
+  const doc = await request.get(`/api/documents/${jobId}`);
+  expect(doc.headers()['content-type']).toContain('application/pdf');
+});</pre></div></div>
+            </div>
+          </div>
+
+          <!-- HYBRID FRAMEWORK -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🏗️ Hybrid Automation Framework Design <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q22. What is a Hybrid Automation Framework and how do you design one?</div><div class="qa-a">Combines Data-Driven, Keyword-Driven, and Modular patterns. Layers: (1) Page Objects — UI abstraction. (2) API Utilities — request helpers. (3) Data Providers — JSON/CSV readers. (4) Config Manager — env settings. (5) Reporting — Allure/HTML. (6) CI — GitLab/Jenkins. Satisfies both new automation and legacy migration needs from the same framework.</div></div>
+              <div class="qa-card"><div class="qa-q">Q23. How do you define an automation strategy for a new project?</div><div class="qa-a">(1) Scope — automate regression, smoke, API; skip exploratory/visual. (2) Tool selection — match team skills. (3) Pyramid — 60% API, 30% integration, 10% E2E. (4) Prioritise — high-frequency, high-risk flows first. (5) Metrics — coverage %, pass rate, maintenance cost. (6) ROI — time saved vs build cost. Document as an Automation Strategy doc signed off by PM and dev lead.</div></div>
+              <div class="qa-card"><div class="qa-q">Q24. How do you identify automatable scenarios and prioritise them?</div><div class="qa-a">Automate when: executed frequently, stable contract, data-driven, time-consuming manually, high business risk. Do NOT automate: one-time tests, exploratory, UX judgment calls, features under active development. Priority order: smoke → API layer → critical-path regression → extended regression.</div></div>
+              <div class="qa-card"><div class="qa-q">Q25. How do you manage test data across environments?</div><div class="qa-a"><pre class="qa-code">// utils/DataManager.js
+class DataManager {
+  static getUser(type) {
+    return require('../data/testData.json')[type];
+  }
+  static async createPolicy(request, overrides = {}) {
+    const payload = { type: 'Auto', name: 'Test-' + Date.now(), ...overrides };
+    const resp = await request.post('/api/policies', { data: payload });
+    return resp.json();
+  }
+  static async cleanup(request, policyId) {
+    await request.delete(`/api/policies/${policyId}`);
+  }
+}
+module.exports = { DataManager };</pre></div></div>
+            </div>
+          </div>
+
+          <!-- CI/CD -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              ⚙️ CI/CD — Maven · GitLab · Jenkins <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q26. How do you set up a GitLab CI pipeline for Playwright on every MR?</div><div class="qa-a"><pre class="qa-code"># .gitlab-ci.yml
+stages: [test]
+playwright:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.45.0-jammy
+  script:
+    - npm ci
+    - npx playwright test --reporter=junit,html
+  artifacts:
+    when: always
+    reports: { junit: test-results/results.xml }
+    paths: [playwright-report/]
+    expire_in: 7 days
+  only: [merge_requests, main]
+  variables: { BASE_URL: $QA_BASE_URL, TEST_USER: $QA_USER }</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q27. How do you structure a Jenkins pipeline for smoke + API + regression?</div><div class="qa-a"><pre class="qa-code">pipeline {
+  agent any
+  stages {
+    stage('Install') {
+      steps { sh 'npm ci && npx playwright install --with-deps' }
+    }
+    stage('Smoke') {
+      steps { sh 'npx playwright test --grep "@smoke" --reporter=junit' }
+      post { always { junit 'test-results/smoke-*.xml' } }
+    }
+    stage('API Tests') {
+      steps { sh 'newman run API-Suite.json -e qa.json --reporters junit' }
+      post { always { junit 'newman/results.xml' } }
+    }
+    stage('Regression') {
+      when { branch 'main' }
+      steps { sh 'npx playwright test --grep "@regression" --reporter=junit,html' }
+      post { always {
+        publishHTML([reportDir:'playwright-report',reportFiles:'index.html'])
+      }}
+    }
+  }
+  post { failure { slackSend(message:"Tests FAILED: ${env.BUILD_URL}") } }
+}</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q28. How does Maven fit into a hybrid JS + Java test project?</div><div class="qa-a">Java (REST Assured): Maven pom.xml manages deps, `mvn test` runs via Surefire. Playwright JS: uses npm + `npx playwright test`. In hybrid projects: use Maven's exec-plugin to invoke `npm test` as a Maven phase, or run as separate Jenkins stages. Both output JUnit XML which Jenkins and GitLab parse uniformly. Keep Java API and JS UI tests in separate Maven submodules.</div></div>
+              <div class="qa-card"><div class="qa-q">Q29. How do you implement shift-left testing in CI/CD?</div><div class="qa-a">(1) QE authors Cucumber feature files on Day 1 from ACs. (2) API tests run in CI from Day 1 (mocked until backend ready). (3) UI tests added when dev delivers a testable build. (4) Smoke gates every PR merge. (5) Full regression nightly. (6) Coverage % tracked as a sprint metric. Finds defects in the sprint they are introduced — not in a UAT phase weeks later.</div></div>
+            </div>
+          </div>
+
+          <!-- DATABASE TESTING -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🗄️ Database Testing — Complex Queries &amp; Integrity <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q30. How do you validate DB state after an API call in Playwright?</div><div class="qa-a"><pre class="qa-code">const { Client } = require('pg');
+test('policy creation persists in DB', async ({ request }) => {
+  const resp = await request.post('/api/policies',
+    { data: { name: 'DBTest', type: 'Auto', vehicleVIN: 'VIN12345' } });
+  const { policyId } = await resp.json();
+  const db = new Client({ connectionString: process.env.DB_URL });
+  await db.connect();
+  const result = await db.query(
+    'SELECT * FROM policies WHERE policy_id = $1', [policyId]);
+  await db.end();
+  expect(result.rows.length).toBe(1);
+  expect(result.rows[0].vehicle_vin).toBe('VIN12345');
+  expect(result.rows[0].status).toBe('DRAFT');
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q31. Complex SQL: policies renewed in 30 days with &gt;10% premium increase.</div><div class="qa-a"><pre class="qa-code">SELECT r.policy_id, r.renewal_date,
+       orig.premium AS original_premium, r.premium AS renewed_premium,
+       ROUND(((r.premium-orig.premium)/orig.premium)*100,2) AS pct_increase
+FROM policies r
+JOIN policies orig ON r.policy_number=orig.policy_number
+  AND orig.version = r.version - 1
+WHERE r.policy_type='RENEWAL'
+  AND r.renewal_date >= CURRENT_DATE - INTERVAL '30 days'
+  AND ((r.premium-orig.premium)/orig.premium) > 0.10
+ORDER BY pct_increase DESC;</pre></div></div>
+              <div class="qa-card"><div class="qa-q">Q32. How do you test stored procedures and referential integrity?</div><div class="qa-a"><pre class="qa-code">-- 1. Setup
+INSERT INTO claims(claim_id,status,amount) VALUES ('CLM-T','SUBMITTED',5000);
+-- 2. Execute
+EXEC sp_process_claim 'CLM-T';
+-- 3. Assert outcome
+SELECT c.status, c.processed_at, p.reserve_amount
+FROM claims c JOIN claim_payments p ON c.claim_id=p.claim_id
+WHERE c.claim_id='CLM-T';
+-- Expected: status=APPROVED, processed_at NOT NULL, reserve_amount=5000
+-- 4. Referential integrity check
+SELECT COUNT(*) FROM claim_payments
+WHERE claim_id NOT IN (SELECT claim_id FROM claims); -- Expected: 0</pre></div></div>
+            </div>
+          </div>
+
+          <!-- SERVICE VIRTUALIZATION -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle">
+              🔮 Service Virtualization <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">Q33. What is Service Virtualization and when do you use it?</div><div class="qa-a">Simulates a dependent service that is unavailable, expensive, or too slow. In insurance: MVR lookups, credit bureaus, or Guidewire integrations may not exist in QA. Virtualise: record real responses once, replay deterministically. Tools: WireMock, Hoverfly, Playwright <code>page.route()</code>. Benefits: no external dependency, controllable error scenarios, no API usage costs.</div></div>
+              <div class="qa-card"><div class="qa-q">Q34. Virtualise a third-party service with WireMock or Playwright routes.</div><div class="qa-a"><pre class="qa-code">// WireMock mapping JSON
+{ "request":  { "method": "POST", "urlPattern": "/mvr/lookup" },
+  "response": { "status": 200, "bodyFileName": "mvr-clean-record.json" } }
+// java -jar wiremock.jar --port 8089
+
+// Playwright route (no extra server needed)
+await page.route('**/api/credit-score', route =>
+  route.fulfill({ status: 200,
+    body: JSON.stringify({ score: 720, tier: 'PREFERRED' }) }));</pre></div></div>
+            </div>
+          </div>
+
+          <!-- TYPESCRIPT TRICKY Q&A -->
+          <div class="interview-category">
+            <button class="category-accordion-btn" data-accordion="toggle" style="background:rgba(154,104,255,0.07);">
+              🟦 TypeScript in Playwright — Tricky Questions <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-section-label" style="background:rgba(154,104,255,0.08);color:#b794f4;">⚡ Good-to-Have — Be Ready if Asked</div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q1. type vs interface — which for test data shapes?</div><div class="qa-a"><pre class="qa-code">// interface — extendable, preferred for objects
+interface PolicyData { policyId: string; type: 'Auto'|'Home'; premium: number; }
+interface AutoPolicy extends PolicyData { vehicleVIN: string; }
+// type — unions, mapped types, intersections
+type Status = 'DRAFT' | 'ACTIVE' | 'CANCELLED';
+type ReadOnly = Readonly&lt;PolicyData&gt;;
+// Rule: interface for test data objects; type for unions/utility types</pre></div></div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q2 (Tricky). Why does this compile fine but fail at runtime?</div><div class="qa-a"><pre class="qa-code">const rows = page.locator('table tr');
+const count = rows.count;          // count is the METHOD reference, not called!
+expect(count).toBe(5);             // always truthy — function is not 5
+
+// Fix:
+const count = await rows.count();  // call the method
+
+// Better — Playwright built-in assertion auto-retries:
+await expect(rows).toHaveCount(5);</pre></div></div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q3. What is ! non-null assertion and when is it dangerous?</div><div class="qa-a"><pre class="qa-code">const text = await page.locator('.price').textContent(); // string | null
+const price = parseFloat(text!); // ! skips null check — runtime crash if null
+
+// Safe: assert first
+expect(text).not.toBeNull();
+const price = parseFloat(text as string);
+
+// Most dangerous — never do this:
+const el = await page.$('.price'); // ElementHandle | null
+await el!.click(); // crash if not found + no auto-wait
+
+// Always prefer locator:
+await page.locator('.price').click(); // auto-waits, descriptive error</pre></div></div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q4. How do you type a custom Playwright fixture?</div><div class="qa-a"><pre class="qa-code">import { test as base } from '@playwright/test';
+import { LoginPage } from './pages/LoginPage';
+import { PolicyPage } from './pages/PolicyPage';
+
+type AppFixtures = { loginPage: LoginPage; policyPage: PolicyPage; };
+
+export const test = base.extend&lt;AppFixtures&gt;({
+  loginPage:  async ({ page }, use) => { await use(new LoginPage(page)); },
+  policyPage: async ({ page }, use) => {
+    await page.goto('/policies');
+    await use(new PolicyPage(page));
+  },
+});
+export { expect } from '@playwright/test';</pre></div></div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q5. as type assertion vs type guard — which is safer for API responses?</div><div class="qa-a"><pre class="qa-code">// as — no runtime check — dangerous for external API data
+const resp = await request.get('/api/policy') as { policyId: string };
+// If API returns { error: string }, resp.policyId is undefined silently
+
+// Type guard — runtime check — safe
+function isPolicyResponse(obj: unknown): obj is { policyId: string } {
+  return typeof obj === 'object' && obj !== null && 'policyId' in obj;
+}
+const body = await (await request.get('/api/policy')).json();
+if (isPolicyResponse(body)) {
+  expect(body.policyId).toBeTruthy(); // TypeScript knows the shape
+} else {
+  throw new Error('Unexpected shape: ' + JSON.stringify(body));
+}
+// Rule: type guards for external API; as only for data you constructed</pre></div></div>
+              <div class="qa-card" style="border-color:rgba(154,104,255,0.3);"><div class="qa-q" style="background:rgba(154,104,255,0.08);color:#b794f4;">TS Q6. How do generics make a reusable API helper fully type-safe?</div><div class="qa-a"><pre class="qa-code">// Without generics — loses type info
+async function getJson(req: APIRequestContext, url: string): Promise&lt;any&gt; {
+  return (await req.get(url)).json(); // returns any — no autocomplete
+}
+// With generics — caller specifies shape
+async function getTypedJson&lt;T&gt;(req: APIRequestContext, url: string): Promise&lt;T&gt; {
+  const resp = await req.get(url);
+  expect(resp.status()).toBe(200);
+  return resp.json() as T;
+}
+interface Policy { policyId: string; premium: number; status: string; }
+const p = await getTypedJson&lt;Policy&gt;(request, '/api/policies/POL-001');
+// p.policyId — autocomplete works
+// p.foo      — TypeScript error at compile time
+
+// Paginated generic
+interface Paginated&lt;T&gt; { data: T[]; total: number; }
+const list = await getTypedJson&lt;Paginated&lt;Policy&gt;&gt;(request, '/api/policies');
+list.data.forEach(p =&gt; expect(p.premium).toBeGreaterThan(0));</pre></div></div>
+            </div>
+          </div>
+
+          <!-- CODING Q&A -->
+          <div class="interview-category">
+            <button class="category-accordion-btn coding-btn" data-accordion="toggle">
+              💻 Coding Questions &amp; Answers — LTIM Stack <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="category-accordion-body open">
+              <div class="qa-card"><div class="qa-q">C1. Playwright + Mocha + Chai full login test suite.</div><div class="qa-a"><pre class="qa-code">const { chromium } = require('@playwright/test');
+const { expect }   = require('chai');
+describe('Login Module', () => {
+  let browser, page;
+  before(async ()  => { browser = await chromium.launch({ headless: true }); });
+  beforeEach(async () => {
+    const ctx = await browser.newContext();
+    page = await ctx.newPage();
+    await page.goto(process.env.BASE_URL + '/login');
+  });
+  afterEach(async () => { await page.close(); });
+  after(async ()   => { await browser.close(); });
+  it('valid credentials redirect to dashboard', async () => {
+    await page.getByLabel('Email').fill('user@test.com');
+    await page.getByLabel('Password').fill('Pass@123');
+    await page.getByRole('button', { name: 'Login' }).click();
+    await page.waitForURL('**/dashboard');
+    expect(page.url()).to.include('dashboard');
+  });
+  it('wrong password shows error', async () => {
+    await page.getByLabel('Email').fill('user@test.com');
+    await page.getByLabel('Password').fill('WRONG');
+    await page.getByRole('button', { name: 'Login' }).click();
+    const err = await page.locator('.error-banner').textContent();
+    expect(err).to.include('Invalid credentials');
+  });
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">C2. Cucumber BDD feature + step def for API policy creation test.</div><div class="qa-a"><pre class="qa-code">// features/createPolicy.feature
+Feature: Policy Creation API
+  Scenario: Valid auto policy creation returns 201
+    Given I have a valid auth token
+    When I POST "/api/policies" with policyType "Auto" vehicleVIN "VIN123"
+    Then the response status should be 201
+    And the response should contain "policyId"
+
+// step-definitions/apiSteps.js
+const { Given, When, Then } = require('@cucumber/cucumber');
+const { expect } = require('chai');
+Given('I have a valid auth token', async function() {
+  this.token = await getAuthToken();
+});
+When('I POST {string} with policyType {string} vehicleVIN {string}',
+  async function(url, type, vin) {
+    this.response = await this.request.post(url, {
+      headers: { Authorization: `Bearer ${this.token}` },
+      data: { policyType: type, vehicleVIN: vin }
+    });
+  });
+Then('the response status should be {int}', async function(code) {
+  expect(this.response.status()).to.equal(code);
+});
+Then('the response should contain {string}', async function(field) {
+  const json = await this.response.json();
+  expect(json).to.have.property(field);
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">C3. TypeScript generic API helper + POM fixture in one test.</div><div class="qa-a"><pre class="qa-code">// utils/api.ts
+import { APIRequestContext } from '@playwright/test';
+export async function postTyped&lt;Req, Res&gt;(
+  req: APIRequestContext, url: string, body: Req, token: string
+): Promise&lt;Res&gt; {
+  const resp = await req.post(url, {
+    headers: { Authorization: `Bearer ${token}` }, data: body as any
+  });
+  return resp.json() as Res;
+}
+// tests/policy.spec.ts
+import { test, expect } from '../fixtures';
+import { postTyped } from '../utils/api';
+interface PolicyReq { policyType: string; vehicleVIN: string; }
+interface PolicyRes { policyId: string; status: string; }
+test('seeded policy appears in UI', async ({ request, policyPage }) => {
+  const result = await postTyped&lt;PolicyReq, PolicyRes&gt;(
+    request, '/api/policies',
+    { policyType: 'Auto', vehicleVIN: 'VIN-TS-001' }, process.env.TOKEN!);
+  expect(result.policyId).toBeTruthy();
+  await policyPage.searchById(result.policyId);
+  await expect(policyPage.firstResultRow).toContainText(result.policyId);
+});</pre></div></div>
+              <div class="qa-card"><div class="qa-q">C4. Postman Tests tab (Chai-style) for a paginated API response.</div><div class="qa-a"><pre class="qa-code">const resp = pm.response.json();
+pm.test("Status 200", () => pm.response.to.have.status(200));
+pm.test("Has pagination meta", () => {
+  pm.expect(resp).to.have.property('data').that.is.an('array');
+  pm.expect(resp.pagination).to.have.all.keys('page','pageSize','total','hasNextPage');
+});
+pm.test("Page size respected", () => {
+  const size = parseInt(pm.variables.get('pageSize') || 10);
+  pm.expect(resp.data.length).to.be.at.most(size);
+});
+pm.test("Each policy has required fields", () => {
+  resp.data.forEach(p => {
+    pm.expect(p).to.include.all.keys('policyId','status','premium');
+    pm.expect(p.premium).to.be.a('number').and.above(0);
+  });
+});
+if (resp.pagination.hasNextPage)
+  pm.environment.set('nextPage', resp.pagination.page + 1);</pre></div></div>
+              <div class="qa-card"><div class="qa-q">C5. GitLab CI YAML for Cucumber BDD + Playwright with artifact publishing.</div><div class="qa-a"><pre class="qa-code"># .gitlab-ci.yml
+stages: [install, test]
+variables: { BASE_URL: $QA_BASE_URL }
+install-deps:
+  stage: install
+  image: node:20-alpine
+  script: [npm ci]
+  cache: { key: $CI_COMMIT_REF_SLUG, paths: [node_modules/] }
+cucumber-bdd:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.45.0-jammy
+  needs: [install-deps]
+  cache: { key: $CI_COMMIT_REF_SLUG, paths: [node_modules/], policy: pull }
+  script:
+    - npm run test:cucumber
+  artifacts:
+    when: always
+    reports: { junit: reports/cucumber.xml }
+    paths: [reports/, playwright-report/]
+    expire_in: 14 days
+  only: [merge_requests, main]</pre></div></div>
+            </div>
+          </div>
+        </div><!-- end ltm -->
+
+      </section>
+      <!-- END TAB 7: INTERVIEW PREP -->
+
+
+      <!-- TAB 8: QUIZ ARENA -->
+      <section id="tab-quiz" class="page-tab-content">
+        <div id="quiz-root"></div>
+      </section>
+
+      <!-- TAB 9: LEARNING LAB -->
+      <section id="tab-learn" class="page-tab-content">
+        <div id="learn-root"></div>
+      </section>
+
     </main>
   </div>
 
+  <script src="whatis.js"></script>
   <script src="app.js"></script>
   <script src="sw-register.js"></script>
+  <script src="questions.js"></script>
+  <script src="quiz.js"></script>
+  <script src="learn.js"></script>
 </body>
 </html>
