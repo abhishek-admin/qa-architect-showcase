@@ -15,6 +15,7 @@ Playwright · CI/CD · Framework Design · AI/LLM Testing · Jenkins · Producti
 - **Section 5 — Production Issues & Debugging**
 - **Section 6 — AI & LLM Testing**
 - **Section 7 — Use of AI Tools in Testing**
+- **Section 8 — Playwright Real-World Workflow Examples**
 
 ---
 
@@ -654,3 +655,337 @@ Tools like **Applitools Eyes** use AI to:
 - Baseline management — automatically approve non-functional changes
 
 Compare to simple screenshot diff (like Playwright's `expect(page).toHaveScreenshot()`): good for stable UIs, too noisy for dynamic content.
+
+---
+
+## Section 8 — Playwright Real-World Workflow Examples
+
+> These are the "I've never done this before" patterns that come up in interviews and real projects. Each one has a working code snippet you can adapt directly.
+
+---
+
+**Q43. How do you upload a file (PDF, image, etc.) using Playwright?**
+
+> **ELI20:** Playwright can set a file directly on the `<input type="file">` element — no OS file dialog needed. It injects the file path programmatically.
+
+```java
+// Single file upload
+page.locator("input[type='file']").setInputFiles(Paths.get("src/test/resources/sample.pdf"));
+
+// Multiple files at once
+page.locator("input[type='file']").setInputFiles(new Path[]{
+    Paths.get("src/test/resources/file1.pdf"),
+    Paths.get("src/test/resources/file2.pdf")
+});
+
+// Clear a previously selected file
+page.locator("input[type='file']").setInputFiles(new Path[0]);
+
+// If the button opens a file dialog (not a direct input):
+// Listen for the file chooser BEFORE clicking the button
+FileChooser fileChooser = page.waitForFileChooser(() ->
+    page.locator("button#upload-btn").click()
+);
+fileChooser.setFiles(Paths.get("src/test/resources/resume.pdf"));
+```
+
+**When to use `waitForFileChooser`:** The upload button's `click()` triggers a native OS dialog instead of a visible `<input type="file">`. Wrapping the click in `waitForFileChooser` intercepts that dialog before it opens.
+
+---
+
+**Q44. How do you perform drag and drop in Playwright?**
+
+> **ELI20:** Two approaches — the simple Playwright API for standard HTML drag-and-drop, and a manual mouse simulation for custom JavaScript drag handlers (React DnD, Sortable.js) that don't listen to native drag events.
+
+```java
+// APPROACH 1 — Standard HTML5 drag-and-drop (works for native draggable elements)
+Locator source = page.locator("#drag-item");
+Locator target = page.locator("#drop-zone");
+source.dragTo(target);
+
+// APPROACH 2 — Manual mouse simulation (for custom JS drag libs like React DnD)
+BoundingBox from = page.locator("#drag-item").boundingBox();
+BoundingBox to   = page.locator("#drop-zone").boundingBox();
+
+page.mouse().move(from.x + from.width / 2, from.y + from.height / 2);
+page.mouse().down();
+// Move in small steps — JS drag listeners need intermediate mousemove events
+page.mouse().move(to.x + to.width / 2, to.y + to.height / 2, new Mouse.MoveOptions().setSteps(10));
+page.mouse().up();
+
+// Verify drop succeeded
+assertThat(page.locator("#drop-zone")).containsText("drag-item");
+```
+
+**Interview tip:** Always ask "is it HTML5 native drag or a JS library?" — `dragTo()` fails silently on custom libs. The manual mouse approach works for both.
+
+---
+
+**Q45. How do you handle a file download in Playwright?**
+
+> **ELI20:** Playwright intercepts the download event before the browser saves it, gives you a handle to the file, and lets you move it wherever you want. You never have to deal with the browser's "Save As" dialog.
+
+```java
+// Wrap the action that triggers the download
+Download download = page.waitForDownload(() ->
+    page.locator("button#export-csv").click()
+);
+
+// Wait for download to complete and get path
+Path downloadedFile = download.path();
+System.out.println("Downloaded to: " + downloadedFile);
+
+// Move to a known location for assertions
+Path savedFile = Paths.get("target/downloads/" + download.suggestedFilename());
+download.saveAs(savedFile);
+
+// Assert file contents (e.g., CSV has the right data)
+String content = Files.readString(savedFile);
+assertThat(content).contains("user@example.com");
+assertThat(content).contains("2026-06-01");
+```
+
+---
+
+**Q46. How do you hover over an element (tooltip testing)?**
+
+> **ELI20:** Playwright's `hover()` moves the mouse to the element's centre. The browser fires `mouseover` and `mouseenter` events — exactly what a real user moving the mouse would do.
+
+```java
+// Hover to reveal a tooltip
+page.locator("button#info-icon").hover();
+
+// Wait for tooltip to appear, then assert its text
+Locator tooltip = page.locator(".tooltip");
+assertThat(tooltip).isVisible();
+assertThat(tooltip).hasText("Click to view full report");
+
+// Hover with a specific offset from top-left corner
+page.locator("#map-element").hover(
+    new Locator.HoverOptions().setPosition(new Position().setX(100).setY(50))
+);
+```
+
+---
+
+**Q47. How do you handle keyboard shortcuts and special key presses?**
+
+> **ELI20:** `press()` sends a key event. `keyboard.down()` + `keyboard.up()` simulates holding a key (useful for Ctrl+Click multi-select). `type()` simulates a human typing character by character.
+
+```java
+// Press a single key
+page.locator("input#search").press("Enter");
+
+// Keyboard shortcut (Ctrl+A to select all, then delete)
+page.locator("textarea#notes").press("Control+A");
+page.locator("textarea#notes").press("Backspace");
+
+// Tab through form fields
+page.locator("input#username").fill("admin");
+page.locator("input#username").press("Tab");  // moves focus to next field
+page.locator("input#password").fill("pass123");
+
+// Hold Ctrl and click multiple items (multi-select)
+page.locator("li#item-1").click();
+page.keyboard().down("Control");
+page.locator("li#item-2").click();
+page.locator("li#item-3").click();
+page.keyboard().up("Control");
+
+// Escape to close a modal
+page.keyboard().press("Escape");
+```
+
+---
+
+**Q48. How do you handle dropdowns — `<select>` and custom dropdowns?**
+
+```java
+// NATIVE <select> element — use selectOption()
+page.locator("select#country").selectOption("India");               // by value
+page.locator("select#country").selectOption(new SelectOption().setLabel("United States")); // by label
+page.locator("select#country").selectOption(new SelectOption().setIndex(2));              // by index
+
+// Multi-select native
+page.locator("select#tags").selectOption(new String[]{"qa", "automation", "playwright"});
+
+// CUSTOM dropdown (built with divs, not <select>)
+page.locator("div.dropdown-trigger").click();             // open the dropdown
+page.locator("div.dropdown-menu li:has-text('India')").click();  // pick option
+assertThat(page.locator("div.dropdown-trigger")).hasText("India"); // verify selection
+```
+
+---
+
+**Q49. How do you interact with a date picker?**
+
+> **ELI20:** Date pickers are the most annoying UI element in testing. If it has a plain `<input type="date">`, just fill it with the ISO format string. If it's a custom calendar widget, click through the UI or inject the value via JavaScript.
+
+```java
+// Simple input[type=date] — just fill it
+page.locator("input[type='date']#start-date").fill("2026-06-15");
+
+// Custom calendar widget — click through it
+page.locator("div.date-picker-trigger").click();                     // open calendar
+page.locator("button.next-month").click();                           // navigate to next month
+page.locator("td[data-date='2026-07-15']").click();                  // pick the date
+assertThat(page.locator("input#start-date")).hasValue("2026-07-15"); // verify
+
+// Force-set value via JavaScript when the element is hidden or read-only
+page.evaluate("document.getElementById('start-date').value = '2026-06-15'");
+page.locator("input#start-date").dispatchEvent("change");  // trigger change event so the app reacts
+```
+
+---
+
+**Q50. How do you handle alerts, confirm dialogs, and prompts?**
+
+> **ELI20:** JavaScript dialogs (`alert`, `confirm`, `prompt`) block the page. Playwright lets you register a handler BEFORE the action that triggers the dialog — otherwise the dialog hangs the test.
+
+```java
+// Alert — just dismiss it
+page.onDialog(dialog -> {
+    System.out.println("Alert text: " + dialog.message());
+    dialog.dismiss();
+});
+page.locator("button#trigger-alert").click();
+
+// Confirm dialog — accept (OK)
+page.onDialog(Dialog::accept);
+page.locator("button#delete-item").click();
+
+// Confirm dialog — dismiss (Cancel)
+page.onDialog(Dialog::dismiss);
+page.locator("button#delete-item").click();
+
+// Prompt dialog — type a value and accept
+page.onDialog(dialog -> dialog.accept("my-input-value"));
+page.locator("button#rename-item").click();
+```
+
+---
+
+**Q51. How do you test a multi-step form / wizard?**
+
+```java
+// Step 1: Personal Info
+page.locator("input#first-name").fill("John");
+page.locator("input#last-name").fill("Doe");
+page.locator("button#next-step").click();
+assertThat(page.locator("h2.step-title")).hasText("Step 2: Address");
+
+// Step 2: Address
+page.locator("input#street").fill("123 Main St");
+page.locator("select#country").selectOption("US");
+page.locator("button#next-step").click();
+assertThat(page.locator("h2.step-title")).hasText("Step 3: Review");
+
+// Step 3: Review and submit
+assertThat(page.locator("span#review-name")).hasText("John Doe");
+assertThat(page.locator("span#review-address")).hasText("123 Main St");
+page.locator("button#submit-form").click();
+
+// Assert success
+assertThat(page.locator("div.success-message")).isVisible();
+assertThat(page.locator("div.success-message")).containsText("Form submitted");
+```
+
+---
+
+**Q52. How do you handle authentication — login once and reuse session across tests?**
+
+> **ELI20:** Logging in via the UI on every test is slow and adds brittleness. Instead, log in ONCE, save the cookies/storage to a file, and load that state in every subsequent test. Playwright calls this "storage state."
+
+```java
+// In a @BeforeAll or setup method — run ONCE
+static void globalSetup() throws Exception {
+    Playwright pw = Playwright.create();
+    Browser browser = pw.chromium().launch();
+    BrowserContext context = browser.newContext();
+    Page page = context.newPage();
+
+    // Log in via UI (or API — even faster)
+    page.navigate("https://app.example.com/login");
+    page.locator("input#email").fill("test@example.com");
+    page.locator("input#password").fill("Password123");
+    page.locator("button[type='submit']").click();
+    assertThat(page.locator("h1.dashboard-title")).isVisible();
+
+    // Save auth state to file
+    context.storageState(new BrowserContext.StorageStateOptions()
+        .setPath(Paths.get("src/test/resources/auth-state.json")));
+    browser.close();
+}
+
+// In each test — load the saved state (no login needed)
+BrowserContext context = browser.newContext(new Browser.NewContextOptions()
+    .setStorageStatePath(Paths.get("src/test/resources/auth-state.json")));
+Page page = context.newPage();
+page.navigate("https://app.example.com/dashboard");
+// Already logged in — no login page shown ✓
+```
+
+---
+
+**Q53. How do you scroll to an element and scroll within a specific container?**
+
+```java
+// Scroll element into view (Playwright does this automatically before interactions,
+// but sometimes you need it explicitly for visibility assertions)
+page.locator("footer#page-footer").scrollIntoViewIfNeeded();
+assertThat(page.locator("footer#page-footer")).isVisible();
+
+// Scroll to bottom of page
+page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
+
+// Scroll within a specific scrollable container (not the whole page)
+page.locator("div.results-list").evaluate("el => el.scrollTop = el.scrollHeight");
+
+// Scroll by a fixed amount
+page.mouse().wheel(0, 500);  // scroll down 500px
+
+// Scroll to an element inside a container using keyboard
+page.locator("div.results-list").focus();
+page.keyboard().press("End");  // jump to bottom of focused scrollable container
+```
+
+---
+
+**Q54. How do you test clipboard copy — when a button copies text to clipboard?**
+
+```java
+// Grant clipboard permissions first
+BrowserContext context = browser.newContext(new Browser.NewContextOptions()
+    .setPermissions(List.of("clipboard-read", "clipboard-write")));
+Page page = context.newPage();
+
+page.navigate("https://app.example.com");
+page.locator("button#copy-api-key").click();
+
+// Read clipboard contents via JS evaluation
+String clipboardText = (String) page.evaluate("navigator.clipboard.readText()");
+assertThat(clipboardText).startsWith("sk-");  // API key format check
+```
+
+---
+
+**Q55. Pattern cheat-sheet — which Playwright API for which scenario**
+
+| Scenario | Playwright API |
+|---|---|
+| Upload file via `<input type="file">` | `locator.setInputFiles(path)` |
+| Upload file via button → OS dialog | `page.waitForFileChooser(() -> btn.click())` |
+| Download a file | `page.waitForDownload(() -> btn.click())` |
+| Drag & drop (HTML5 native) | `source.dragTo(target)` |
+| Drag & drop (React DnD / custom JS) | `mouse.move → mouse.down → mouse.move(steps) → mouse.up` |
+| Hover / tooltip | `locator.hover()` |
+| Keyboard shortcut | `locator.press("Control+A")` |
+| Hold key + click | `keyboard.down("Control") → click → keyboard.up("Control")` |
+| Native `<select>` | `locator.selectOption("value")` |
+| Custom dropdown | `click trigger → click option` |
+| Date input (ISO string) | `locator.fill("2026-06-15")` |
+| Alert / confirm / prompt | `page.onDialog(dialog -> dialog.accept())` before trigger |
+| Reuse login session | `context.storageState(path)` save once, load per test |
+| Scroll element into view | `locator.scrollIntoViewIfNeeded()` |
+| Scroll page to bottom | `page.evaluate("window.scrollTo(0, document.body.scrollHeight)")` |
+| Copy to clipboard check | grant `clipboard-read` permission → `page.evaluate("navigator.clipboard.readText()")` |

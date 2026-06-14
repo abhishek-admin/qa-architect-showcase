@@ -1,4 +1,4 @@
-const CACHE = 'qa-architect-v9';
+const CACHE = 'qa-architect-v11';
 
 const CORE = [
   'fullpage.html',

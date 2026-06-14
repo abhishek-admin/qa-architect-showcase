@@ -2980,3 +2980,45 @@ function generateExplanation(line, lang) {
 
   return null;
 }
+
+/* ============================================================
+   INTERVIEW PREP — Company switcher + Accordion (CSP-safe)
+   ============================================================ */
+(function initInterviewPrep() {
+  function switchCompany(company, btn) {
+    document.querySelectorAll('.interview-section').forEach(function(s) {
+      s.style.display = 'none';
+    });
+    document.querySelectorAll('.company-btn').forEach(function(b) {
+      b.classList.remove('active', 'active-ltm');
+    });
+    var section = document.getElementById('interview-' + company);
+    if (section) section.style.display = 'block';
+    btn.classList.add('active');
+    if (company === 'ltm') btn.classList.add('active-ltm');
+  }
+
+  function toggleAccordion(btn) {
+    var body = btn.nextElementSibling;
+    if (!body) return;
+    var arrow = btn.querySelector('.accordion-arrow');
+    var isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    if (arrow) arrow.classList.toggle('rotated', isOpen);
+  }
+
+  document.addEventListener('click', function(e) {
+    // Company pill switcher
+    var companyBtn = e.target.closest('[data-company]');
+    if (companyBtn) {
+      switchCompany(companyBtn.getAttribute('data-company'), companyBtn);
+      return;
+    }
+
+    // Accordion toggle
+    var accordionBtn = e.target.closest('[data-accordion="toggle"]');
+    if (accordionBtn) {
+      toggleAccordion(accordionBtn);
+    }
+  });
+})();

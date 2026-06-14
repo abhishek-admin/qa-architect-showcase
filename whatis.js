@@ -1,577 +1,952 @@
-/* ═══════════════════════════════════════════════════════════
-   WHAT IS — Interview Q&A Bank   (whatis.js)
-═══════════════════════════════════════════════════════════ */
+/* whatis.js — Interview Q&A Bank (100+ per chapter) */
 const WI_CHAPTERS = [
-  {
-    id: 'bdd',
-    title: '🥒 BDD & Cucumber',
-    sections: [
-      {
-        title: '📖 Core BDD Concepts',
-        qs: [
-          { q: 'What is BDD (Behavior-Driven Development)?', a: '<span class="wi-ans-key">BDD is a development methodology where tests are written in plain English from the user\'s perspective</span> using a Given/When/Then syntax. It bridges the communication gap between business stakeholders, QA, and developers by making test scenarios readable by everyone on the team.<span class="wi-ans-tip">Lead with: "BDD is about collaboration, not just automation — the Gherkin scenarios are living documentation that the business can validate."</span>' },
-          { q: 'How does BDD differ from TDD?', a: '<span class="wi-ans-key">TDD focuses on testing individual code units from a developer\'s perspective; BDD focuses on user behavior from a stakeholder\'s perspective.</span> TDD uses JUnit/TestNG assertions; BDD uses Gherkin feature files. BDD generates business-readable reports; TDD generates technical pass/fail output.' },
-          { q: 'What is Gherkin and what are its key keywords?', a: '<span class="wi-ans-key">Gherkin is the plain-text DSL used to write BDD scenarios.</span> Keywords: <b>Feature</b> (describes the functionality), <b>Scenario</b> (one test case), <b>Given</b> (precondition), <b>When</b> (action), <b>Then</b> (assertion), <b>And/But</b> (chain steps), <b>Background</b> (shared setup), <b>Scenario Outline</b> (data-driven), <b>Examples</b> (data table).' },
-          { q: 'What is a Feature file?', a: '<span class="wi-ans-key">A Feature file is a plain-text .feature file that contains one Feature and one or more Scenarios written in Gherkin.</span> It lives under src/test/resources/features/ and is version-controlled as living documentation. Each file should describe one functional area (e.g., Login, Checkout).' },
-          { q: 'What is a Scenario Outline and when do you use it?', a: '<span class="wi-ans-key">Scenario Outline is a parameterized template that runs the same test steps with different data rows from an Examples table.</span> Use it for form validation, login with valid/invalid credentials, or any test that differs only in input/output data. It avoids copy-pasting scenarios.' },
-          { q: 'What is a Background block in Cucumber?', a: '<span class="wi-ans-key">Background contains Given steps shared by all scenarios in the same feature file — it runs before every scenario in that file.</span> Use it for common preconditions like navigating to a URL or logging in. Do not abuse it — if two scenarios need different setups, Background is the wrong tool.' },
-          { q: 'How do you organize feature files in a large project?', a: '<span class="wi-ans-key">Organize by functional domain — one feature file per bounded context (authentication, checkout, dashboard).</span> For multi-product systems, add a top-level subdirectory per product. Use tags (@smoke, @regression, @wip) for cross-cutting groupings that CI/CD filters on.' },
-          { q: 'What are Cucumber tags and how are they used for execution control?', a: '<span class="wi-ans-key">Tags are labels prefixed with @ placed above Scenario or Feature and used to filter which tests run.</span> In @CucumberOptions: <code>tags = "@smoke"</code>. In Maven CLI: <code>-Dcucumber.filter.tags="@regression and not @wip"</code>. CI pipelines run different tag sets on PR vs nightly.' },
-          { q: 'Can you explain the difference between Scenario and Scenario Outline?', a: '<span class="wi-ans-key">Scenario runs once with hardcoded values; Scenario Outline runs N times, once per row in the Examples table.</span> Scenario Outline generates N individual test reports. Use Scenario for unique flows, Scenario Outline for data-driven repetition.' },
-          { q: 'How do you write a good Gherkin scenario?', a: '<span class="wi-ans-key">Focus on user behavior, not UI mechanics — "When user submits login form" not "When user clicks button with id=submit".</span> Keep each scenario under 5 steps. Use present tense. Scenarios should be independent and not rely on ordering. One scenario = one behavior.' },
-        ]
-      },
-      {
-        title: '⚙️ Cucumber Lifecycle & Hooks',
-        qs: [
-          { q: 'What are Cucumber Hooks and what types exist?', a: '<span class="wi-ans-key">Hooks are lifecycle methods that run at specific points: @Before (before each scenario), @After (after each scenario), @BeforeStep, @AfterStep.</span> They support an <code>order</code> parameter for sequencing. Use @Before for browser setup and @After for screenshot capture and teardown.' },
-          { q: 'How do you attach screenshots on test failure in Cucumber?', a: '<span class="wi-ans-key">In the @After hook, check if the scenario failed via <code>scenario.isFailed()</code>, then capture a screenshot and attach it via <code>scenario.attach()</code>.</span> <div class="wi-code-block">@After\npublic void tearDown(Scenario scenario) {\n  if (scenario.isFailed()) {\n    byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);\n    scenario.attach(screenshot, "image/png", "failure-screenshot");\n  }\n  driver.quit();\n}</div>' },
-          { q: 'What is the Cucumber dry-run option?', a: '<span class="wi-ans-key">dryRun = true in @CucumberOptions validates that all Gherkin steps have matching step definitions without actually executing tests.</span> It quickly surfaces "undefined step" errors when adding new feature files. Never run in CI — use it locally as a sanity check.' },
-          { q: 'How do you share state between step definitions in Cucumber?', a: '<span class="wi-ans-key">Use Dependency Injection (PicoContainer or Guice) or ThreadLocal context objects.</span> Never use static mutable fields — they break parallel execution. With PicoContainer, create a shared context class; Cucumber injects it via constructor into every step definition class that needs it.' },
-          { q: 'Can you explain PicoContainer dependency injection in Cucumber?', a: '<span class="wi-ans-key">PicoContainer is a lightweight DI container that Cucumber uses to inject shared objects into step definition classes via constructor injection.</span> Add <code>cucumber-picocontainer</code> dependency. Create a context class (e.g., TestContext) holding shared state. Any step class whose constructor takes TestContext gets it auto-injected.' },
-          { q: 'What is the difference between @Before and @BeforeAll in Cucumber?', a: '<span class="wi-ans-key">@Before runs before each individual scenario; there is no @BeforeAll in Cucumber — use TestNG @BeforeSuite or a static initializer for suite-level setup.</span> For one-time setup (e.g., starting a test server), use a custom plugin or TestNG integration.' },
-          { q: 'How do you implement Cucumber with TestNG?', a: '<span class="wi-ans-key">Create a runner class annotated with @CucumberOptions and extend AbstractTestNGCucumberTests.</span> TestNG drives the runner; Cucumber drives scenario discovery. Parallel execution is configured in testng.xml using the dataProvider thread count.' },
-          { q: 'What are Cucumber plugins and which ones do you use?', a: '<span class="wi-ans-key">Plugins generate reports and outputs: <code>pretty</code> (console), <code>json:target/cucumber.json</code> (CI integration), <code>html:target/reports</code> (HTML report), <code>junit:target/cucumber.xml</code> (CI JUnit format).</span> Third-party: ExtentCucumberAdapter for rich HTML dashboards with screenshots embedded.' },
-          { q: 'How do you generate Extent Reports with Cucumber?', a: '<span class="wi-ans-key">Add extent-cucumber7-adapter dependency, add a plugin reference in @CucumberOptions, and create an extent.properties config file.</span> The adapter hooks into Cucumber\'s event bus and auto-generates a rich HTML report with step-level pass/fail, screenshots, and tags.' },
-          { q: 'What is a Cucumber Runner class?', a: '<span class="wi-ans-key">The Runner class is a Java class annotated with @RunWith(Cucumber.class) (JUnit) or extending AbstractTestNGCucumberTests (TestNG) plus @CucumberOptions to configure features path, glue path, tags, and plugins.</span> It is the entry point that connects Gherkin scenarios to step definitions.' },
-        ]
-      },
-      {
-        title: '🧩 Step Definitions & Expressions',
-        qs: [
-          { q: 'What is a Step Definition in Cucumber?', a: '<span class="wi-ans-key">A Step Definition is a Java method annotated with @Given, @When, @Then, @And, @But that maps to a Gherkin step via a string pattern.</span> It contains the automation code that implements the behavior described by the Gherkin step.' },
-          { q: 'What is the difference between Cucumber Expressions and Regex in step definitions?', a: '<span class="wi-ans-key">Cucumber Expressions use typed placeholders ({string}, {int}, {word}) — simpler and self-documenting. Regex uses capture groups — more powerful for complex matching.</span> Cucumber Expressions cover 95% of use cases. Prefer them unless you need lookbehind, lookahead, or non-standard matching.' },
-          { q: 'How do you handle a DataTable in step definitions?', a: '<span class="wi-ans-key">DataTable is passed as a parameter to a step method and can be converted to List&lt;List&lt;String&gt;&gt;, List&lt;Map&lt;String,String&gt;&gt;, or a custom POJO via DataTable.asMaps() or DataTable.as().</span> Use it for tabular input data like multiple users, product lists, or config combinations.' },
-          { q: 'How do you implement data-driven testing in Cucumber?', a: '<span class="wi-ans-key">Two approaches: (1) Scenario Outline with Examples table — Cucumber generates one test per row; (2) Load external JSON/CSV in step definitions and iterate programmatically.</span> Scenario Outline is preferred for small datasets visible in the feature file. External files suit large datasets or dynamically generated test data.' },
-          { q: 'Can you explain what "glue" means in CucumberOptions?', a: '<span class="wi-ans-key">Glue is the package path(s) where Cucumber looks for step definitions and hooks.</span> Setting <code>glue = {"com.company.steps", "com.company.hooks"}</code> tells Cucumber to scan those packages. Incorrect glue causes "Undefined step" errors even when step definitions exist.' },
-          { q: 'How do you avoid duplicate step definitions in large test suites?', a: '<span class="wi-ans-key">Keep step definitions at a high behavioral level, not UI mechanics level — reuse steps by making them generic (e.g., "I navigate to {page}").</span> Organize by domain, not by feature file. Use a shared CommonSteps class for steps that appear in multiple feature files.' },
-          { q: 'What happens if two step definitions match the same Gherkin step?', a: '<span class="wi-ans-key">Cucumber throws an AmbiguousStepDefinitionsException and fails the build.</span> Resolve by making patterns more specific, renaming one step, or merging the two implementations into one step definition with conditional logic.' },
-          { q: 'How do you pass a multiline string (docstring) to a step?', a: '<span class="wi-ans-key">Use triple-quoted """ syntax in Gherkin — Cucumber passes it as a String parameter to the step method.</span> Useful for passing JSON bodies, SQL queries, or multiline text to API or DB steps without escaping.' },
-        ]
-      },
-      {
-        title: '⚡ Parallel Execution & Advanced',
-        qs: [
-          { q: 'How do you run Cucumber tests in parallel with TestNG?', a: '<span class="wi-ans-key">In testng.xml, set <code>data-provider-thread-count="4"</code> in AbstractTestNGCucumberTests which uses a DataProvider per scenario.</span> Each scenario runs in its own thread. Ensure all shared resources (driver, context) are ThreadLocal-isolated to prevent data collisions.' },
-          { q: 'What is the risk of using static fields in parallel Cucumber tests?', a: '<span class="wi-ans-key">Static mutable fields are shared across all threads, causing race conditions: Thread A\'s test data overwrites Thread B\'s mid-execution.</span> The fix: use ThreadLocal&lt;T&gt; for any per-test state, or inject via PicoContainer with thread-scoped context objects.' },
-          { q: 'How do you retry flaky tests in Cucumber?', a: '<span class="wi-ans-key">Implement a Cucumber RetryAnalyzer by creating a class implementing IRetryAnalyzer (TestNG) or use the cucumber-retry plugin.</span> Configure max retries and tag scenarios with @flaky. Report retried tests separately in CI to track flakiness trends.' },
-          { q: 'How do you integrate Cucumber with Jenkins CI?', a: '<span class="wi-ans-key">Run tests via <code>mvn test -Dcucumber.filter.tags="@regression"</code> in Jenkins. Publish the JSON report using the Cucumber Jenkins plugin or parse it with allure.</span> Archive artifacts (reports/, screenshots/). Fail the pipeline on non-zero Maven exit code.' },
-          { q: 'What is the Cucumber EventBus and how can you use it?', a: '<span class="wi-ans-key">EventBus is Cucumber\'s internal event system. You can listen to events (TestRunStarted, TestCaseStarted, TestStepFinished) by implementing a custom EventListener plugin.</span> Use it to build custom reporters, integrate with monitoring tools, or push real-time test results to Slack or dashboards.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'playwright',
-    title: '🎭 Playwright Java',
-    sections: [
-      {
-        title: '🏗️ Core Architecture',
-        qs: [
-          { q: 'What is Playwright and why choose it over Selenium?', a: '<span class="wi-ans-key">Playwright is a browser automation library that communicates directly via Chrome DevTools Protocol (CDP), eliminating the WebDriver HTTP layer.</span> Advantages: built-in auto-waiting, isolated BrowserContext for parallel tests, native network interception, multi-browser support in one run, faster execution due to fewer round trips.<span class="wi-ans-tip">"Playwright isn\'t just faster Selenium — it\'s a fundamentally different runtime model."</span>' },
-          { q: 'Can you explain the Playwright object hierarchy?', a: '<span class="wi-ans-key">Playwright → Browser → BrowserContext → Page.</span> Playwright manages the browser process lifecycle. Browser represents one browser type (Chromium/Firefox/WebKit). BrowserContext is an isolated session (own cookies/storage). Page is a single tab. Each level has independent lifecycle management.' },
-          { q: 'What is BrowserContext and why is it important?', a: '<span class="wi-ans-key">BrowserContext is a fully isolated browser session — its own cookies, localStorage, cache, and auth state.</span> Multiple contexts share one Browser process but are completely isolated. This enables true parallel testing without spawning multiple browser processes, saving 60-80% memory vs Selenium Grid approach.' },
-          { q: 'How does Playwright\'s auto-waiting mechanism work?', a: '<span class="wi-ans-key">Before every action (click, fill, check), Playwright automatically waits for the element to be: attached to DOM, visible, stable (not animating), enabled, and ready to receive events.</span> This eliminates 90% of explicit waits. You can configure action timeout globally via browserContext.setDefaultTimeout().' },
-          { q: 'What is a Locator in Playwright and how is it different from ElementHandle?', a: '<span class="wi-ans-key">A Locator is a lazy reference that re-queries the DOM on each action, making it retry-safe for dynamic elements. ElementHandle is a snapshot reference that can become stale.</span> Always use Locators — they are auto-retrying, composable, and work correctly in dynamic SPAs. ElementHandle is legacy API.' },
-          { q: 'How do you implement a ThreadLocal DriverManager with Playwright?', a: '<span class="wi-ans-key">Use ThreadLocal&lt;Page&gt;, ThreadLocal&lt;BrowserContext&gt;, and ThreadLocal&lt;Playwright&gt; with static getters and a teardown that calls remove() on all three.</span><div class="wi-code-block">public final class DriverManager {\n  private static final ThreadLocal&lt;Page&gt; PAGE = new ThreadLocal&lt;&gt;();\n  public static Page getPage() { return PAGE.get(); }\n  public static void teardown() { \n    PAGE.get().context().close();\n    PAGE.remove(); // CRITICAL — prevents memory leak in thread pool\n  }\n}</div>' },
-          { q: 'What browser types does Playwright support?', a: '<span class="wi-ans-key">Chromium (Chrome/Edge), Firefox, and WebKit (Safari).</span> All three are bundled with Playwright — no separate driver downloads. You can run the same test suite across all three browsers in parallel to catch browser-specific rendering bugs.' },
-          { q: 'How do you launch Playwright in headless vs headed mode?', a: '<span class="wi-ans-key">Pass LaunchOptions to the launch call: <code>new BrowserType.LaunchOptions().setHeadless(false)</code> for headed (visible browser).</span> Headless is the default for CI. Headed is useful for local debugging. You can also set slowMo to slow down actions for visual observation.' },
-        ]
-      },
-      {
-        title: '🎯 Locators & Selectors',
-        qs: [
-          { q: 'What are the recommended locator strategies in Playwright?', a: '<span class="wi-ans-key">Priority order: getByRole() → getByLabel() → getByText() → getByTestId() → CSS → XPath (last resort).</span> Role-based and label-based locators are most resilient to UI changes. Avoid positional CSS selectors like nth-child. Add data-testid attributes to elements that lack semantic roles.' },
-          { q: 'How do you use getByRole() in Playwright?', a: '<span class="wi-ans-key">getByRole() selects elements by their ARIA role — the most resilient locator strategy.</span> Examples: <code>page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Submit"))</code>. Works for: button, link, textbox, heading, checkbox, radio, combobox, listitem, etc.' },
-          { q: 'How do you handle dynamic elements with no stable ID?', a: '<span class="wi-ans-key">Use combination locators: filter by text + role, or add data-testid to the element in the application code.</span> If you can\'t modify the app: use <code>locator.filter(new Locator.FilterOptions().setHasText("Submit"))</code> or chain locators like <code>page.locator(".card").filter(...).locator("button")</code>.' },
-          { q: 'How do you locate an element inside a shadow DOM?', a: '<span class="wi-ans-key">Playwright automatically pierces shadow DOM boundaries — use CSS selectors normally and Playwright handles the traversal.</span> Use <code>page.locator("my-component >> .inner-element")</code> syntax or just standard CSS — Playwright\'s engine is shadow-DOM aware by default, unlike Selenium.' },
-          { q: 'How do you handle elements inside iframes?', a: '<span class="wi-ans-key">Use <code>page.frameLocator("iframe-selector")</code> to get a FrameLocator, then chain locators on it exactly like on the main page.</span><div class="wi-code-block">FrameLocator frame = page.frameLocator("#payment-iframe");\nframe.getByLabel("Card number").fill("4111111111111111");</div>' },
-          { q: 'What is locator.filter() and when do you use it?', a: '<span class="wi-ans-key">filter() narrows a locator to elements matching additional conditions — by visible text or a child locator.</span> Example: find a table row that contains "John Doe" — <code>page.locator("tr").filter(new Locator.FilterOptions().setHasText("John Doe"))</code>. Essential for lists of identical elements.' },
-          { q: 'How do you handle a list of elements and assert their count?', a: '<span class="wi-ans-key">Use <code>locator.all()</code> to get List&lt;Locator&gt; for iteration, or <code>assertThat(locator).hasCount(N)</code> for count assertion.</span> Never use elementHandles().size() — it\'s a snapshot. Locator count assertions auto-retry until the count matches or timeout.' },
-          { q: 'How do you select an option from a dropdown?', a: '<span class="wi-ans-key">For native &lt;select&gt; elements: <code>page.locator("#country").selectOption("India")</code> or selectOption by value/index.</span> For custom dropdowns (div-based): click the trigger, wait for options list to appear, then click the desired option. Never use static sleep — use waitFor().' },
-        ]
-      },
-      {
-        title: '🌐 Network & API Interception',
-        qs: [
-          { q: 'How do you mock API responses in Playwright?', a: '<span class="wi-ans-key">Use <code>page.route()</code> to intercept and fulfill requests with mock data without hitting the real server.</span><div class="wi-code-block">page.route("**/api/products", route -> route.fulfill(\n  new Route.FulfillOptions()\n    .setStatus(200)\n    .setContentType("application/json")\n    .setBody("[{\"id\":1,\"name\":\"Laptop\"}]")\n));</div>' },
-          { q: 'How do you wait for an API response in Playwright?', a: '<span class="wi-ans-key">Use <code>page.waitForResponse()</code> to wait for a specific network response before proceeding.</span><div class="wi-code-block">Response response = page.waitForResponse(\n  r -> r.url().contains("/api/login") && r.status() == 200,\n  () -> page.getByRole(AriaRole.BUTTON, ...).click()\n);</div>This is far better than fixed sleep for async-triggered API calls.' },
-          { q: 'How do you intercept and modify a request before it reaches the server?', a: '<span class="wi-ans-key">Use <code>route.continue()</code> with modified options to pass through with changes, or <code>route.abort()</code> to block.</span><div class="wi-code-block">page.route("**/api/config", route -> {\n  route.resume(new Route.ResumeOptions()\n    .setHeaders(Map.of("X-Test-Flag", "enabled")));\n});</div>' },
-          { q: 'Can you explain Playwright\'s network HAR recording?', a: '<span class="wi-ans-key">HAR (HTTP Archive) recording captures all network requests/responses during a test run into a .har file for replay or analysis.</span> Use <code>browser.newContext(new Browser.NewContextOptions().setRecordHarPath(Paths.get("trace.har")))</code>. Great for diagnosing production incidents by replaying real traffic patterns in tests.' },
-          { q: 'How do you test authenticated flows without repeating login every test?', a: '<span class="wi-ans-key">Save auth state to a JSON file after one login, then reuse it via <code>browser.newContext(new Browser.NewContextOptions().setStorageStatePath(...))</code>.</span> This skips the login flow for every test, saving 3-10 seconds per test in large suites. Store separate state files for different user roles.' },
-        ]
-      },
-      {
-        title: '🔍 Assertions & Debugging',
-        qs: [
-          { q: 'How do you use Playwright\'s built-in assertions?', a: '<span class="wi-ans-key">Use the static <code>assertThat()</code> method from PlaywrightAssertions for auto-retrying assertions.</span> Examples: <code>assertThat(page.locator(".status")).hasText("Active")</code>. These retry until the condition is met or timeout. Never use assertEquals() directly — it doesn\'t retry for async DOM updates.' },
-          { q: 'What is the Playwright Trace Viewer?', a: '<span class="wi-ans-key">Trace Viewer is a UI tool that replays a recorded test execution showing every action, DOM snapshot before/after, network requests, console logs, and screenshots.</span> Enable with <code>context.tracing().start()</code>. Run with <code>mvn playwright:show-trace trace.zip</code>. Invaluable for debugging CI failures without local reproduction.' },
-          { q: 'How do you capture screenshots in Playwright?', a: '<span class="wi-ans-key">Programmatic: <code>page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("screenshot.png")))</code>. In config: set screenshot to "only-on-failure" or "on".</span> For full-page screenshots add <code>.setFullPage(true)</code>. Attach screenshots to Cucumber/TestNG reports in the teardown hook.' },
-          { q: 'How do you capture video of test execution in Playwright?', a: '<span class="wi-ans-key">Set <code>recordVideo</code> in BrowserContext options: <code>new Browser.NewContextOptions().setRecordVideoDir(Paths.get("videos/"))</code>.</span> Video is saved when the context closes. Set recordVideoSize to control resolution. Combine with trace for complete failure evidence in CI.' },
-          { q: 'How do you debug a failing Playwright test?', a: '<span class="wi-ans-key">Step 1: Run with <code>setHeadless(false)</code> and <code>setSlowMo(500)</code> to observe visually. Step 2: Enable trace recording. Step 3: Use Playwright Inspector with <code>PWDEBUG=1</code> env var.</span> Inspector pauses execution and lets you step through actions, inspect locators live, and see the DOM state at each step.' },
-          { q: 'What is Playwright\'s page.pause() and when is it useful?', a: '<span class="wi-ans-key">page.pause() halts test execution and opens the Playwright Inspector — useful for interactive debugging of a specific point in a test.</span> Use it in headed mode to inspect element state, try selector variants live, and understand why a locator isn\'t finding an element.' },
-        ]
-      },
-      {
-        title: '⚡ Parallel & Advanced',
-        qs: [
-          { q: 'How do you run Playwright tests in parallel with TestNG?', a: '<span class="wi-ans-key">Configure testng.xml with parallel="methods" or parallel="classes" and thread-count. Each thread gets its own BrowserContext via ThreadLocal DriverManager.</span> Never share a Page or BrowserContext across threads. Use @BeforeMethod to init and @AfterMethod to teardown per-thread browser resources.' },
-          { q: 'How do you handle file uploads in Playwright?', a: '<span class="wi-ans-key">For &lt;input type="file"&gt;: <code>page.locator("#file-input").setInputFiles(Paths.get("test-doc.pdf"))</code>. For drag-drop uploads or custom file dialogs: listen with <code>page.onFileChooser()</code>.</span><div class="wi-code-block">page.onFileChooser(chooser -> {\n  chooser.setFiles(Paths.get("src/test/resources/test.pdf"));\n});\npage.locator(".upload-zone").click();</div>' },
-          { q: 'How do you test a new browser tab or popup?', a: '<span class="wi-ans-key">Use <code>page.waitForPopup()</code> to capture a new page/tab opened by an action.</span><div class="wi-code-block">Page newPage = page.waitForPopup(() -> {\n  page.getByText("Open in new tab").click();\n});\nnewPage.waitForLoadState();\nassertThat(newPage).hasURL(Pattern.compile("/terms"));</div>' },
-          { q: 'How do you handle alert/confirm dialogs in Playwright?', a: '<span class="wi-ans-key">Register a dialog listener before triggering the action: <code>page.onDialog(dialog -> dialog.accept())</code> or <code>dialog.dismiss()</code>.</span> The listener must be registered before the dialog triggers. For dialogs with text input, use <code>dialog.accept("input text")</code>.' },
-          { q: 'How do you perform keyboard actions in Playwright?', a: '<span class="wi-ans-key">Use <code>page.keyboard().press("Enter")</code>, <code>page.keyboard().type("Hello")</code>, or <code>locator.press("Tab")</code> for element-focused keys.</span> For key combinations: <code>page.keyboard().press("Control+A")</code>. Use <code>locator.fill()</code> for input text — it replaces existing content instantly.' },
-          { q: 'How do you scroll to an element in Playwright?', a: '<span class="wi-ans-key">Playwright auto-scrolls before interactions. For explicit scroll: <code>locator.scrollIntoViewIfNeeded()</code> or <code>page.mouse().wheel(0, 500)</code> for pixel scrolling.</span> For infinite scroll testing: scroll in a loop while checking for new elements, then break when content stops loading.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'java',
-    title: '☕ Java Core',
-    sections: [
-      {
-        title: '🔤 Strings & Primitives',
-        qs: [
-          { q: 'Why is String immutable in Java?', a: '<span class="wi-ans-key">String is immutable because it is stored in the String Pool — multiple references can point to the same String object safely. Immutability enables safe sharing, caching of hashCode, and thread-safety without synchronization.</span> If Strings were mutable, changing one reference would corrupt all others pointing to the same pool entry.' },
-          { q: 'What is the String Pool and how does it work?', a: '<span class="wi-ans-key">The String Pool is a special heap area where JVM caches String literals.</span> When you write <code>String s = "hello"</code>, JVM checks the pool — if "hello" exists, it returns the existing reference. <code>new String("hello")</code> always creates a new heap object, bypassing the pool. Use <code>intern()</code> to add a runtime string to the pool.' },
-          { q: 'What is the difference between String, StringBuilder, and StringBuffer?', a: '<span class="wi-ans-key">String: immutable, thread-safe, slow for repeated concatenation (creates new objects). StringBuilder: mutable, NOT thread-safe, fastest for single-threaded concatenation. StringBuffer: mutable, thread-safe via synchronized methods, slower than StringBuilder.</span> Use StringBuilder in loops; String for constants; StringBuffer only when multiple threads share the same builder (rare).' },
-          { q: 'How does Java handle == vs .equals() for Strings?', a: '<span class="wi-ans-key">== compares object references (memory address). .equals() compares content.</span> String literals from the pool may pass == because they share the same reference, but this is unreliable — always use .equals() for String comparison. Use Objects.equals() to handle nulls safely.' },
-          { q: 'What is autoboxing and unboxing in Java?', a: '<span class="wi-ans-key">Autoboxing: automatic conversion of primitive to wrapper (int → Integer). Unboxing: wrapper to primitive (Integer → int).</span> NullPointerException risk: unboxing a null Integer throws NPE. Performance cost: autoboxing in tight loops creates many short-lived objects — use primitives in performance-critical code.' },
-          { q: 'What is the difference between int and Integer in Java?', a: '<span class="wi-ans-key">int is a primitive stored on the stack (4 bytes, no null, no methods). Integer is a wrapper object on the heap with methods like parseInt(), compareTo(), and the ability to be null.</span> Integer caches values -128 to 127 (Integer.valueOf()) — comparing cached values with == returns true, which can fool you.' },
-        ]
-      },
-      {
-        title: '🗂️ Collections Framework',
-        qs: [
-          { q: 'How does HashMap work internally in Java?', a: '<span class="wi-ans-key">HashMap uses an array of buckets. The key\'s hashCode() determines the bucket index. Within a bucket, entries with same hash are stored as a linked list (or Red-Black Tree if list length exceeds 8, Java 8+).</span> get() and put() are O(1) average. Worst case is O(log n) with treeified buckets. Load factor 0.75 triggers resize at 75% capacity.' },
-          { q: 'What is the contract between hashCode() and equals()?', a: '<span class="wi-ans-key">If two objects are equal via equals(), they MUST have the same hashCode(). The converse is not required — two objects with the same hashCode may not be equal (hash collision).</span> Violating this contract breaks HashMap/HashSet — equal keys may be stored twice, or get() may fail to find an existing key.' },
-          { q: 'What is the difference between ArrayList and LinkedList?', a: '<span class="wi-ans-key">ArrayList: backed by a dynamic array. get(i) is O(1), add/remove in middle is O(n) (shift). LinkedList: doubly linked nodes. get(i) is O(n), add/remove at ends is O(1).</span> Use ArrayList for random access and iteration. Use LinkedList when you frequently add/remove from both ends (Queue/Deque operations).' },
-          { q: 'How does ArrayList resize internally?', a: '<span class="wi-ans-key">When capacity is exceeded, ArrayList creates a new array 1.5× larger and copies all elements.</span> Default initial capacity is 10. Pre-size with <code>new ArrayList&lt;&gt;(expectedSize)</code> if you know the count to avoid repeated resizing in large datasets. Each resize is O(n).' },
-          { q: 'What is the difference between HashMap and ConcurrentHashMap?', a: '<span class="wi-ans-key">HashMap is not thread-safe — concurrent modification causes ConcurrentModificationException. ConcurrentHashMap is thread-safe using segment-level locking (Java 7) or CAS + synchronized buckets (Java 8+).</span> ConcurrentHashMap allows concurrent reads always; writes lock only the affected bucket, not the entire map.' },
-          { q: 'What is the difference between fail-fast and fail-safe iterators?', a: '<span class="wi-ans-key">Fail-fast iterators (ArrayList, HashMap) throw ConcurrentModificationException if the collection is modified during iteration. Fail-safe iterators (CopyOnWriteArrayList, ConcurrentHashMap) iterate over a snapshot and never throw.</span> The trade-off: fail-safe uses more memory (snapshot copy) and may not see the latest modifications.' },
-          { q: 'What is a TreeMap and when do you use it?', a: '<span class="wi-ans-key">TreeMap stores entries sorted by key using a Red-Black Tree. get/put/remove are O(log n).</span> Use it when you need natural key ordering (alphabetical, numeric) or range queries (subMap, headMap, tailMap). Keys must implement Comparable or you must provide a Comparator.' },
-          { q: 'What is the difference between HashSet and LinkedHashSet and TreeSet?', a: '<span class="wi-ans-key">HashSet: unordered, O(1) ops, no duplicates. LinkedHashSet: insertion-ordered, O(1) ops. TreeSet: sorted order, O(log n) ops.</span> Use HashSet for fast membership tests. LinkedHashSet when order of insertion matters. TreeSet for sorted unique collections or range-based queries.' },
-          { q: 'What is a PriorityQueue in Java?', a: '<span class="wi-ans-key">PriorityQueue is a min-heap by default — poll() always returns the smallest element.</span> Uses natural ordering or a provided Comparator. Not thread-safe. Used in Dijkstra\'s algorithm, task scheduling, and any "process the most urgent item first" pattern. Peek is O(1), poll is O(log n).' },
-          { q: 'How does Java\'s Deque differ from Stack?', a: '<span class="wi-ans-key">Deque (ArrayDeque) supports insertion/removal from both ends — it works as both a stack (LIFO) and a queue (FIFO).</span> ArrayDeque is faster than Stack (synchronized) and LinkedList (pointer overhead). Use ArrayDeque whenever you need a stack in Java — Stack is legacy.' },
-          { q: 'What are generics in Java and what is type erasure?', a: '<span class="wi-ans-key">Generics provide compile-time type safety for collections and methods (e.g., List&lt;String&gt; only accepts Strings).</span> Type erasure: the generic type parameter is removed at runtime — all generic types become Object or their bound. This means List&lt;String&gt; and List&lt;Integer&gt; are the same type at runtime, which limits reflection-based operations.' },
-        ]
-      },
-      {
-        title: '🔄 Streams & Lambda (Java 8+)',
-        qs: [
-          { q: 'What is a Stream in Java 8?', a: '<span class="wi-ans-key">A Stream is a sequence of elements from a source (collection, array, I/O) that supports functional-style operations (filter, map, reduce) without modifying the source.</span> Streams are lazy — intermediate operations (filter, map) are not evaluated until a terminal operation (collect, forEach, count) is called.' },
-          { q: 'What is the difference between map() and flatMap() in streams?', a: '<span class="wi-ans-key">map() transforms each element to one output element (1-to-1). flatMap() transforms each element to zero or more elements and flattens the resulting streams into one (1-to-many).</span> Example: converting List&lt;List&lt;String&gt;&gt; to List&lt;String&gt; uses flatMap(Collection::stream).' },
-          { q: 'What is a functional interface in Java?', a: '<span class="wi-ans-key">A functional interface has exactly one abstract method and is annotated @FunctionalInterface.</span> Built-in examples: Runnable (no args, no return), Callable (no args, returns T), Predicate&lt;T&gt; (test → boolean), Function&lt;T,R&gt; (apply → R), Consumer&lt;T&gt; (accept → void), Supplier&lt;T&gt; (get → T). Lambdas are shorthand implementations.' },
-          { q: 'What is the difference between Predicate, Function, and Consumer?', a: '<span class="wi-ans-key">Predicate&lt;T&gt;: takes T, returns boolean (use for filter). Function&lt;T,R&gt;: takes T, returns R (use for map). Consumer&lt;T&gt;: takes T, returns void (use for forEach side effects).</span> They can be composed: predicate.and(other), function.andThen(other).' },
-          { q: 'How do you collect stream results in Java?', a: '<span class="wi-ans-key">Use Collectors.toList(), Collectors.toSet(), Collectors.toMap(), Collectors.groupingBy(), Collectors.joining().</span> Example: <code>list.stream().filter(s -> s.startsWith("A")).collect(Collectors.toList())</code>. Java 16+: use .toList() directly (returns unmodifiable list).' },
-          { q: 'What is Optional in Java and how do you use it?', a: '<span class="wi-ans-key">Optional&lt;T&gt; is a container that may or may not contain a non-null value — it prevents NullPointerException by making nullability explicit.</span> Use orElse(default), orElseGet(supplier), orElseThrow(), map(), filter(). Never call get() without isPresent() check — that\'s worse than direct null handling.' },
-        ]
-      },
-      {
-        title: '🧵 Concurrency & Memory',
-        qs: [
-          { q: 'What is the volatile keyword in Java?', a: '<span class="wi-ans-key">volatile guarantees that reads and writes to a variable are always from main memory, not a CPU cache.</span> Prevents visibility issues in multi-threaded programs where one thread\'s write isn\'t seen by another thread. Required in Double-Checked Locking Singleton to prevent partial construction of the instance being visible.' },
-          { q: 'What is the difference between synchronized and ReentrantLock?', a: '<span class="wi-ans-key">synchronized is simpler — automatic lock/unlock, supports only one condition. ReentrantLock is explicit — you must unlock in finally{}, supports multiple conditions, tryLock(), timed lock, fairness policy.</span> Prefer synchronized for simple cases. Use ReentrantLock when you need advanced features like interruptible lock acquisition.' },
-          { q: 'What is ThreadLocal in Java?', a: '<span class="wi-ans-key">ThreadLocal provides thread-local variables — each thread accessing the variable gets its own independent copy, never shared with other threads.</span> Used in Playwright/Selenium frameworks to store the browser/driver instance per thread. Always call remove() in teardown to prevent memory leaks in thread pools.' },
-          { q: 'What is a deadlock and how do you prevent it?', a: '<span class="wi-ans-key">Deadlock occurs when two or more threads are blocked forever, each waiting for a lock held by the other.</span> Prevention: always acquire locks in the same order, use tryLock() with timeout, minimize lock scope, prefer immutable objects. Detect with jstack — look for "waiting to lock" in circular dependencies.' },
-          { q: 'What is the difference between Runnable and Callable?', a: '<span class="wi-ans-key">Runnable: run() returns void, cannot throw checked exceptions. Callable&lt;T&gt;: call() returns T, can throw Exception.</span> Submit Callable to ExecutorService via submit() to get a Future&lt;T&gt; — you can check completion, get the result, and handle exceptions from the async task.' },
-          { q: 'How does garbage collection work in Java (high level)?', a: '<span class="wi-ans-key">JVM automatically frees heap memory for objects with no live references.</span> Young Generation (Eden + Survivor spaces) holds new objects — Minor GC runs frequently here. Objects surviving multiple GCs are promoted to Old Generation — Major GC (Stop-the-World) is less frequent but longer. Modern GCs (G1, ZGC) minimize pause times.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'oops',
-    title: '🏗️ OOPs & Design Patterns',
-    sections: [
-      {
-        title: '🔑 Four Pillars of OOPs',
-        qs: [
-          { q: 'What are the four pillars of OOPs?', a: '<span class="wi-ans-key">Encapsulation: bundling data and methods, hiding internal state via access modifiers. Abstraction: exposing only essential behavior via interfaces/abstract classes. Inheritance: child class inherits parent\'s state and behavior. Polymorphism: one interface, many implementations — method overriding (runtime) and overloading (compile time).</span>' },
-          { q: 'What is Encapsulation and why is it important?', a: '<span class="wi-ans-key">Encapsulation hides internal implementation behind a public interface — private fields + public getters/setters.</span> Benefits: controls how data is accessed/modified, enables validation in setters, changes to internals don\'t break callers. In test frameworks: Page Object Model is encapsulation — selectors are private, actions are public methods.' },
-          { q: 'What is the difference between Abstraction and Encapsulation?', a: '<span class="wi-ans-key">Abstraction hides complexity — shows WHAT an object does (interface/abstract class). Encapsulation hides state — controls HOW internal data is accessed (private fields + public methods).</span> They work together: an interface defines what a class does (abstraction); the implementing class hides its data (encapsulation).' },
-          { q: 'What is polymorphism in Java?', a: '<span class="wi-ans-key">Runtime polymorphism (overriding): a subclass provides its own implementation of a parent method — the correct version is chosen at runtime based on the actual object type. Compile-time polymorphism (overloading): multiple methods with the same name but different parameter signatures.</span> Runtime polymorphism enables the Open/Closed Principle.' },
-          { q: 'What is the difference between method overriding and overloading?', a: '<span class="wi-ans-key">Overriding: subclass redefines parent method with same signature — resolved at runtime (dynamic dispatch). Overloading: multiple methods in same class with same name but different parameters — resolved at compile time.</span> @Override annotation enforces correct overriding signature at compile time.' },
-          { q: 'What is inheritance and what are its limitations?', a: '<span class="wi-ans-key">Inheritance allows a class to reuse state and behavior from a parent class via extends.</span> Limitations: tight coupling (child depends on parent internals), fragile base class problem (parent changes break children), Java only supports single class inheritance. Prefer composition over inheritance for flexibility.' },
-        ]
-      },
-      {
-        title: '📐 Interfaces & Abstract Classes',
-        qs: [
-          { q: 'What is the difference between Interface and Abstract Class?', a: '<span class="wi-ans-key">Interface: defines a contract (what), no state, supports multiple inheritance, all methods implicitly public. Abstract class: partial implementation, can have state and constructors, single inheritance only.</span> Rule: if you\'re defining a capability (Runnable, Comparable), use interface. If you\'re defining a base type with shared behavior, use abstract class.' },
-          { q: 'What are default methods in Java interfaces (Java 8)?', a: '<span class="wi-ans-key">Default methods allow interfaces to have concrete method implementations without breaking existing implementing classes.</span> Use case: adding new methods to existing interfaces (e.g., Collection.forEach()). If a class implements two interfaces with the same default method, it MUST override it to resolve the diamond problem.' },
-          { q: 'Can an interface have static methods in Java 8+?', a: '<span class="wi-ans-key">Yes — static methods in interfaces are utility methods that belong to the interface type itself, not to instances.</span> They cannot be overridden by implementing classes. Use them for factory methods or helper utilities tightly coupled to the interface (e.g., Comparator.comparing()). Accessed via InterfaceName.method().' },
-          { q: 'What is a Functional Interface in Java?', a: '<span class="wi-ans-key">A functional interface has exactly one abstract method and can be used as a lambda target.</span> @FunctionalInterface annotation enforces this at compile time. Examples: Runnable, Callable, Comparator, Predicate, Function, Consumer, Supplier. The foundation of Java 8 streams and lambda expressions.' },
-          { q: 'What is a Marker Interface?', a: '<span class="wi-ans-key">A marker interface has no methods — it just marks a class as having a certain property.</span> Examples: Serializable (marks object as serializable), Cloneable (allows clone()), RandomAccess (List supports O(1) indexed access). Modern Java prefers annotations over marker interfaces, but they still appear in legacy APIs.' },
-          { q: 'Can you achieve multiple inheritance in Java?', a: '<span class="wi-ans-key">Java doesn\'t support multiple class inheritance (diamond problem), but a class can implement multiple interfaces.</span> Java 8 default methods introduced limited multiple inheritance of behavior — if two interfaces provide conflicting defaults, the implementing class must override to resolve it explicitly.' },
-        ]
-      },
-      {
-        title: '🔄 SOLID Principles',
-        qs: [
-          { q: 'What is the Single Responsibility Principle (SRP)?', a: '<span class="wi-ans-key">A class should have only one reason to change — it should do one thing well.</span> In QA frameworks: LoginPage only handles login UI actions, not test data generation or report writing. A class that reads config, connects to DB, and sends emails violates SRP and is fragile.' },
-          { q: 'What is the Open/Closed Principle (OCP)?', a: '<span class="wi-ans-key">Software entities should be open for extension but closed for modification — add new behavior by adding code, not changing existing code.</span> Example: if adding a new browser type requires modifying existing DriverFactory switch-case, that violates OCP. Fix: use a strategy/factory pattern where new browsers are new classes, not new cases.' },
-          { q: 'What is the Liskov Substitution Principle (LSP)?', a: '<span class="wi-ans-key">Subtypes must be substitutable for their base types without altering program correctness.</span> Violation example: a ReadOnlyList extends ArrayList but throws UnsupportedOperationException on add() — callers expecting an ArrayList will break. Fix the hierarchy or use composition.' },
-          { q: 'What is the Interface Segregation Principle (ISP)?', a: '<span class="wi-ans-key">Clients should not be forced to implement interfaces they don\'t use — prefer many small, specific interfaces over one large interface.</span> Example: don\'t force a ReadOnlyRepository to implement save() and delete() by bundling them into one IRepository interface. Split into IReadRepository and IWriteRepository.' },
-          { q: 'What is the Dependency Inversion Principle (DIP)?', a: '<span class="wi-ans-key">High-level modules should not depend on low-level modules — both should depend on abstractions.</span> Example: a test class should depend on a IBrowser interface, not directly on ChromeDriver. This allows swapping implementations (Chrome → Firefox) without changing test code. Foundation of Dependency Injection frameworks.' },
-        ]
-      },
-      {
-        title: '🎨 Design Patterns',
-        qs: [
-          { q: 'What is the Singleton Design Pattern?', a: '<span class="wi-ans-key">Singleton ensures a class has only one instance and provides a global access point to it.</span> Thread-safe implementation: Bill Pugh (static inner class) or Enum singleton. Used in test frameworks for: config manager, driver manager, report manager. Risk: global state makes unit testing harder — consider dependency injection as an alternative.' },
-          { q: 'How do you implement a thread-safe Singleton in Java?', a: '<span class="wi-ans-key">Bill Pugh (best): static inner helper class — lazy, thread-safe without synchronization overhead.</span><div class="wi-code-block">public class Config {\n  private Config() {}\n  private static class Holder {\n    static final Config INSTANCE = new Config();\n  }\n  public static Config getInstance() { return Holder.INSTANCE; }\n}</div>Alternative: Enum singleton — also reflection-proof and serialization-safe.' },
-          { q: 'What is the Factory Design Pattern?', a: '<span class="wi-ans-key">Factory encapsulates object creation logic — clients request an object by type without knowing the concrete class.</span> In test frameworks: BrowserFactory.getDriver("chrome") returns a Chromium Page, getDriver("firefox") returns Firefox Page. Adding a new browser is a new class, not a modification of existing code (OCP).' },
-          { q: 'What is the Builder Design Pattern?', a: '<span class="wi-ans-key">Builder constructs complex objects step by step, separating construction from representation.</span><div class="wi-code-block">TestConfig config = new TestConfig.Builder()\n  .browser("chrome")\n  .headless(true)\n  .timeout(30000)\n  .build();</div>Avoids telescoping constructors. Each setter returns the builder (fluent API). build() validates and creates the final immutable object.' },
-          { q: 'What is the Page Object Model (POM) design pattern?', a: '<span class="wi-ans-key">POM encapsulates a web page\'s selectors and interactions in a dedicated class, separating test logic from page implementation details.</span> Each page = one class. Selectors are private fields. Public methods represent user actions (login(), addToCart()). Tests call page methods, never access locators directly. When UI changes, only the POM class changes, not every test.' },
-          { q: 'What is the Strategy Design Pattern?', a: '<span class="wi-ans-key">Strategy defines a family of algorithms behind a common interface, making them interchangeable at runtime.</span> Test framework example: execution strategy interface with LocalStrategy, GridStrategy, DockerStrategy implementations. The test runner holds a reference to the interface — swap strategies via config without changing test code.' },
-          { q: 'What is the Observer Design Pattern?', a: '<span class="wi-ans-key">Observer defines a one-to-many dependency — when one object (subject) changes state, all dependents (observers) are notified automatically.</span> In test frameworks: Cucumber EventBus uses Observer — test lifecycle events (TestStarted, TestFinished) notify registered listeners (reporters, screenshot capturer, Slack notifier).' },
-          { q: 'What is the Decorator Design Pattern?', a: '<span class="wi-ans-key">Decorator wraps an object to add behavior dynamically without changing its class.</span> Example: wrap a basic WebDriver/Page with a LoggingPage decorator that logs every action. Stack decorators: LoggingPage(RetryingPage(BasePage)) — each adds a cross-cutting concern without modifying the core implementation.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'testng',
-    title: '🧪 TestNG & Framework',
-    sections: [
-      {
-        title: '⚙️ TestNG Core',
-        qs: [
-          { q: 'What is TestNG and how does it differ from JUnit?', a: '<span class="wi-ans-key">TestNG is a testing framework inspired by JUnit but with more advanced features: parallel execution configuration, data providers, test groups, suite XML configuration, and flexible dependency management.</span> JUnit 5 is now competitive, but TestNG\'s testng.xml provides declarative parallelism control without annotations, which is better for large enterprise suites.' },
-          { q: 'What are the TestNG annotations and their execution order?', a: '<span class="wi-ans-key">Execution order: @BeforeSuite → @BeforeTest → @BeforeClass → @BeforeMethod → @Test → @AfterMethod → @AfterClass → @AfterTest → @AfterSuite.</span> @BeforeSuite runs once for the entire suite. @BeforeMethod runs before every @Test method. Understanding this order is critical for correct setup/teardown in parallel environments.' },
-          { q: 'How do you run tests in parallel with TestNG?', a: '<span class="wi-ans-key">Configure testng.xml: set parallel="methods" (each method in its own thread), "classes" (each class in its own thread), or "tests" (each &lt;test&gt; tag in its own thread), plus thread-count.</span><div class="wi-code-block">&lt;suite name="Regression" parallel="methods" thread-count="4"&gt;</div>Ensure all per-test resources (driver, test data) are ThreadLocal-isolated.' },
-          { q: 'What is a TestNG DataProvider?', a: '<span class="wi-ans-key">DataProvider is an annotation that feeds test methods with multiple data sets — each data set runs as a separate test iteration.</span><div class="wi-code-block">@DataProvider(name = "loginData")\npublic Object[][] loginData() {\n  return new Object[][] { {"admin","pass123"}, {"user","secret"} };\n}\n@Test(dataProvider = "loginData")\npublic void testLogin(String user, String pass) {...}</div>' },
-          { q: 'How do you group tests in TestNG?', a: '<span class="wi-ans-key">Use groups attribute in @Test annotation: <code>@Test(groups = {"smoke", "login"})</code>. In testng.xml, include/exclude groups.</span> Group hierarchy: define meta-groups like "regression" = "smoke" + "sanity" + "functional" in testng.xml. Run subsets in CI: smoke on every push, regression nightly.' },
-          { q: 'What is test dependency in TestNG?', a: '<span class="wi-ans-key">dependsOnMethods = {"loginTest"} makes a test run only if the dependent test passes.</span> Use sparingly — hard test dependencies reduce test isolation. Better approach: use setup methods to establish prerequisite state, not test-to-test dependencies. Dependent tests that are skipped are marked as SKIP in the report.' },
-          { q: 'How do you implement IRetryAnalyzer in TestNG?', a: '<span class="wi-ans-key">Implement IRetryAnalyzer interface with retry() method that returns true to retry.</span><div class="wi-code-block">public class RetryAnalyzer implements IRetryAnalyzer {\n  int count = 0; int MAX = 2;\n  public boolean retry(ITestResult result) {\n    if (count &lt; MAX) { count++; return true; }\n    return false;\n  }\n}</div>Apply via @Test(retryAnalyzer = RetryAnalyzer.class) or a global IAnnotationTransformer listener.' },
-          { q: 'What is an ITestListener in TestNG?', a: '<span class="wi-ans-key">ITestListener provides hooks for test lifecycle events: onTestStart, onTestSuccess, onTestFailure, onTestSkipped.</span> Use it to: capture screenshots on failure, log to external dashboards, send Slack notifications for failures, update test management tools (JIRA, TestRail). Register in testng.xml &lt;listeners&gt; block or @Listeners annotation.' },
-          { q: 'How do you soft assert in TestNG?', a: '<span class="wi-ans-key">SoftAssert collects all assertion failures and reports them at the end — tests continue even after a failure.</span><div class="wi-code-block">SoftAssert sa = new SoftAssert();\nsa.assertEquals(title, "Dashboard");\nsa.assertTrue(menuVisible);\nsa.assertAll(); // throws if any assertion failed</div>Use for validating multiple fields in one test. Don\'t forget assertAll() — omitting it means failures are silently swallowed.' },
-        ]
-      },
-      {
-        title: '🏛️ Framework Architecture',
-        qs: [
-          { q: 'Can you explain your 7-layer BDD framework architecture?', a: '<span class="wi-ans-key">Layer 1: Feature Files (Gherkin). Layer 2: Step Definitions. Layer 3: Page Objects / Page Components. Layer 4: DriverManager (ThreadLocal browser). Layer 5: ConfigFactory (env config). Layer 6: Utils (ApiHelper, ReportingUtils). Layer 7: Hooks & Listeners (lifecycle management).</span> Each layer has one responsibility; dependencies flow downward only.' },
-          { q: 'How do you manage test configuration across environments (dev/staging/prod)?', a: '<span class="wi-ans-key">Use a ConfigFactory with a Singleton that reads the environment name from a Maven/system property and loads the corresponding .properties or .yaml file.</span> Never hardcode URLs. Structure: config/dev.properties, config/staging.properties. CI passes <code>-Denv=staging</code>. All test code reads via Config.get("baseUrl") — switching environments requires zero code changes.' },
-          { q: 'What is the Page Component pattern and how does it differ from POM?', a: '<span class="wi-ans-key">Page Component represents reusable UI sections that appear across multiple pages (navigation header, sidebar, data table, toast notifications).</span> POM = one class per page. Component = one class per reusable section. Pages compose components: LoginPage extends BasePage and holds a NavComponent. This prevents duplicating header/footer selectors across every page class.' },
-          { q: 'How do you handle test data management in your framework?', a: '<span class="wi-ans-key">Three-tier approach: (1) Static data in JSON/YAML under src/test/resources/testdata/ for fixed reference data. (2) Dynamic data via REST API calls in @Before hooks (create user, seed DB). (3) Faker library for randomized data fields.</span> Never share mutable test data across parallel tests — each test creates its own independent data set.' },
-          { q: 'How do you ensure test isolation in a parallel test suite?', a: '<span class="wi-ans-key">Each test must be completely independent: own browser context (ThreadLocal), own test user (created via API in @BeforeMethod), own test data (no shared state), own cleanup in @AfterMethod.</span> Tests should be runnable in any order and in parallel without flakiness. A test that requires another test to run first is not isolated.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'api',
-    title: '🌐 REST Assured & API',
-    sections: [
-      {
-        title: '📡 REST Assured Fundamentals',
-        qs: [
-          { q: 'What is REST Assured and what is its BDD syntax?', a: '<span class="wi-ans-key">REST Assured is a Java library for testing RESTful APIs using a fluent Given/When/Then DSL that mirrors Cucumber\'s BDD style.</span><div class="wi-code-block">given()\n  .header("Authorization", "Bearer " + token)\n  .body(requestPayload)\n.when()\n  .post("/api/users")\n.then()\n  .statusCode(201)\n  .body("id", notNullValue());</div>' },
-          { q: 'What is RequestSpecification in REST Assured?', a: '<span class="wi-ans-key">RequestSpecification is a reusable request template — define common headers, auth, base URI once and share across all tests.</span><div class="wi-code-block">RequestSpecification spec = new RequestSpecBuilder()\n  .setBaseUri("https://api.example.com")\n  .addHeader("Accept", "application/json")\n  .setAuth(oauth2("token"))\n  .build();\ngiven(spec).when().get("/products").then().statusCode(200);</div>' },
-          { q: 'What is ResponseSpecification in REST Assured?', a: '<span class="wi-ans-key">ResponseSpecification is a reusable response assertion template — define expected status codes, content types, and headers once.</span><div class="wi-code-block">ResponseSpecification respSpec = new ResponseSpecBuilder()\n  .expectStatusCode(200)\n  .expectContentType(ContentType.JSON)\n  .build();\ngiven(spec).when().get("/health").then().spec(respSpec);</div>Combine with RequestSpecification for DRY test code.' },
-          { q: 'How do you extract values from a JSON response in REST Assured?', a: '<span class="wi-ans-key">Use response.jsonPath().get() with JsonPath expressions, or extract().path() inline.</span><div class="wi-code-block">String token = given().body(creds).post("/login")\n  .then().statusCode(200)\n  .extract().jsonPath().getString("data.token");\n\n// Or: extract a list\nList&lt;String&gt; names = response.jsonPath().getList("products.name");</div>' },
-          { q: 'How do you handle authentication in REST Assured?', a: '<span class="wi-ans-key">Four approaches: Basic auth (.auth().basic(user, pass)), Bearer token (.header("Authorization", "Bearer "+token)), OAuth2 (.auth().oauth2(token)), API Key (.header("X-API-Key", key)).</span> Set auth in RequestSpecification so all tests in a suite inherit it. Fetch tokens dynamically in @BeforeSuite to avoid hardcoded credentials.' },
-          { q: 'How do you serialize a POJO to JSON in REST Assured?', a: '<span class="wi-ans-key">REST Assured integrates with Jackson/Gson automatically — pass a POJO directly to .body() and it serializes to JSON.</span><div class="wi-code-block">CreateUserRequest req = new CreateUserRequest("John", "john@test.com");\ngiven().contentType(ContentType.JSON)\n  .body(req)\n.when().post("/users")\n.then().statusCode(201);</div>Ensure Jackson is on the classpath; REST Assured auto-detects it.' },
-          { q: 'How do you deserialize a JSON response to a POJO?', a: '<span class="wi-ans-key">Use <code>.as(ClassName.class)</code> to deserialize the response body into a POJO.</span><div class="wi-code-block">UserResponse user = given().get("/users/1")\n  .then().statusCode(200)\n  .extract().as(UserResponse.class);\nassertEquals(user.getName(), "John");</div>The POJO needs Jackson annotations or a no-arg constructor + public setters.' },
-          { q: 'How do you validate a nested JSON field in REST Assured?', a: '<span class="wi-ans-key">Use JsonPath dot notation for nested fields and bracket notation for arrays.</span><div class="wi-code-block">// Assert nested field\n.body("data.user.email", equalTo("john@test.com"))\n// Assert array element\n.body("products[0].name", equalTo("Laptop"))\n// Assert array size\n.body("products.size()", equalTo(5))\n// Hamcrest on list\n.body("products.name", hasItems("Laptop", "Mouse"))</div>' },
-        ]
-      },
-      {
-        title: '🔧 HTTP & API Concepts',
-        qs: [
-          { q: 'What are the HTTP methods and when do you use each?', a: '<span class="wi-ans-key">GET: retrieve resource (idempotent, no body). POST: create resource (non-idempotent). PUT: replace entire resource (idempotent). PATCH: partial update (idempotent). DELETE: remove resource (idempotent).</span> Idempotent = same request N times has same effect as 1 time. POST is not idempotent — submitting twice may create two records.' },
-          { q: 'What do HTTP status code ranges mean?', a: '<span class="wi-ans-key">2xx Success: 200 OK, 201 Created, 204 No Content. 3xx Redirect: 301 Moved, 302 Found. 4xx Client Error: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable. 5xx Server Error: 500 Internal, 503 Service Unavailable.</span> In tests: assert 201 on POST, 200 on GET, 204 on DELETE.' },
-          { q: 'What is the difference between authentication and authorization?', a: '<span class="wi-ans-key">Authentication: proving who you are (login with username/password, token verification). Authorization: what you are allowed to do (role-based access control).</span> A valid token (authenticated) may still get 403 Forbidden if that user lacks permission for the resource (not authorized). Test both: authenticated wrong role → 403, unauthenticated → 401.' },
-          { q: 'What is an API contract test?', a: '<span class="wi-ans-key">Contract testing verifies that an API producer and consumer agree on the API format — field names, types, required fields, status codes.</span> Tools: Pact for consumer-driven contract testing. In REST Assured: validate response schema with JSON Schema validator. Contract tests catch breaking API changes before they reach integration tests.' },
-          { q: 'How do you test API pagination?', a: '<span class="wi-ans-key">Assert: first page returns correct count and has nextPage link. Navigate via next page token/offset. Last page has no nextPage. Out-of-range page returns empty array (not 404).</span><div class="wi-code-block">given().queryParam("page", 1).queryParam("size", 10)\n  .get("/products")\n  .then().body("items.size()", equalTo(10))\n         .body("hasNext", equalTo(true));</div>' },
-          { q: 'How do you test error responses in REST Assured?', a: '<span class="wi-ans-key">Test all error paths: 400 (invalid payload), 401 (missing/invalid token), 403 (wrong role), 404 (non-existent resource), 409 (duplicate), 422 (validation failure).</span> Assert both the status code AND the error response body structure — verify error message, error code field, and that no sensitive data leaks in the error response.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'cicd',
-    title: '🚀 CI/CD & DevOps',
-    sections: [
-      {
-        title: '🔧 Jenkins Fundamentals',
-        qs: [
-          { q: 'What is Jenkins and why is it used for test automation?', a: '<span class="wi-ans-key">Jenkins is an open-source CI/CD automation server that orchestrates build, test, and deployment pipelines.</span> For test automation: triggers test suites on every code push, publishes test reports, sends failure notifications, runs parallel test execution across agents, and gates deployments on test passage.' },
-          { q: 'What is the difference between Freestyle and Pipeline jobs in Jenkins?', a: '<span class="wi-ans-key">Freestyle: UI-configured, limited scripting, hard to version-control. Pipeline (Declarative or Scripted): pipeline-as-code in Jenkinsfile, checked into the repo, version-controlled, supports parallel stages, more powerful.</span> Always use Pipeline — Freestyle is legacy. Declarative pipeline is readable; Scripted is more flexible for complex logic.' },
-          { q: 'What is a Jenkinsfile and what are its key sections?', a: '<span class="wi-ans-key">Jenkinsfile is a text file in the repo root defining the entire pipeline as code.</span> Key sections: agent (where to run), stages (logical phases), steps (commands in each stage), post (always/success/failure cleanup), environment (variables), parameters (runtime inputs). Declarative syntax with pipeline { } block.' },
-          { q: 'How do you run tests in parallel stages in Jenkins?', a: '<span class="wi-ans-key">Use the parallel block inside a stage to run branches concurrently.</span><div class="wi-code-block">stage("Test") {\n  parallel {\n    stage("Smoke") { steps { sh "mvn test -Dgroups=smoke" } }\n    stage("API") { steps { sh "mvn test -Dgroups=api" } }\n  }\n}</div>Both stages run simultaneously on available agents, reducing total pipeline time.' },
-          { q: 'What are Jenkins agents and how do they relate to test execution?', a: '<span class="wi-ans-key">Agents are machines (physical, VM, Docker container) that execute Jenkins pipeline stages.</span> Distributed agents allow parallel test execution across multiple machines. Docker agents ensure a clean, consistent environment for every build — no "works on my machine" issues. Kubernetes agents auto-scale based on queue depth.' },
-          { q: 'How do you archive test artifacts in Jenkins?', a: '<span class="wi-ans-key">In the post section or after test step: <code>archiveArtifacts artifacts: "target/reports/**, target/screenshots/**"</code>.</span> Publish HTML reports: use the HTML Publisher Plugin. Publish JUnit XML: <code>junit "target/surefire-reports/*.xml"</code> — enables Jenkins to show pass/fail trends per test method over time.' },
-          { q: 'How do you trigger a Jenkins pipeline on a GitHub push?', a: '<span class="wi-ans-key">Install GitHub plugin, configure webhook in GitHub repo settings pointing to Jenkins URL /github-webhook/, add <code>triggers { githubPush() }</code> in Jenkinsfile.</span> For PR triggers: use GitHub Branch Source plugin — pipeline runs on every PR, reports status back to GitHub. Gate merges on green builds.' },
-          { q: 'How do you manage secrets in Jenkins?', a: '<span class="wi-ans-key">Use Jenkins Credentials Store — never hardcode secrets in Jenkinsfile.</span><div class="wi-code-block">environment {\n  API_KEY = credentials("api-key-prod")\n}\nsteps { sh "curl -H \'X-API-Key: ${API_KEY}\' ..." }</div>Jenkins masks credential values in logs. Use secret text for tokens, username/password for basic auth, SSH key for Git.' },
-        ]
-      },
-      {
-        title: '🧩 CI/CD Concepts',
-        qs: [
-          { q: 'What is the difference between Continuous Integration, Delivery, and Deployment?', a: '<span class="wi-ans-key">CI: automatically build and test on every commit — catches integration bugs early. CD (Delivery): CI + automated release to staging, but production deployment requires manual approval. CD (Deployment): fully automated — every green build goes straight to production.</span> Most enterprises practice CI + Delivery. Full Deployment requires high test coverage and feature flags.' },
-          { q: 'What is a test pyramid and how does it apply to CI/CD?', a: '<span class="wi-ans-key">Test pyramid: many fast unit tests at the base → fewer integration tests in middle → few slow E2E tests at the top.</span> In CI/CD: unit tests run on every commit (seconds), integration tests on PR (minutes), E2E/UI tests in nightly or pre-release pipeline (hours). Inverting the pyramid (many E2E tests) makes CI slow and brittle.' },
-          { q: 'How do you handle flaky tests in a CI pipeline?', a: '<span class="wi-ans-key">Strategies: quarantine flaky tests (run separately, don\'t block pipeline), auto-retry on failure (up to 2 retries), track flakiness metrics, fix root causes (timing issues, test data conflicts, environment instability).</span> Never ignore flaky tests — they erode confidence in the suite. A test that sometimes passes is not a passing test.' },
-          { q: 'What is Docker and how is it used in test automation?', a: '<span class="wi-ans-key">Docker packages the test environment (JDK, browser, dependencies) into a container that runs identically everywhere.</span> Benefits: consistent environment across dev/CI/CD, parallel test execution in isolated containers, no "browser not installed" CI failures. Playwright ships its own browser binaries inside the container image.' },
-          { q: 'What is Selenium Grid and when would you use it vs Playwright?', a: '<span class="wi-ans-key">Selenium Grid distributes Selenium WebDriver tests across multiple machines/browsers in a hub-node topology.</span> Use Selenium Grid for legacy Selenium suites or when cross-browser coverage requires physical devices. Prefer Playwright for new projects — BrowserContext isolation provides parallel execution without Grid\'s infrastructure overhead.' },
-          { q: 'How do you integrate test results with Allure Reports?', a: '<span class="wi-ans-key">Add allure-testng (or allure-cucumber) dependency, add the Allure listener. Run tests — results written to allure-results/ folder. Then run <code>allure generate allure-results/</code> to build the HTML report.</span> Allure provides: step-level pass/fail, attachments (screenshots, logs), timeline view, flakiness tracking. Publish in Jenkins via Allure Plugin.' },
-        ]
-      },
-    ]
-  },
-  {
-    id: 'coding',
-    title: '💻 Coding Challenges',
-    sections: [
-      {
-        title: '📊 Arrays & Strings',
-        qs: [
-          { q: 'How do you find the two numbers in an array that sum to a target?', a: '<span class="wi-ans-key">Use a HashMap to store complements — one pass O(n) solution.</span><div class="wi-code-block">public int[] twoSum(int[] nums, int target) {\n  Map&lt;Integer, Integer&gt; map = new HashMap&lt;&gt;();\n  for (int i = 0; i &lt; nums.length; i++) {\n    int complement = target - nums[i];\n    if (map.containsKey(complement))\n      return new int[]{map.get(complement), i};\n    map.put(nums[i], i);\n  }\n  return new int[]{};\n}\n// Time: O(n), Space: O(n)</div>', coding: true },
-          { q: 'How do you check if a string is a palindrome?', a: '<span class="wi-ans-key">Two-pointer approach — compare characters from both ends moving inward.</span><div class="wi-code-block">public boolean isPalindrome(String s) {\n  s = s.toLowerCase().replaceAll("[^a-z0-9]", "");\n  int l = 0, r = s.length() - 1;\n  while (l &lt; r) {\n    if (s.charAt(l) != s.charAt(r)) return false;\n    l++; r--;\n  }\n  return true;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you find the maximum subarray sum (Kadane\'s Algorithm)?', a: '<span class="wi-ans-key">Track current sum and global max — reset current sum to 0 if it goes negative.</span><div class="wi-code-block">public int maxSubArray(int[] nums) {\n  int maxSum = nums[0], curSum = nums[0];\n  for (int i = 1; i &lt; nums.length; i++) {\n    curSum = Math.max(nums[i], curSum + nums[i]);\n    maxSum = Math.max(maxSum, curSum);\n  }\n  return maxSum;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you check if two strings are anagrams?', a: '<span class="wi-ans-key">Count character frequencies — use an int[26] array for O(n) space instead of HashMap.</span><div class="wi-code-block">public boolean isAnagram(String s, String t) {\n  if (s.length() != t.length()) return false;\n  int[] count = new int[26];\n  for (char c : s.toCharArray()) count[c - \'a\']++;\n  for (char c : t.toCharArray()) count[c - \'a\']--;\n  for (int n : count) if (n != 0) return false;\n  return true;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you find all duplicates in an array?', a: '<span class="wi-ans-key">Use a HashSet — add each element; if add() returns false it\'s a duplicate.</span><div class="wi-code-block">public List&lt;Integer&gt; findDuplicates(int[] nums) {\n  Set&lt;Integer&gt; seen = new HashSet&lt;&gt;();\n  List&lt;Integer&gt; result = new ArrayList&lt;&gt;();\n  for (int n : nums) {\n    if (!seen.add(n)) result.add(n);\n  }\n  return result;\n}\n// Time: O(n), Space: O(n)</div>', coding: true },
-          { q: 'How do you find the longest common prefix among a list of strings?', a: '<span class="wi-ans-key">Use the first string as a reference and progressively shorten it while checking against all other strings.</span><div class="wi-code-block">public String longestCommonPrefix(String[] strs) {\n  String prefix = strs[0];\n  for (int i = 1; i &lt; strs.length; i++)\n    while (!strs[i].startsWith(prefix))\n      prefix = prefix.substring(0, prefix.length() - 1);\n  return prefix;\n}\n// Time: O(S) total chars, Space: O(1)</div>', coding: true },
-          { q: 'How do you rotate an array by k positions?', a: '<span class="wi-ans-key">Three-reverse trick — reverse entire array, then reverse first k, then reverse remainder.</span><div class="wi-code-block">public void rotate(int[] nums, int k) {\n  k %= nums.length;\n  reverse(nums, 0, nums.length - 1);\n  reverse(nums, 0, k - 1);\n  reverse(nums, k, nums.length - 1);\n}\nvoid reverse(int[] a, int l, int r) {\n  while (l &lt; r) { int t = a[l]; a[l++] = a[r]; a[r--] = t; }\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you find the missing number in an array of 0 to n?', a: '<span class="wi-ans-key">Use the Gauss formula: expected sum = n*(n+1)/2, subtract actual sum.</span><div class="wi-code-block">public int missingNumber(int[] nums) {\n  int n = nums.length;\n  int expected = n * (n + 1) / 2;\n  int actual = 0;\n  for (int num : nums) actual += num;\n  return expected - actual;\n}\n// Time: O(n), Space: O(1) — no extra data structure needed</div>', coding: true },
-        ]
-      },
-      {
-        title: '🔗 Linked Lists',
-        qs: [
-          { q: 'How do you reverse a singly linked list?', a: '<span class="wi-ans-key">Iterative three-pointer approach — prev, curr, next.</span><div class="wi-code-block">public ListNode reverseList(ListNode head) {\n  ListNode prev = null, curr = head;\n  while (curr != null) {\n    ListNode next = curr.next;\n    curr.next = prev;\n    prev = curr;\n    curr = next;\n  }\n  return prev;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you detect a cycle in a linked list?', a: '<span class="wi-ans-key">Floyd\'s cycle detection — slow pointer moves 1 step, fast pointer moves 2 steps. If they meet, there\'s a cycle.</span><div class="wi-code-block">public boolean hasCycle(ListNode head) {\n  ListNode slow = head, fast = head;\n  while (fast != null && fast.next != null) {\n    slow = slow.next;\n    fast = fast.next.next;\n    if (slow == fast) return true;\n  }\n  return false;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you find the middle node of a linked list?', a: '<span class="wi-ans-key">Slow/fast pointer — when fast reaches end, slow is at the middle.</span><div class="wi-code-block">public ListNode middleNode(ListNode head) {\n  ListNode slow = head, fast = head;\n  while (fast != null && fast.next != null) {\n    slow = slow.next;\n    fast = fast.next.next;\n  }\n  return slow;\n}\n// For even-length list, returns second middle node</div>', coding: true },
-          { q: 'How do you merge two sorted linked lists?', a: '<span class="wi-ans-key">Use a dummy head node and compare nodes from both lists iteratively.</span><div class="wi-code-block">public ListNode mergeTwoLists(ListNode l1, ListNode l2) {\n  ListNode dummy = new ListNode(0), cur = dummy;\n  while (l1 != null && l2 != null) {\n    if (l1.val &lt;= l2.val) { cur.next = l1; l1 = l1.next; }\n    else { cur.next = l2; l2 = l2.next; }\n    cur = cur.next;\n  }\n  cur.next = l1 != null ? l1 : l2;\n  return dummy.next;\n}\n// Time: O(n+m), Space: O(1)</div>', coding: true },
-        ]
-      },
-      {
-        title: '🌳 Trees & Graphs',
-        qs: [
-          { q: 'How do you find the maximum depth of a binary tree?', a: '<span class="wi-ans-key">Recursive DFS — depth = 1 + max(leftDepth, rightDepth).</span><div class="wi-code-block">public int maxDepth(TreeNode root) {\n  if (root == null) return 0;\n  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));\n}\n// Time: O(n), Space: O(h) where h is height</div>', coding: true },
-          { q: 'How do you check if a binary tree is balanced?', a: '<span class="wi-ans-key">Return height from bottom up — return -1 to signal unbalanced subtree detected.</span><div class="wi-code-block">public boolean isBalanced(TreeNode root) {\n  return height(root) != -1;\n}\nint height(TreeNode node) {\n  if (node == null) return 0;\n  int l = height(node.left);\n  int r = height(node.right);\n  if (l == -1 || r == -1 || Math.abs(l-r) > 1) return -1;\n  return 1 + Math.max(l, r);\n}</div>', coding: true },
-          { q: 'How do you perform level-order traversal (BFS) of a binary tree?', a: '<span class="wi-ans-key">Use a Queue — process each level by iterating over its current size.</span><div class="wi-code-block">public List&lt;List&lt;Integer&gt;&gt; levelOrder(TreeNode root) {\n  List&lt;List&lt;Integer&gt;&gt; res = new ArrayList&lt;&gt;();\n  if (root == null) return res;\n  Queue&lt;TreeNode&gt; q = new LinkedList&lt;&gt;();\n  q.offer(root);\n  while (!q.isEmpty()) {\n    int size = q.size();\n    List&lt;Integer&gt; level = new ArrayList&lt;&gt;();\n    for (int i = 0; i &lt; size; i++) {\n      TreeNode n = q.poll();\n      level.add(n.val);\n      if (n.left != null) q.offer(n.left);\n      if (n.right != null) q.offer(n.right);\n    }\n    res.add(level);\n  }\n  return res;\n}</div>', coding: true },
-          { q: 'How do you validate a Binary Search Tree?', a: '<span class="wi-ans-key">Pass valid min/max bounds down the recursion — every node must be within its valid range.</span><div class="wi-code-block">public boolean isValidBST(TreeNode root) {\n  return validate(root, Long.MIN_VALUE, Long.MAX_VALUE);\n}\nboolean validate(TreeNode n, long min, long max) {\n  if (n == null) return true;\n  if (n.val &lt;= min || n.val &gt;= max) return false;\n  return validate(n.left, min, n.val) &&\n         validate(n.right, n.val, max);\n}</div>', coding: true },
-        ]
-      },
-      {
-        title: '🔢 Hashmaps & Sliding Window',
-        qs: [
-          { q: 'How do you find the first non-repeating character in a string?', a: '<span class="wi-ans-key">Two passes: count frequencies in first pass, find first with count 1 in second pass.</span><div class="wi-code-block">public int firstUniqChar(String s) {\n  int[] count = new int[26];\n  for (char c : s.toCharArray()) count[c - \'a\']++;\n  for (int i = 0; i &lt; s.length(); i++)\n    if (count[s.charAt(i) - \'a\'] == 1) return i;\n  return -1;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you find the longest substring without repeating characters?', a: '<span class="wi-ans-key">Sliding window with HashMap tracking last seen index — jump left pointer past the duplicate.</span><div class="wi-code-block">public int lengthOfLongestSubstring(String s) {\n  Map&lt;Character, Integer&gt; map = new HashMap&lt;&gt;();\n  int max = 0, left = 0;\n  for (int right = 0; right &lt; s.length(); right++) {\n    char c = s.charAt(right);\n    if (map.containsKey(c))\n      left = Math.max(left, map.get(c) + 1);\n    map.put(c, right);\n    max = Math.max(max, right - left + 1);\n  }\n  return max;\n}\n// Time: O(n), Space: O(min(n,charset))</div>', coding: true },
-          { q: 'How do you find the maximum sum subarray of size k?', a: '<span class="wi-ans-key">Sliding window — add the new element, subtract the element leaving the window.</span><div class="wi-code-block">public int maxSumSubarray(int[] nums, int k) {\n  int windowSum = 0, maxSum = 0;\n  for (int i = 0; i &lt; k; i++) windowSum += nums[i];\n  maxSum = windowSum;\n  for (int i = k; i &lt; nums.length; i++) {\n    windowSum += nums[i] - nums[i - k];\n    maxSum = Math.max(maxSum, windowSum);\n  }\n  return maxSum;\n}\n// Time: O(n), Space: O(1)</div>', coding: true },
-          { q: 'How do you group anagrams together from a list of strings?', a: '<span class="wi-ans-key">Sort each string as the HashMap key — anagrams share the same sorted form.</span><div class="wi-code-block">public List&lt;List&lt;String&gt;&gt; groupAnagrams(String[] strs) {\n  Map&lt;String, List&lt;String&gt;&gt; map = new HashMap&lt;&gt;();\n  for (String s : strs) {\n    char[] ca = s.toCharArray();\n    Arrays.sort(ca);\n    String key = new String(ca);\n    map.computeIfAbsent(key, k -> new ArrayList&lt;&gt;()).add(s);\n  }\n  return new ArrayList&lt;&gt;(map.values());\n}\n// Time: O(n * k log k), Space: O(n*k)</div>', coding: true },
-        ]
-      },
-    ]
-  },
-];
+/* ══════════════════════════════════════════════════════
+   CHAPTER 1 — BDD & CUCUMBER
+══════════════════════════════════════════════════════ */
+{
+  id:'bdd', title:'🥒 BDD & Cucumber',
+  sections:[
+    { title:'📖 Core BDD Concepts', qs:[
+      {q:'What is BDD (Behavior-Driven Development)?', a:'<b>BDD is a methodology where tests are written in plain English from the user\'s perspective using Given/When/Then syntax.</b> It bridges communication between business, QA and developers — Gherkin scenarios serve as living documentation everyone can validate.'},
+      {q:'How does BDD differ from TDD?', a:'<b>TDD tests individual code units from a developer perspective; BDD tests user behavior from a stakeholder perspective.</b> TDD uses JUnit assertions on methods; BDD uses Gherkin feature files that the business team can read and approve.'},
+      {q:'What is Gherkin?', a:'<b>Gherkin is the plain-text DSL used to write BDD scenarios.</b> Keywords: Feature, Scenario, Given, When, Then, And, But, Background, Scenario Outline, Examples. It is parsed by Cucumber and mapped to Java step definitions.'},
+      {q:'What is a Feature file?', a:'<b>A .feature file contains one Feature and one or more Scenarios written in Gherkin.</b> It lives in src/test/resources/features/ and is version-controlled as living documentation, one file per functional area.'},
+      {q:'What is a Scenario in Cucumber?', a:'<b>A Scenario is one test case — a concrete example of a system behavior.</b> It contains Given (preconditions), When (action), Then (expected outcome). Each Scenario should be independent and test exactly one behavior.'},
+      {q:'What is a Scenario Outline?', a:'<b>Scenario Outline is a parameterized template that runs the same steps with different data rows from an Examples table.</b> Use it for form validation, login flows, or any test that varies only in input/output data.'},
+      {q:'What is a Background block?', a:'<b>Background contains Given steps shared by all Scenarios in the same feature file — it runs before every Scenario.</b> Use it for common preconditions like navigation or login. Avoid it if two Scenarios need different setups.'},
+      {q:'What are Cucumber tags?', a:'<b>Tags are @-prefixed labels placed above Scenario or Feature to filter which tests run.</b> Example: @smoke, @regression, @wip. Filter via @CucumberOptions(tags="@smoke") or CLI -Dcucumber.filter.tags="@regression".'},
+      {q:'What is the difference between Scenario and Scenario Outline?', a:'<b>Scenario runs once with hardcoded values; Scenario Outline runs N times, once per Examples row.</b> Scenario Outline generates N test reports, one per data row.'},
+      {q:'How do you write a good Gherkin step?', a:'<b>Focus on user intent, not UI mechanics.</b> Write "When user submits login form" not "When user clicks button with id=submit". Keep steps high-level so they remain valid when the UI is redesigned.'},
+      {q:'What is the purpose of the And/But keywords?', a:'<b>And/But chain multiple steps of the same type without repeating Given/When/Then.</b> "Given I am on the homepage / And I am logged in" reads more naturally than two Given lines.'},
+      {q:'How many Scenarios should a Feature file contain?', a:'<b>Typically 3-10 Scenarios per Feature file.</b> More than 15 usually signals the Feature covers too broad a scope and should be split. Each file should describe one bounded context.'},
+      {q:'What is a DocString in Gherkin?', a:'<b>DocString is a multiline string passed to a step using triple-quote """ delimiters.</b> Use it for passing JSON bodies, SQL, or multiline text to API or DB steps without escaping.'},
+      {q:'What is a DataTable in Gherkin?', a:'<b>DataTable is tabular data embedded in a step, passed to the step definition as DataTable object.</b> Use it for multiple users, product lists, or configuration combinations within a single Scenario.'},
+      {q:'How do you run only smoke tests in Cucumber?', a:'<b>Tag scenarios with @smoke and filter via @CucumberOptions(tags="@smoke") or Maven CLI -Dcucumber.filter.tags="@smoke".</b> CI pipelines run @smoke on every PR and @regression nightly.'},
+      {q:'Can a Scenario have multiple tags?', a:'<b>Yes — a Scenario can have multiple tags on the same line: @smoke @login @critical.</b> Tags can be combined in filter expressions: @smoke and not @wip, @smoke or @regression.'},
+      {q:'What is the difference between Feature-level and Scenario-level tags?', a:'<b>Feature-level tags apply to all Scenarios within that feature file; Scenario-level tags apply only to that specific Scenario.</b> A Scenario inherits its Feature\'s tags plus its own.'},
+      {q:'How do you exclude tests from a run using tags?', a:'<b>Use the "not" operator: @CucumberOptions(tags="not @wip") or -Dcucumber.filter.tags="@regression and not @slow".</b> This is the standard way to skip in-progress or known-broken tests in CI.'},
+      {q:'What is the dry-run option in Cucumber?', a:'<b>dryRun=true validates all Gherkin steps have matching step definitions without executing tests.</b> Use it locally to verify new feature files have no undefined steps before committing.'},
+      {q:'What is the Cucumber monorepo vs per-module feature file structure?', a:'<b>Monorepo: all feature files in one module, organized by domain subdirectory. Per-module: feature files live with each microservice module.</b> Monorepo is simpler for single-app suites; per-module suits microservice repos where each team owns their tests.'},
+    ]},
+    { title:'⚙️ Hooks & Lifecycle', qs:[
+      {q:'What are Cucumber Hooks?', a:'<b>Hooks are lifecycle methods that run at specific points: @Before (before each Scenario), @After (after each Scenario), @BeforeStep, @AfterStep.</b> They support an order parameter for sequencing multiple hooks.'},
+      {q:'What do you put in @Before hook?', a:'<b>Browser/driver initialization, loading test config, setting base URL, creating test data via API.</b> Keep @Before fast — heavy setup slows every Scenario. Move one-time setup to @BeforeSuite (TestNG).'},
+      {q:'What do you put in @After hook?', a:'<b>Screenshot capture on failure, browser teardown, test data cleanup via API DELETE calls.</b> Always close browser in @After regardless of pass/fail to prevent resource leaks.'},
+      {q:'How do you capture a screenshot on failure in @After?', a:'<b>Check scenario.isFailed(), then call page.screenshot() and attach bytes via scenario.attach(bytes, "image/png", "failure").</b> This embeds the screenshot directly into Cucumber HTML and Extent reports.'},
+      {q:'How do you order multiple @Before hooks?', a:'<b>Use the order attribute: @Before(order=1) runs first, @Before(order=2) runs second.</b> Lower order values run first in @Before; higher order values run first in @After (teardown reverses setup order).'},
+      {q:'What is the difference between @Before and @BeforeStep?', a:'<b>@Before runs once before the entire Scenario; @BeforeStep runs before every individual step.</b> Use @BeforeStep sparingly — it adds overhead to every step execution.'},
+      {q:'Can hooks be scoped to specific tags?', a:'<b>Yes — @Before("@login") runs only for Scenarios tagged @login.</b> Use scoped hooks to add tag-specific setup like pre-authenticating the browser only for tests that need it.'},
+      {q:'How do you share data between @Before and step definitions?', a:'<b>Use a shared context object injected via PicoContainer or a ThreadLocal context holder.</b> Never use static fields — they break parallel execution.'},
+      {q:'What is PicoContainer in Cucumber?', a:'<b>PicoContainer is a lightweight DI container that auto-injects shared objects into step definition classes via constructor injection.</b> Add cucumber-picocontainer dependency; any step class whose constructor takes a context class gets it injected.'},
+      {q:'How does PicoContainer share state between step definition classes?', a:'<b>Create a TestContext class holding shared state (Page, auth token, test data). Any step class declaring TestContext in its constructor gets the same instance per Scenario.</b> PicoContainer creates it once and shares it.'},
+      {q:'What happens if you forget to close the browser in @After?', a:'<b>Browser processes accumulate per test execution — in large parallel suites this exhausts memory and crashes the JVM.</b> Always call context.close() and playwright.close() in @After, even if the Scenario passed.'},
+      {q:'What is scenario.isFailed() used for?', a:'<b>scenario.isFailed() returns true if any step in the Scenario failed, allowing conditional logic in @After.</b> Capture screenshots, extra logs, or send alerts only on failures to avoid noise in passing runs.'},
+      {q:'What is scenario.attach() used for?', a:'<b>scenario.attach() embeds binary data (screenshots, HTML, text) directly into the Cucumber report for that Scenario.</b> Supports MIME types: image/png, text/plain, text/html.'},
+      {q:'Can you have multiple @After hooks in one class?', a:'<b>Yes — multiple @After methods in one class all execute; order determines sequence.</b> Separate teardown concerns: one @After for screenshots, another for browser close, another for API cleanup.'},
+      {q:'What is @AfterAll in Cucumber vs TestNG @AfterSuite?', a:'<b>Cucumber has no native @AfterAll — use TestNG @AfterSuite or a custom Cucumber plugin for suite-level teardown.</b> @AfterSuite is the right place to stop a shared test server or generate the final aggregated report.'},
+      {q:'How do you run a setup that happens only once per Feature file?', a:'<b>There is no @BeforeFeature in Cucumber JVM — use a static boolean flag in @Before with a check, or use TestNG @BeforeClass if features map to classes.</b> Another approach: use a Cucumber plugin that listens to TestSourceRead events.'},
+      {q:'What is the Cucumber event system?', a:'<b>Cucumber\'s EventBus publishes events (TestRunStarted, TestCaseStarted, TestStepFinished, TestRunFinished) that custom plugins can listen to.</b> Use it to build real-time dashboards, Slack integrations, or push results to test management tools.'},
+      {q:'How do you implement a custom Cucumber plugin?', a:'<b>Implement the Plugin interface and subscribe to EventBus events in the constructor.</b> Register via @CucumberOptions(plugin="com.company.MyPlugin"). The plugin receives typed event objects for every lifecycle transition.'},
+      {q:'What is the difference between a Cucumber plugin and a TestNG listener?', a:'<b>Cucumber plugins receive Cucumber-level events (scenario start/finish, step pass/fail). TestNG listeners receive TestNG-level events (test method pass/fail, suite start/finish).</b> For BDD reports use Cucumber plugins; for framework-level telemetry use TestNG listeners.'},
+      {q:'How do you generate an Extent Report with Cucumber?', a:'<b>Add extent-cucumber7-adapter, reference it in @CucumberOptions plugin, and create extent.properties with output path.</b> The adapter hooks into Cucumber events and auto-generates rich HTML with step-level details and embedded screenshots.'},
+    ]},
+    { title:'🧩 Step Definitions', qs:[
+      {q:'What is a Step Definition?', a:'<b>A Step Definition is a Java method annotated with @Given/@When/@Then that maps to a Gherkin step via a pattern and contains the automation code implementing that step.</b>'},
+      {q:'What are Cucumber Expressions?', a:'<b>Cucumber Expressions use typed placeholders ({string}, {int}, {word}, {float}) that are simpler than regex and self-documenting.</b> They cover 95% of use cases and are the recommended approach over raw regex.'},
+      {q:'What is the difference between {string} and {word} in Cucumber Expressions?', a:'<b>{string} matches a quoted string — "hello" or \'hello\' — and strips the quotes. {word} matches a single word with no spaces.</b> Use {string} for values that may contain spaces; {word} for simple identifiers.'},
+      {q:'How do you use a DataTable in a step definition?', a:'<b>Add DataTable as the last parameter; convert via asMaps() for List&lt;Map&lt;String,String&gt;&gt; or asList() for List&lt;String&gt;.</b> For custom POJOs use DataTable.as(MyClass.class) with a custom DataTableType.'},
+      {q:'How do you define a DataTableType for custom POJO mapping?', a:'<b>Annotate a method with @DataTableType that takes Map&lt;String,String&gt; and returns your POJO.</b> Cucumber uses it automatically when step definitions declare List&lt;YourPojo&gt; parameters.'},
+      {q:'What is the glue path in CucumberOptions?', a:'<b>glue is the package path(s) Cucumber scans for step definitions and hooks.</b> Incorrect glue causes "Undefined step" errors even when code exists. Specify all packages: glue={"com.steps","com.hooks"}.'},
+      {q:'What causes an AmbiguousStepDefinitionsException?', a:'<b>Two step definitions match the same Gherkin step.</b> Fix by making patterns more specific, merging the two implementations, or renaming one step in the feature file.'},
+      {q:'What causes an UndefinedStepException?', a:'<b>No step definition pattern matches the Gherkin step.</b> Check: correct glue path, correct annotation (@Given vs @When), Cucumber Expression syntax error, or typo in the step text.'},
+      {q:'How do you share state between two step definition classes?', a:'<b>PicoContainer: declare the shared context class in both constructors — Cucumber injects the same instance. ThreadLocal: store in a static ThreadLocal accessor class.</b> Never use static mutable fields.'},
+      {q:'What is a pending step?', a:'<b>A step definition method that throws PendingException() is "pending" — it signals the step is not yet implemented.</b> Cucumber marks the Scenario as pending (yellow) rather than failed (red) in the report.'},
+      {q:'How do you handle optional groups in Cucumber Expressions?', a:'<b>Use the (optional) syntax: "I wait for(?: up to)? {int} seconds" makes "up to" optional.</b> This allows one step definition to match both "I wait for 5 seconds" and "I wait for up to 5 seconds".'},
+      {q:'Can one step definition match multiple Gherkin steps?', a:'<b>Yes — a flexible pattern with alternation or optional groups can match multiple step phrasings.</b> Example: "I (click|tap) the {string} button" matches both "I click" and "I tap".'},
+      {q:'How do you handle a step that appears in both @Given and @When?', a:'<b>Use @ParameterType or define a generic step annotated with @Given that is also called from When steps.</b> Alternatively annotate the method with both @Given and @When — Cucumber allows multiple annotations on one method.'},
+      {q:'How do you organize step definitions in a large project?', a:'<b>By domain, not by feature file: LoginSteps, CheckoutSteps, CommonSteps.</b> CommonSteps holds steps reused across many features. Avoid one step class per feature file — it causes duplication.'},
+      {q:'What is the maximum number of parameters a step definition can have?', a:'<b>There is no enforced limit, but Cucumber Expressions support up to 10 capture groups.</b> If a step needs more parameters, use a DataTable or DocString instead.'},
+      {q:'How do you write a step that accepts a multiline string?', a:'<b>Declare a String parameter as the last argument — Cucumber passes the DocString content automatically.</b> The triple-quote delimiters are stripped; only the content is passed.'},
+      {q:'What is a ParameterType in Cucumber?', a:'<b>@ParameterType defines a custom type for Cucumber Expressions.</b> Example: @ParameterType("admin|user|guest") with name "role" lets you write {role} in expressions and receive a typed enum value.'},
+      {q:'How do you implement a step that navigates to a named page?', a:'<b>Use a ParameterType mapping page names to URLs, or a switch in the step method.</b> "When I navigate to the {string} page" with a map of name→URL keeps navigation logic centralized.'},
+      {q:'How do you avoid duplicating browser interaction code across step classes?', a:'<b>Create a BasePage or ActionHelper with common methods (click, fill, waitForVisible) that all step classes reference.</b> Step definitions call high-level page object methods, never Playwright locators directly.'},
+      {q:'What is a transformation in Cucumber and when do you use it?', a:'<b>Transformations (now ParameterTypes) convert matched strings to custom types before passing to step methods.</b> Use them to auto-parse dates, enums, or domain objects from Gherkin step text.'},
+    ]},
+    { title:'⚡ Parallel, Runner & Integration', qs:[
+      {q:'What is a Cucumber Runner class?', a:'<b>The Runner is a Java class annotated @RunWith(Cucumber.class) or extending AbstractTestNGCucumberTests plus @CucumberOptions that connects Gherkin to step definitions.</b> It is the entry point for test execution.'},
+      {q:'How do you configure CucumberOptions?', a:'<b>@CucumberOptions(features="src/test/resources/features", glue="com.steps", tags="@smoke", plugin={"pretty","json:target/cucumber.json"}).</b> All options can be overridden at runtime via system properties.'},
+      {q:'How do you run Cucumber tests with Maven?', a:'<b>mvn test -Dcucumber.filter.tags="@smoke" -Denv=staging.</b> Maven Surefire plugin runs the runner class; Cucumber picks up the system property overrides.'},
+      {q:'How do you run Cucumber in parallel with TestNG?', a:'<b>Extend AbstractTestNGCucumberTests and set thread count in testng.xml via data-provider-thread-count.</b> Each Scenario runs in its own thread; all shared resources must be ThreadLocal-isolated.'},
+      {q:'What is data-provider-thread-count in TestNG Cucumber?', a:'<b>AbstractTestNGCucumberTests uses a @DataProvider to supply Scenarios; data-provider-thread-count controls parallel Scenario execution.</b> Setting it to 4 runs 4 Scenarios simultaneously.'},
+      {q:'How do you run a subset of feature files in parallel?', a:'<b>Use tags to select the subset and set thread-count for parallelism.</b> All features matching the tag run in parallel threads — no need to manually split files.'},
+      {q:'What plugins do you include in CucumberOptions for CI?', a:'<b>At minimum: json:target/cucumber.json (for CI tools), html:target/reports (for HTML), junit:target/cucumber.xml (for JUnit XML).</b> Add ExtentCucumberAdapter for rich HTML with screenshots.'},
+      {q:'How do you publish Cucumber results to Jenkins?', a:'<b>Use the Cucumber Reports Jenkins plugin — it reads cucumber.json and displays interactive step-level results on the Jenkins build page.</b> Also archive the HTML report folder as build artifact.'},
+      {q:'How do you integrate Cucumber with JIRA/Xray?', a:'<b>Add Xray\'s Cucumber plugin; tag Scenarios with @JIRA-123 to link to Xray test issues.</b> After the run, push cucumber.json to Xray REST API to sync results automatically.'},
+      {q:'How do you retry failed Scenarios in Cucumber?', a:'<b>Use the @Retry annotation from cucumber-retry or implement IRetryAnalyzer in TestNG and apply globally via IAnnotationTransformer.</b> Limit retries to 1-2; more signals a systemic flakiness problem.'},
+      {q:'What is the @CucumberOptions monochrome option?', a:'<b>monochrome=true removes ANSI escape characters from console output, making logs readable in CI environments that don\'t support color.</b> Always enable in CI pipelines.'},
+      {q:'How do you generate a Cucumber JUnit XML report?', a:'<b>Add plugin="junit:target/cucumber.xml" to @CucumberOptions.</b> Jenkins and GitHub Actions parse JUnit XML natively to display per-test pass/fail trends without additional plugins.'},
+      {q:'What is the Allure Cucumber adapter?', a:'<b>allure-cucumber7-jvm integrates Cucumber with Allure — each step becomes a nested step in the Allure timeline report.</b> Supports attachments, parameters, and links to JIRA stories automatically.'},
+      {q:'How do you run Cucumber tests on a Selenium Grid?', a:'<b>In @Before, connect to Grid hub URL instead of launching local browser: browser.connect("http://hub:4444").</b> The rest of the framework is identical — BrowserContext and Page work the same over remote connections.'},
+      {q:'What is Cucumber\'s strict mode?', a:'<b>strict=true causes Cucumber to fail the build if any Scenario has undefined or pending steps.</b> Enable in CI to catch missing step definitions before they silently skip coverage.'},
+      {q:'How do you pass runtime parameters to step definitions?', a:'<b>Read from System.getProperty() set via Maven -D flags, or from a ConfigFactory singleton loaded from environment-specific properties files.</b> Never hardcode environment URLs in step definitions.'},
+      {q:'What is the difference between Cucumber JVM and Cucumber JS?', a:'<b>Cucumber JVM runs on the Java Virtual Machine; Cucumber JS runs on Node.js.</b> Both support the same Gherkin syntax but have different APIs, tool ecosystems, and step definition conventions.'},
+      {q:'How do you test multiple languages/locales with Cucumber?', a:'<b>Use a Scenario Outline with locale as a parameter; the step definition switches the browser locale via BrowserContext options.</b> Feature file: Examples table with locale column driving language-specific assertions.'},
+      {q:'How do you handle test ordering in Cucumber?', a:'<b>Cucumber does not guarantee execution order — each Scenario must be self-contained and independent.</b> If order matters, you have a design problem: fix by making each Scenario seed its own data.'},
+      {q:'How do you debug a "No features found" error?', a:'<b>Check: features path in @CucumberOptions matches actual directory, .feature file extension is correct, no typos in tag filter.</b> Use absolute path temporarily to confirm the path issue.'},
+    ]},
+    { title:'🔬 Advanced BDD Topics', qs:[
+      {q:'What is Living Documentation in BDD?', a:'<b>Living Documentation is the idea that BDD feature files serve as always up-to-date specifications that are both human-readable and executable.</b> Tools like Serenity generate publishable documentation from feature files automatically.'},
+      {q:'What is the Three Amigos meeting?', a:'<b>Three Amigos is a refinement meeting with Developer, QA, and Business Analyst collaborating to define acceptance criteria as Gherkin Scenarios before development starts.</b> It prevents misunderstood requirements from becoming bugs.'},
+      {q:'What is Specification by Example?', a:'<b>Specification by Example uses concrete examples to define system behavior instead of abstract requirements.</b> A feature file IS the specification — the Examples table in a Scenario Outline is a specification table.'},
+      {q:'What is the difference between Acceptance Tests and BDD?', a:'<b>Acceptance Tests verify the system meets requirements; BDD is a process for defining and automating those acceptance tests collaboratively.</b> BDD formalizes acceptance testing with Gherkin syntax and stakeholder participation.'},
+      {q:'How do you handle complex test data setup in BDD?', a:'<b>Use API calls in @Before hooks to create entities, not UI navigation.</b> REST calls to seed a user and their data in 200ms beats a 30-second UI signup flow every time.'},
+      {q:'What is the Screenplay Pattern?', a:'<b>The Screenplay Pattern models tests as Actors who have Abilities (use a browser) and perform Tasks (add item to cart) and ask Questions (what is the cart total?).</b> It is an alternative to POM — more composable but more verbose.'},
+      {q:'What is the difference between Imperative and Declarative BDD style?', a:'<b>Imperative: "When I click the Login button" — describes UI mechanics. Declarative: "When I log in as an admin" — describes intent.</b> Always prefer declarative; it is resilient to UI changes.'},
+      {q:'How do you prevent step definition class explosion?', a:'<b>Group steps by domain, not by feature file.</b> LoginSteps, SearchSteps, CartSteps. A CommonSteps class handles reusable cross-domain steps. 10-15 step classes serve 200+ Scenarios.'},
+      {q:'What is an Anti-Pattern in BDD?', a:'<b>Common anti-patterns: UI-focused steps (click, type), overly long Scenarios (10+ steps), Scenarios that depend on execution order, hardcoded test data in feature files.</b> Each violates BDD\'s goal of readable, resilient specifications.'},
+      {q:'How do you handle flaky steps due to timing in BDD?', a:'<b>Never use Thread.sleep() in step definitions — use Playwright\'s built-in auto-waiting or explicit waitFor() calls.</b> Flaky steps are usually a symptom of missing wait conditions or shared state between Scenarios.'},
+      {q:'What is Cucumber\'s configurability for step timeouts?', a:'<b>Cucumber itself has no step timeout; the timeout is set at the Playwright/WebDriver level via setDefaultTimeout() or TestNG @Test(timeOut=N).</b> Set a global default in @Before: page.setDefaultTimeout(15000).'},
+      {q:'How do you implement soft assertions in BDD step definitions?', a:'<b>Use TestNG\'s SoftAssert inside step methods, or accumulate assertion errors in a list and assert all in a dedicated "Then" step.</b> Soft assertions let you check multiple conditions in one Scenario without stopping at first failure.'},
+      {q:'What is the @Ignore equivalent in Cucumber?', a:'<b>Tag the Scenario with @wip or @ignore and exclude that tag in @CucumberOptions: tags="not @ignore".</b> There is no direct @Ignore annotation like JUnit — tag-based exclusion is the Cucumber way.'},
+      {q:'How do you test negative scenarios in BDD?', a:'<b>Write explicit negative Scenarios: "Given invalid credentials, When I log in, Then I see an error message".</b> Don\'t skip negatives — they often catch 403/400 handling bugs that positive tests miss.'},
+      {q:'How do you handle asynchronous behavior in BDD Scenarios?', a:'<b>In step definitions, use Playwright\'s waitForResponse() or waitForSelector() — never add sleep.</b> Model async flows declaratively: "When the upload completes" maps to a step that waits for the upload confirmation element.'},
+      {q:'What is the role of QA in Three Amigos?', a:'<b>QA brings the edge cases: what happens with empty input, what if the network fails, what are the boundary values?</b> QA turns abstract requirements into concrete Examples table rows that developers and business sign off on.'},
+      {q:'How do you version your feature files with the application?', a:'<b>Feature files live in the same Git repo as the application code and are versioned together.</b> A PR that changes behavior must also update or add the corresponding feature file — this keeps living documentation current.'},
+      {q:'What is Cucumber\'s World object (JavaScript) and its Java equivalent?', a:'<b>In Cucumber JS, World is a shared context per Scenario. In Cucumber JVM, PicoContainer-managed TestContext serves the same role.</b> Both provide isolated per-Scenario state shared across step classes.'},
+      {q:'How do you test API behavior using BDD (without UI)?', a:'<b>Write feature files describing API behavior in business terms, and implement step definitions using REST Assured instead of Playwright.</b> Given/When/Then maps naturally: Given auth header, When POST /users, Then 201 Created.'},
+      {q:'What is the Cucumber Expression {bigdecimal} used for?', a:'<b>{bigdecimal} is a built-in Cucumber Expression type that parses strings like "19.99" into BigDecimal.</b> Use it for monetary values and precise numeric assertions to avoid floating-point rounding issues.'},
+    ]},
+  ]
+},
+/* ══════════════════════════════════════════════════════
+   CHAPTER 2 — PLAYWRIGHT JAVA
+══════════════════════════════════════════════════════ */
+{
+  id:'playwright', title:'🎭 Playwright Java',
+  sections:[
+    { title:'🏗️ Architecture & Setup', qs:[
+      {q:'What is Playwright?', a:'<b>Playwright is a browser automation library that communicates via Chrome DevTools Protocol (CDP), bypassing the WebDriver HTTP layer.</b> It supports Chromium, Firefox, and WebKit from a single API with built-in auto-waiting.'},
+      {q:'Why choose Playwright over Selenium?', a:'<b>Playwright has built-in auto-wait, isolated BrowserContext for parallel testing, native network interception, and faster execution.</b> Selenium requires explicit waits, a separate Grid for isolation, and third-party tools for network mocking.'},
+      {q:'What is the Playwright object hierarchy?', a:'<b>Playwright → Browser → BrowserContext → Page.</b> Playwright manages process lifecycle; Browser = one browser type; BrowserContext = isolated session; Page = single tab.'},
+      {q:'What is BrowserContext and why does it matter?', a:'<b>BrowserContext is a fully isolated browser session with its own cookies, localStorage, and cache.</b> Multiple contexts share one Browser process — this enables true parallel testing at a fraction of the memory cost of spawning multiple browsers.'},
+      {q:'How do you create a Playwright instance in Java?', a:'<b>Playwright.create() returns a Playwright instance; call playwright.chromium().launch() to get a Browser.</b> Always close Playwright in a finally block or use try-with-resources to prevent process leaks.'},
+      {q:'What is LaunchOptions in Playwright?', a:'<b>LaunchOptions configures how the browser launches: setHeadless(false), setSlowMo(500), setArgs(List.of("--no-sandbox")).</b> Pass it to browser type\'s launch() method.'},
+      {q:'How do you implement a ThreadLocal DriverManager?', a:'<b>Store Page, BrowserContext, and Playwright in separate ThreadLocal&lt;T&gt; fields with static getters.</b> Call ThreadLocal.remove() in teardown to prevent memory leaks in TestNG\'s thread pool.'},
+      {q:'Why must you call ThreadLocal.remove() in teardown?', a:'<b>TestNG reuses threads across tests — without remove(), the next test on the same thread gets the previous test\'s browser object.</b> This causes cross-test contamination and memory leaks.'},
+      {q:'What is setDefaultTimeout() in Playwright?', a:'<b>setDefaultTimeout(ms) sets the global timeout for all actions and assertions on that Page or BrowserContext.</b> Set it once in @Before: page.setDefaultTimeout(15000). Individual actions can override with their own timeout.'},
+      {q:'What is setDefaultNavigationTimeout()?', a:'<b>setDefaultNavigationTimeout(ms) sets timeout specifically for navigation actions (goto, waitForNavigation).</b> Navigation often needs a longer timeout than element interactions — set separately.'},
+      {q:'How do you launch a browser in headed mode?', a:'<b>new BrowserType.LaunchOptions().setHeadless(false) shows the browser UI.</b> Use headed for local debugging, headless for CI/CD.'},
+      {q:'What is slowMo in Playwright?', a:'<b>setSlowMo(N) adds N milliseconds delay between every action — useful for watching test execution visually during debugging.</b> Never use in CI — it multiplies suite duration.'},
+      {q:'How do you configure viewport size for a BrowserContext?', a:'<b>new Browser.NewContextOptions().setViewportSize(1280, 720).</b> Set to null to use the browser\'s default. Consistent viewport prevents responsive layout surprises in CI.'},
+      {q:'What is a Browser.NewContextOptions used for?', a:'<b>It configures a new BrowserContext: viewport, locale, timezone, storageState, permissions, proxy, recordVideo, recordHar.</b> Pass it to browser.newContext() to create a pre-configured session.'},
+      {q:'How do you set locale and timezone for tests?', a:'<b>new Browser.NewContextOptions().setLocale("en-IN").setTimezoneId("Asia/Kolkata").</b> Use this to test date/time formatting, number formatting, and localized UI strings in CI.'},
+      {q:'How does Playwright handle browser process cleanup?', a:'<b>Call context.close() then browser.close() then playwright.close() in teardown.</b> Missing any of these leaves zombie browser processes that accumulate across a CI run.'},
+      {q:'What is Playwright\'s tracing API?', a:'<b>context.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true)) records a trace; stop() saves it to a .zip file.</b> View with playwright show-trace for full action replay.'},
+      {q:'How do you configure Playwright for Docker/CI?', a:'<b>Use the official mcr.microsoft.com/playwright/java Docker image — it includes all browser binaries.</b> Set headless=true. No additional browser install steps needed.'},
+      {q:'What is Playwright Inspector?', a:'<b>PWDEBUG=1 launches the Playwright Inspector — a GUI debugger that pauses execution, lets you step through actions, and try locators live.</b> Only use locally, never in CI.'},
+      {q:'How do you run Playwright tests cross-browser?', a:'<b>Parameterize the browser type via config (chromium/firefox/webkit) and pass to DriverManager.initDriver().</b> In CI: run three jobs in parallel, each with a different browser parameter.'},
+    ]},
+    { title:'🎯 Locators & Selectors', qs:[
+      {q:'What is a Locator in Playwright?', a:'<b>A Locator is a lazy, auto-retrying reference that re-queries the DOM on every action — unlike ElementHandle which is a stale snapshot.</b> Always use Locators; never use ElementHandle in new code.'},
+      {q:'What is the recommended locator priority order?', a:'<b>getByRole() → getByLabel() → getByPlaceholder() → getByText() → getByTestId() → CSS → XPath.</b> Start with the most semantic locator and only fall back to CSS/XPath when no semantic option exists.'},
+      {q:'How does getByRole() work?', a:'<b>getByRole(AriaRole.BUTTON, new Options().setName("Submit")) finds elements by ARIA role and accessible name.</b> Most resilient to UI changes because it mirrors how screen readers and users interact with the page.'},
+      {q:'How does getByLabel() work?', a:'<b>getByLabel("Email") finds form inputs associated with a label element containing "Email".</b> Works for input, textarea, and select elements. Preferred for form fields.'},
+      {q:'How does getByTestId() work?', a:'<b>getByTestId("submit-btn") finds elements with data-testid="submit-btn" attribute.</b> Best for elements that lack semantic roles. Requires adding data-testid to application HTML — negotiate this with developers.'},
+      {q:'How does getByText() work?', a:'<b>getByText("Add to Cart") finds elements containing that text.</b> Use exact:true for exact match. Works for any element containing text — use getByRole() for buttons/links when possible.'},
+      {q:'What is locator.filter()?', a:'<b>filter() narrows a locator to elements matching additional conditions by visible text or child locator.</b> page.locator("tr").filter(new FilterOptions().setHasText("John")) finds table rows containing "John".'},
+      {q:'How do you locate the Nth element in a list?', a:'<b>Use locator.nth(index) — zero-based indexing.</b> page.locator(".item").nth(2) returns the third item. Prefer locator.filter() over nth when the element has distinguishing text.'},
+      {q:'How do you locate an element inside another element?', a:'<b>Chain locators: page.locator(".card").locator("button.buy").</b> Or use the descendant combinator in CSS: page.locator(".card button.buy"). Chaining is more readable.'},
+      {q:'How do you handle a shadow DOM element?', a:'<b>Playwright auto-pierces shadow DOM — use normal CSS selectors and Playwright handles traversal.</b> page.locator("my-component .inner-button") works without any special shadow DOM API.'},
+      {q:'How do you locate elements inside an iframe?', a:'<b>page.frameLocator("#payment-iframe").getByLabel("Card number").fill("4111...").</b> FrameLocator acts like a Page for the iframe scope — chain locators on it normally.'},
+      {q:'What is the >> syntax in Playwright locators?', a:'<b>The >> operator is a legacy CSS descendant combinator for chaining in string-form locators.</b> It is now superseded by locator chaining (locator.locator()) which is clearer and type-safe.'},
+      {q:'How do you wait for an element to disappear?', a:'<b>locator.waitFor(new WaitForOptions().setState(WaitForSelectorState.HIDDEN)) waits until the element is hidden or detached.</b> Use for loading spinners, skeleton screens, modals closing.'},
+      {q:'How do you assert a locator has specific text?', a:'<b>assertThat(locator).hasText("Expected Text") — auto-retries until the text matches or timeout.</b> Never use locator.textContent().equals() — it does not retry for async DOM updates.'},
+      {q:'How do you get all elements matching a locator?', a:'<b>locator.all() returns List&lt;Locator&gt; — snapshot of all currently matching elements.</b> For assertions: assertThat(locator).hasCount(N) auto-retries. Use all() only when you need to iterate.'},
+      {q:'What is the difference between locator.click() and locator.dispatchEvent()?', a:'<b>click() simulates a real user click including hover, mouse-down, mouse-up; dispatchEvent() fires a synthetic DOM event directly.</b> Always use click() — dispatchEvent() bypasses Playwright\'s actionability checks.'},
+      {q:'How do you handle a select dropdown?', a:'<b>page.locator("#country").selectOption("India") or selectOption(new SelectOption().setValue("IN")).</b> For custom div-based dropdowns: click the trigger, waitFor the list, then click the option.'},
+      {q:'How do you select a checkbox?', a:'<b>locator.check() checks; locator.uncheck() unchecks; locator.setChecked(bool) sets to a specific state.</b> assertThat(locator).isChecked() verifies state.'},
+      {q:'How do you interact with a radio button group?', a:'<b>page.getByRole(AriaRole.RADIO, new Options().setName("Monthly")).check().</b> Radios are best located by their label text via getByLabel() or getByRole().'},
+      {q:'How do you type text into an input?', a:'<b>locator.fill("text") replaces existing content instantly — preferred for most inputs.</b> locator.type("text") types character by character triggering keydown/keypress/keyup events — use only when the app listens to individual keystrokes.'},
+    ]},
+    { title:'🔄 Actions & Interactions', qs:[
+      {q:'How does Playwright\'s auto-waiting work?', a:'<b>Before every action Playwright waits for the element to be: attached, visible, stable (not animating), enabled, and receivable.</b> This eliminates 90% of explicit waits. Override per-action via timeout option.'},
+      {q:'How do you handle a file upload?', a:'<b>locator.setInputFiles(Paths.get("file.pdf")) for &lt;input type="file"&gt;.</b> For custom file choosers: page.onFileChooser(chooser -> chooser.setFiles(path)) before the action that triggers the dialog.'},
+      {q:'How do you handle a file download?', a:'<b>Download d = page.waitForDownload(() -> page.locator("#download-btn").click()).</b> Then d.saveAs(path). waitForDownload() ensures the Download event is captured before processing.'},
+      {q:'How do you handle a new browser tab?', a:'<b>Page newTab = page.waitForPopup(() -> page.locator("#open-tab").click()).</b> The lambda triggers the action; waitForPopup() captures the new Page object. Then interact with newTab normally.'},
+      {q:'How do you handle alert/confirm/prompt dialogs?', a:'<b>page.onDialog(dialog -> dialog.accept()) registers a handler before triggering the action.</b> For prompts: dialog.accept("input text"). For dismissal: dialog.dismiss(). Must register BEFORE the action fires.'},
+      {q:'How do you hover over an element?', a:'<b>locator.hover() moves the mouse to the element center triggering CSS :hover state.</b> Use for dropdown menus, tooltips, hover cards — anything that requires mouseover to reveal.'},
+      {q:'How do you perform a drag and drop?', a:'<b>source.dragTo(target) is the high-level API. For custom drag: source.hover(), page.mouse().down(), page.mouse().move(x,y,steps), page.mouse().up().</b>'},
+      {q:'How do you press keyboard shortcuts?', a:'<b>page.keyboard().press("Control+A") for combinations; locator.press("Enter") for element-focused keys.</b> locator.fill() for typing text — it is faster than keyboard().type().'},
+      {q:'How do you scroll to an element?', a:'<b>locator.scrollIntoViewIfNeeded() scrolls the page until the element is visible.</b> Playwright auto-scrolls before most actions, so explicit scroll is rarely needed.'},
+      {q:'How do you take a screenshot?', a:'<b>page.screenshot(new ScreenshotOptions().setPath(Paths.get("shot.png")).setFullPage(true)).</b> locator.screenshot() captures only the element. Attach bytes to reports via scenario.attach().'},
+      {q:'How do you capture a specific element as a screenshot?', a:'<b>locator.screenshot(new Locator.ScreenshotOptions().setPath(path)) captures only the element\'s bounding box.</b> Useful for visual regression comparison of specific components.'},
+      {q:'How do you double-click an element?', a:'<b>locator.dblclick() performs a double-click action.</b> For right-click: locator.click(new ClickOptions().setButton(MouseButton.RIGHT)).'},
+      {q:'How do you clear a text field?', a:'<b>locator.fill("") replaces content with empty string — effectively clears the field.</b> locator.clear() also works. Avoid locator.triple-click then type — fill() is more reliable.'},
+      {q:'How do you verify text content of an element?', a:'<b>assertThat(locator).hasText("Expected") for exact match; containsText("partial") for partial match.</b> Both auto-retry. For getting text: locator.textContent() or locator.innerText().'},
+      {q:'How do you wait for a page to fully load?', a:'<b>page.waitForLoadState(LoadState.NETWORKIDLE) waits until no network activity for 500ms.</b> page.waitForURL("/dashboard") waits for specific URL. For SPA navigation prefer waitForURL or waitForResponse.'},
+      {q:'How do you handle a table and iterate its rows?', a:'<b>List&lt;Locator&gt; rows = page.locator("tbody tr").all().</b> Iterate with rows.forEach() calling cell locators on each row. For counting: assertThat(page.locator("tbody tr")).hasCount(10).'},
+      {q:'How do you handle clipboard in Playwright tests?', a:'<b>Grant clipboard permission via context.grantPermissions(List.of("clipboard-read","clipboard-write")).</b> Then use page.evaluate() to read/write clipboard content via JS.'},
+      {q:'How do you simulate slow network?', a:'<b>new Browser.NewContextOptions().setOffline(true) goes fully offline; for throttling use page.route() to add delays.</b> Route handlers can call Thread.sleep() before fulfilling to simulate slow APIs.'},
+      {q:'How do you test a form with validation?', a:'<b>Submit with empty/invalid fields and assertThat(page.locator(".error-msg")).isVisible().</b> Test each validation rule independently — one Scenario per validation case.'},
+      {q:'How do you handle an element that is present but not visible?', a:'<b>Use locator.waitFor(new WaitForOptions().setState(WaitForSelectorState.VISIBLE)) to wait for visibility.</b> Playwright actions require visibility by default — a hidden element throws an error if you try to click it.'},
+    ]},
+    { title:'🌐 Network, Auth & Storage', qs:[
+      {q:'How do you mock an API response?', a:'<b>page.route("**/api/products", route -> route.fulfill(new FulfillOptions().setStatus(200).setBody(json))).</b> The test never hits the real server — fast, deterministic, enables edge case simulation.'},
+      {q:'How do you abort a network request?', a:'<b>page.route("**/analytics/**", route -> route.abort()) blocks matching requests.</b> Use to prevent analytics/tracking calls from slowing tests or causing third-party auth issues.'},
+      {q:'How do you wait for an API call to complete?', a:'<b>Response r = page.waitForResponse(r -> r.url().contains("/api/data"), () -> triggerAction()).</b> The lambda triggers the action; waitForResponse() captures the response before assertions run.'},
+      {q:'How do you verify an API request was made?', a:'<b>Use page.waitForRequest(url, action) to capture and assert request properties: URL, method, body, headers.</b> Alternative: page.route() intercepts and stores requests for later assertion.'},
+      {q:'How do you save and restore authentication state?', a:'<b>After login: context.storageState(new StorageStateOptions().setPath("auth.json")). Reuse: browser.newContext(new NewContextOptions().setStorageStatePath("auth.json")).</b> Skips the login flow for every test.'},
+      {q:'How do you test with multiple user roles in the same suite?', a:'<b>Save separate storageState files per role (admin-auth.json, viewer-auth.json).</b> Each test class or BrowserContext loads the appropriate auth file — zero login overhead.'},
+      {q:'How do you grant browser permissions in Playwright?', a:'<b>context.grantPermissions(List.of("geolocation","camera","microphone")).</b> Without this, permission dialogs block tests. Combine with context.setGeolocation() for location-dependent tests.'},
+      {q:'How do you set cookies programmatically?', a:'<b>context.addCookies(List.of(new Cookie("session","abc").setDomain("app.com").setPath("/"))).</b> Use to inject auth cookies, feature flags, or A/B test variants without going through login UI.'},
+      {q:'How do you intercept and modify response headers?', a:'<b>route.fulfill() with custom headers option replaces the response entirely. To modify: route.fetch() to get the real response, then fulfill() with modified headers.</b>'},
+      {q:'How do you record a HAR file?', a:'<b>new NewContextOptions().setRecordHarPath(Paths.get("trace.har")).setRecordHarContent(HarContentPolicy.ATTACH).</b> HAR captures all requests/responses for offline replay or performance analysis.'},
+      {q:'How do you test behind a proxy?', a:'<b>new NewContextOptions().setProxy(new Proxy("http://proxy.company.com:8080")).</b> Corporate networks often require proxy config — set via context options or PLAYWRIGHT_JAVA_HTTP_PROXY env var.'},
+      {q:'How do you set request headers globally?', a:'<b>context.setExtraHTTPHeaders(Map.of("X-Test-Run","true","Authorization","Bearer "+token)).</b> Headers apply to all requests from that context, eliminating per-request header setup.'},
+      {q:'How do you test error states (500 server error)?', a:'<b>page.route("**/api/checkout", route -> route.fulfill(new FulfillOptions().setStatus(500).setBody("Server Error"))).</b> Then assert the UI shows the appropriate error message.'},
+      {q:'How do you test offline behavior?', a:'<b>context.setOffline(true) disconnects the network; test the offline UI; context.setOffline(false) reconnects.</b> Test retry behavior, offline banners, cached content.'},
+      {q:'How do you handle CORS in Playwright tests?', a:'<b>Playwright automatically handles CORS because it controls the browser directly via CDP — CORS restrictions only apply to requests from JavaScript, not from Playwright\'s native request API.</b>'},
+      {q:'How do you verify response body content in Playwright?', a:'<b>Response r = page.waitForResponse(pattern, action); String body = r.text(); or r.json().</b> Assert the body content as part of hybrid UI+API assertions.'},
+      {q:'How do you test WebSocket connections?', a:'<b>page.onWebSocket(ws -> ws.onFrameSent(f -> log(f.text()))) listens to WebSocket traffic.</b> Use to verify real-time data, chat messages, or live dashboards receive correct WebSocket frames.'},
+      {q:'How do you mock a slow API with a delay?', a:'<b>In route handler: Thread.sleep(3000) then route.fulfill(). This simulates backend latency to test loading states, spinners, and timeout handling.</b>'},
+      {q:'How do you handle HTTP Basic Auth on a page?', a:'<b>new NewContextOptions().setHttpCredentials(new HttpCredentials("user","pass")) auto-submits browser-level Basic Auth dialogs.</b>'},
+      {q:'How do you verify no 4xx/5xx errors occurred during a test?', a:'<b>page.onResponse(r -> { if(r.status()>=400) failures.add(r.url()+": "+r.status()); }) collects all errors.</b> Assert failures.isEmpty() at the end of the test.'},
+    ]},
+    { title:'🔍 Assertions, Debugging & Parallel', qs:[
+      {q:'How do you use Playwright\'s built-in assertions?', a:'<b>PlaywrightAssertions.assertThat(locator).hasText() / isVisible() / isEnabled() — all auto-retry until condition or timeout.</b> Never use assertEquals() on locator.textContent() — it doesn\'t retry.'},
+      {q:'What assertions does PlaywrightAssertions provide?', a:'<b>For Locator: hasText, containsText, hasValue, isVisible, isHidden, isEnabled, isDisabled, isChecked, hasCount, hasAttribute, hasClass.</b> For Page: hasTitle, hasURL. For APIResponse: isOK, hasStatus.'},
+      {q:'What is the difference between locator.isVisible() and assertThat().isVisible()?', a:'<b>locator.isVisible() is a synchronous snapshot check — true/false immediately. assertThat(locator).isVisible() retries until visible or timeout.</b> Use assertThat() in tests; locator.isVisible() for conditional logic.'},
+      {q:'How do you assert a page URL?', a:'<b>assertThat(page).hasURL(Pattern.compile("/dashboard")) or hasURL("https://app.com/dashboard").</b> Supports exact string and regex patterns; auto-retries during navigation.'},
+      {q:'How do you assert page title?', a:'<b>assertThat(page).hasTitle("Dashboard — MyApp").</b> Title assertions auto-retry, useful after navigation that changes the &lt;title&gt; tag dynamically.'},
+      {q:'What is the Trace Viewer?', a:'<b>Trace Viewer replays a recorded test showing every action, DOM snapshot, network call, and console log.</b> Run: playwright show-trace trace.zip. Invaluable for debugging CI failures without local reproduction.'},
+      {q:'How do you enable trace recording?', a:'<b>context.tracing().start(new StartOptions().setScreenshots(true).setSnapshots(true)).</b> On failure: context.tracing().stop(new StopOptions().setPath(Paths.get("trace.zip"))).'},
+      {q:'How do you record video of test execution?', a:'<b>new NewContextOptions().setRecordVideoDir(Paths.get("videos/")).</b> Video saved when context.close() is called. Combine with trace for complete failure evidence.'},
+      {q:'What is page.pause() used for?', a:'<b>page.pause() halts execution and opens the Playwright Inspector at that exact point.</b> Use in headed mode to inspect element state mid-test. Remove before committing.'},
+      {q:'How do you debug a locator that isn\'t finding elements?', a:'<b>Run in headed mode with PWDEBUG=1 to open Inspector; use the locator playground to test selectors live.</b> Check: element is in correct frame, not hidden behind a z-index, not inside shadow DOM.'},
+      {q:'How do you run Playwright tests in parallel with TestNG?', a:'<b>parallel="methods" in testng.xml with thread-count; each thread has its own BrowserContext via ThreadLocal DriverManager.</b> Never share Page or BrowserContext across threads.'},
+      {q:'How do you ensure test isolation in parallel Playwright runs?', a:'<b>Each test: own BrowserContext (ThreadLocal), own test user (created via API in @BeforeMethod), own test data (UUID-based), cleanup in @AfterMethod.</b>'},
+      {q:'What happens if BrowserContext is shared across threads?', a:'<b>Cookies and localStorage bleed between tests — authentication state, cached responses, and navigation history mix between concurrent tests causing random failures.</b>'},
+      {q:'How do you soft-assert multiple conditions in Playwright?', a:'<b>Playwright\'s assertions throw immediately on failure; use TestNG SoftAssert for collecting multiple failures.</b> Wrap each assertThat() in a try-catch and collect errors, or use SoftAssert.assertTrue() alongside Playwright snapshots.'},
+      {q:'How do you retry a flaky Playwright test?', a:'<b>Apply IRetryAnalyzer in TestNG; retry max 2 times.</b> Log retries to identify patterns. If a test retries often, fix the root cause (missing wait, shared state) rather than increasing retry count.'},
+      {q:'How do you assert a list of items has specific content?', a:'<b>assertThat(page.locator(".item")).containsText(new String[]{"Apple","Banana","Cherry"}).</b> containsText on a locator matching multiple elements checks each element in order.'},
+      {q:'How do you handle assertion failures with detailed error messages?', a:'<b>Playwright assertions include the actual vs expected in the failure message automatically.</b> Add .withTimeout(N) to extend wait time before failing for specific slow elements.'},
+      {q:'How do you test that an element does NOT exist?', a:'<b>assertThat(page.locator(".error-banner")).not().isVisible().</b> The .not() modifier inverts any assertion. Also assertThat(locator).hasCount(0) for "no such elements".'},
+      {q:'What is the difference between isVisible() and isAttached()?', a:'<b>isAttached: element exists in the DOM tree (may be hidden). isVisible: element is in DOM AND visible to the user.</b> Always assert isVisible() for UI interaction tests; isAttached() for checking element presence before visibility.'},
+      {q:'How do you verify console errors during a test?', a:'<b>page.onConsoleMessage(msg -> { if(msg.type().equals("error")) errors.add(msg.text()); }) collects console errors.</b> Assert errors.isEmpty() at test end to catch JS exceptions silently swallowed by the page.'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 3 — JAVA CORE ══ */
+{
+  id:'java', title:'☕ Java Core',
+  sections:[
+    { title:'🔤 Strings & Primitives', qs:[
+      {q:'Why is String immutable in Java?', a:'<b>String is immutable so it can be safely shared in the String Pool — multiple references point to the same object without risk.</b> Immutability enables hashCode caching and thread-safety without synchronization.'},
+      {q:'What is the String Pool?', a:'<b>The String Pool is a JVM heap cache where String literals are stored and reused.</b> String s = "hello" reuses pooled object; new String("hello") always creates a new heap object bypassing the pool.'},
+      {q:'What is the difference between String, StringBuilder, and StringBuffer?', a:'<b>String: immutable, thread-safe, slow for concatenation loops. StringBuilder: mutable, NOT thread-safe, fastest. StringBuffer: mutable, thread-safe via synchronized, slower.</b> Use StringBuilder in loops; String for constants.'},
+      {q:'How does == differ from .equals() for Strings?', a:'<b>== compares references (memory address); .equals() compares content character by character.</b> Always use .equals() for String comparison. Use Objects.equals(a,b) to handle nulls safely.'},
+      {q:'What is autoboxing and unboxing?', a:'<b>Autoboxing: automatic conversion of primitive to wrapper (int → Integer). Unboxing: wrapper to primitive (Integer → int).</b> NPE risk: unboxing null Integer throws NPE. Avoid in tight loops — creates garbage objects.'},
+      {q:'What is the difference between int and Integer?', a:'<b>int is a primitive on stack (4 bytes, no null, no methods). Integer is a wrapper object on heap with null capability and methods like parseInt().</b> Integer caches -128 to 127 — comparing with == can fool you.'},
+      {q:'What is String.intern()?', a:'<b>intern() adds the string to the String Pool and returns the pooled reference.</b> Use when comparing many identical strings by reference for performance. Rarely needed in modern Java.'},
+      {q:'How does String concatenation with + work in a loop?', a:'<b>In a loop, each iteration creates a new StringBuilder — O(n²) for n concatenations.</b> Use StringBuilder explicitly in loops: sb.append(s) per iteration, then sb.toString() once at the end.'},
+      {q:'What is the char type?', a:'<b>char is a 16-bit unsigned primitive for a Unicode code unit.</b> Character wrapper provides: isDigit(), isLetter(), toUpperCase(). String.charAt(i) returns a char.'},
+      {q:'How do you check if a String is null or empty?', a:'<b>s == null || s.isEmpty() for null-or-empty; s == null || s.isBlank() (Java 11+) for null-or-whitespace-only.</b> Use Objects.isNull(s) for null check clarity in complex conditions.'},
+      {q:'How do you convert String to int?', a:'<b>Integer.parseInt("42") → int. Integer.valueOf("42") → Integer object.</b> Both throw NumberFormatException for non-numeric input — wrap in try-catch for user-supplied input.'},
+      {q:'What is String.format()?', a:'<b>String.format("Hello %s, you are %d", name, age) formats a string with placeholders.</b> %s=String, %d=int, %f=float, %n=newline. More readable than concatenation for templated strings.'},
+      {q:'What new String methods came in Java 11?', a:'<b>isBlank() (whitespace check), strip()/stripLeading()/stripTrailing() (Unicode-aware trim), repeat(n), lines() (Stream of lines).</b> strip() handles Unicode whitespace; trim() only handles ASCII ≤32.'},
+      {q:'What is a final variable?', a:'<b>A final variable can only be assigned once — its reference cannot change after initialization.</b> For objects, the reference is final but the object\'s state can still mutate.'},
+      {q:'What is a static variable?', a:'<b>Static variables belong to the class, not instances — shared across all objects.</b> Dangerous in parallel tests: static mutable state is shared across threads causing race conditions.'},
+      {q:'What are wrapper classes?', a:'<b>Wrapper classes box primitives: Integer, Long, Double, Boolean, Character, Byte, Short, Float.</b> Required for generics, null representation, and utility methods like Integer.MAX_VALUE.'},
+      {q:'What is the difference between char and String?', a:'<b>char is a primitive holding one character; String is an object holding a character sequence.</b> "" + someChar converts char to String. "A".charAt(0) returns the char \'A\'.'},
+      {q:'What is a raw type?', a:'<b>A raw type uses a generic class without type parameter: List list = new ArrayList().</b> Avoid raw types — they bypass compile-time type safety and produce unchecked cast warnings.'},
+      {q:'What is the difference between long and Long?', a:'<b>long: 64-bit primitive, no null. Long: wrapper object with null capability and methods.</b> Use long for computations; Long when storing in collections or needing null.'},
+      {q:'What is String.valueOf() vs toString()?', a:'<b>String.valueOf(obj) safely returns "null" if obj is null. obj.toString() throws NullPointerException if obj is null.</b> Prefer String.valueOf() for null-safe string conversion.'},
+    ]},
+    { title:'🗂️ Collections Framework', qs:[
+      {q:'What is the Java Collections Framework?', a:'<b>A unified architecture of interfaces (List, Set, Map, Queue, Deque) and implementations for storing and manipulating groups of objects.</b> Choosing the right collection directly impacts framework performance and thread-safety.'},
+      {q:'How does HashMap work internally?', a:'<b>HashMap uses an array of buckets; hashCode() determines the bucket. Within a bucket, entries form a linked list (or Red-Black Tree if length exceeds 8, Java 8+).</b> Average O(1) get/put. Load factor 0.75 triggers resize.'},
+      {q:'What is the hashCode/equals contract?', a:'<b>If a.equals(b) then a.hashCode() must equal b.hashCode().</b> Violating this breaks HashMap — equal keys may be stored twice or get() fails to find existing keys. Always override both together.'},
+      {q:'What is the difference between ArrayList and LinkedList?', a:'<b>ArrayList: O(1) get(i), O(n) insert/remove mid-list. LinkedList: O(n) get(i), O(1) add/remove at ends.</b> Use ArrayList for most cases; LinkedList as Queue/Deque for constant-time head/tail operations.'},
+      {q:'How does ArrayList resize?', a:'<b>When capacity is exceeded, ArrayList creates a new array 1.5× larger and copies all elements — O(n) one-time cost.</b> Pre-size with new ArrayList<>(expectedSize) to avoid repeated resizing in data-heavy setups.'},
+      {q:'What is the difference between HashMap, LinkedHashMap, and TreeMap?', a:'<b>HashMap: unordered O(1). LinkedHashMap: insertion-ordered O(1). TreeMap: sorted by key O(log n).</b> Use LinkedHashMap for ordered JSON payloads; TreeMap for alphabetically sorted test report outputs.'},
+      {q:'What is ConcurrentHashMap?', a:'<b>ConcurrentHashMap is thread-safe using bucket-level CAS (Java 8+) — concurrent reads never block; writes lock only the affected bucket.</b> Use in parallel test suites for shared test result collection.'},
+      {q:'What is the difference between ConcurrentHashMap and Hashtable?', a:'<b>Hashtable locks the entire map per operation — bottleneck in parallel suites. ConcurrentHashMap locks only the affected bucket, enabling high-concurrency reads and writes.</b>'},
+      {q:'What is a fail-fast iterator?', a:'<b>Fail-fast iterators throw ConcurrentModificationException if the collection is structurally modified during iteration.</b> Fix: use iterator.remove() instead of collection.remove(), or use CopyOnWriteArrayList.'},
+      {q:'What is CopyOnWriteArrayList?', a:'<b>CopyOnWriteArrayList creates a new copy of the array on every write — reads are always lock-free.</b> Best when reads dominate and writes are rare, such as a shared test config list.'},
+      {q:'What is TreeSet?', a:'<b>TreeSet stores unique elements in sorted order using a Red-Black Tree — O(log n) operations.</b> Use for alphabetically sorted unique collections, range queries via headSet/tailSet.'},
+      {q:'What is PriorityQueue?', a:'<b>PriorityQueue is a min-heap — poll() always returns the smallest element per ordering.</b> Used for Dijkstra, task scheduling, any "process most urgent item first" use case.'},
+      {q:'What is ArrayDeque?', a:'<b>ArrayDeque is a double-ended queue with O(1) add/remove at both ends.</b> Faster than Stack (synchronized) and LinkedList (node overhead). Default stack/queue choice in Java.'},
+      {q:'What is the difference between poll() and remove() in Queue?', a:'<b>poll() returns null if empty; remove() throws NoSuchElementException.</b> Use poll() in test frameworks to handle empty queues without exceptions.'},
+      {q:'What is Collections.synchronizedList()?', a:'<b>Wraps a List with synchronized per-method access — coarse global lock.</b> Each method is atomic but compound operations are not. Prefer CopyOnWriteArrayList or ConcurrentHashMap for parallel suites.'},
+      {q:'How do you sort a List by a field?', a:'<b>list.sort(Comparator.comparing(User::getName)) sorts by name field.</b> Chain: Comparator.comparing(User::getDept).thenComparing(User::getName) for multi-field sort.'},
+      {q:'What is List.of() vs Arrays.asList()?', a:'<b>List.of() (Java 9+): fully immutable, no nulls. Arrays.asList(): fixed-size but set() allowed, nulls allowed.</b> Prefer List.of() for constants; Arrays.asList() when you need to set() elements.'},
+      {q:'What is computeIfAbsent()?', a:'<b>map.computeIfAbsent(key, k -> new ArrayList<>()) creates value only if key is absent.</b> Idiomatic for grouping: map<String, List<...>> without explicit null checks.'},
+      {q:'How do you remove duplicates from a List preserving order?', a:'<b>new ArrayList<>(new LinkedHashSet<>(list)) deduplicates while preserving insertion order.</b> Or list.stream().distinct().toList() (Java 16+) for a clean stream approach.'},
+      {q:'What is EnumMap?', a:'<b>EnumMap is a high-performance Map for enum keys — uses an array indexed by ordinal.</b> Faster than HashMap for enum-keyed lookups. Always prefer EnumMap when keys are enum values.'},
+      {q:'What is the difference between Iterator and ListIterator?', a:'<b>Iterator: forward-only traversal. ListIterator: bidirectional traversal, supports set() and add() during iteration.</b>'},
+      {q:'What is Collections.unmodifiableList()?', a:'<b>Returns a view that throws UnsupportedOperationException on mutations.</b> Use to return internal lists from APIs without exposing mutability.'},
+      {q:'How do you find the max/min element in a List?', a:'<b>Collections.max(list) / Collections.min(list) for Comparable elements.</b> Or list.stream().max(Comparator.comparing(fn)).orElseThrow() for custom comparators.'},
+      {q:'What is a Map.getOrDefault()?', a:'<b>map.getOrDefault(key, defaultValue) returns defaultValue if key is absent — avoids null check and put.</b> Cleaner than: value = map.containsKey(k) ? map.get(k) : default.'},
+      {q:'What is Collections.frequency()?', a:'<b>Collections.frequency(list, element) returns how many times element appears in list.</b> O(n) scan. For repeated counts consider a frequency Map built with computeIfAbsent + increment.'},
+    ]},
+    { title:'🔁 Streams & Lambda', qs:[
+      {q:'What is a Stream?', a:'<b>A Stream is a lazy sequence supporting functional operations (filter, map, reduce) that do not modify the source.</b> Intermediate ops are lazy; terminal ops (collect, forEach, count) trigger evaluation.'},
+      {q:'What is the difference between map() and flatMap()?', a:'<b>map(): 1-to-1 transform. flatMap(): 1-to-N transform with flattening.</b> flatMap(Collection::stream) converts List<List<T>> to Stream<T>.'},
+      {q:'What is filter() in streams?', a:'<b>filter(predicate) returns a stream containing only elements matching the predicate.</b> Lazy — evaluated only when a terminal op is invoked.'},
+      {q:'What is reduce()?', a:'<b>reduce(identity, accumulator) folds stream into one value.</b> stream.reduce(0, Integer::sum) sums all ints. Without identity returns Optional<T>.'},
+      {q:'What are the key Collectors?', a:'<b>toList(), toSet(), toMap(keyFn, valueFn), groupingBy(classifier), joining(delimiter), counting(), summingInt(), partitioningBy(predicate).</b> groupingBy is the most powerful — creates Map<K, List<V>>.'},
+      {q:'What is a Functional Interface?', a:'<b>An interface with exactly one abstract method, usable as a lambda target.</b> @FunctionalInterface annotation enforces this at compile time. Built-ins: Predicate, Function, Consumer, Supplier.'},
+      {q:'What is Predicate<T>?', a:'<b>Predicate<T> has test(T t) returning boolean.</b> Used in stream filter(). Composable: and(), or(), negate(). BiPredicate<T,U> takes two inputs.'},
+      {q:'What is Function<T,R>?', a:'<b>Function<T,R> transforms T to R via apply().</b> Used in stream map(). Compose with andThen()/compose(). UnaryOperator<T> when input and output type are the same.'},
+      {q:'What is Consumer<T>?', a:'<b>Consumer<T> accepts T and returns void via accept().</b> Used in forEach(). BiConsumer<T,U> takes two inputs. Composable via andThen().'},
+      {q:'What is Supplier<T>?', a:'<b>Supplier<T> produces T via get() with no input.</b> Used for lazy initialization, test data factories, Optional.orElseGet(). () -> new ArrayList<>() is a Supplier.'},
+      {q:'What is Optional<T>?', a:'<b>Optional<T> explicitly represents a possibly-absent value preventing NPE.</b> Use orElse(default), orElseGet(fn), orElseThrow(), map(), filter(). Never call get() without isPresent() check.'},
+      {q:'What is a method reference?', a:'<b>Method references are lambda shorthand: Class::staticMethod, obj::method, Class::instanceMethod, Class::new.</b> String::valueOf replaces s -> String.valueOf(s). More readable.'},
+      {q:'What is Stream.distinct()?', a:'<b>Returns a stream with duplicates removed using equals()/hashCode().</b> Order preserved for ordered streams. Java 16+: .distinct().toList() is concise.'},
+      {q:'What is Stream.sorted()?', a:'<b>sorted() sorts in natural order; sorted(Comparator) uses custom order.</b> Buffers the entire stream — O(n log n). Avoid on infinite streams.'},
+      {q:'What is Stream.peek()?', a:'<b>peek(consumer) passes elements through a side-effect consumer without consuming the stream.</b> Use for debug logging only — not production logic. Runs only when terminal op executes.'},
+      {q:'What is IntStream?', a:'<b>IntStream is a specialized primitive stream avoiding Integer boxing overhead.</b> IntStream.range(0,10) produces 0..9. Provides sum(), average(), min(), max() terminals directly.'},
+      {q:'What is Collectors.joining()?', a:'<b>joining(delimiter, prefix, suffix) concatenates String stream elements.</b> stream.collect(joining(", ","[","]")) produces "[a, b, c]". Great for CSV or log strings.'},
+      {q:'What is a parallel stream?', a:'<b>stream.parallel() splits work across ForkJoinPool threads.</b> Only beneficial for CPU-bound large-dataset operations. Avoid for I/O, ordering-sensitive, or thread-unsafe collectors.'},
+      {q:'What is Collectors.partitioningBy()?', a:'<b>partitioningBy(predicate) splits stream into Map<Boolean, List<T>> — true bucket and false bucket.</b> Useful to split test results into passed and failed in one operation.'},
+      {q:'What is Stream.anyMatch() / allMatch() / noneMatch()?', a:'<b>Short-circuit terminal ops returning boolean: anyMatch(any element matches), allMatch(all match), noneMatch(none match).</b> Stop processing as soon as result is determined.'},
+    ]},
+    { title:'🧵 Concurrency & Memory', qs:[
+      {q:'What is the volatile keyword?', a:'<b>volatile guarantees reads/writes happen in main memory, not CPU cache — prevents thread visibility issues.</b> Required in Double-Checked Locking to prevent partial construction being visible to other threads.'},
+      {q:'What is synchronized?', a:'<b>synchronized ensures one thread executes a block/method at a time — intrinsic lock on object or class.</b> Simpler than ReentrantLock but cannot tryLock or have multiple conditions.'},
+      {q:'What is ReentrantLock?', a:'<b>ReentrantLock is explicit lock management: lock(), unlock() (must be in finally), tryLock(), lockInterruptibly(), multiple Condition objects, fairness policy.</b>'},
+      {q:'What is ThreadLocal?', a:'<b>ThreadLocal gives each thread its own variable copy — invisible to other threads.</b> Critical for per-thread browser instances in parallel Playwright suites. Always call remove() in teardown to prevent memory leaks.'},
+      {q:'What is a deadlock?', a:'<b>Deadlock: two threads each wait for a lock held by the other — both block forever.</b> Prevention: acquire locks in consistent order, use tryLock() with timeout, minimize lock scope.'},
+      {q:'What is a race condition?', a:'<b>Race condition: threads concurrently read-modify-write shared state without synchronization — result depends on execution order.</b> count++ is three ops and is not atomic without synchronization.'},
+      {q:'What is AtomicInteger?', a:'<b>AtomicInteger provides thread-safe integer operations (incrementAndGet, compareAndSet) without synchronization via CAS (Compare-And-Swap) CPU instructions.</b>'},
+      {q:'What is ExecutorService?', a:'<b>ExecutorService manages a thread pool for submitting Runnable/Callable tasks.</b> Executors.newFixedThreadPool(N). Always call shutdown() to release threads; shutdownNow() for immediate interruption.'},
+      {q:'What is the difference between Runnable and Callable?', a:'<b>Runnable.run(): void return, no checked exception. Callable<T>.call(): returns T, can throw Exception.</b> Submit Callable to ExecutorService to get Future<T>.'},
+      {q:'What is Future<T>?', a:'<b>Future<T> represents the pending result of an async computation.</b> isDone() checks completion; get() blocks until result; cancel() attempts cancellation. Use CompletableFuture for non-blocking chains.'},
+      {q:'What is CompletableFuture?', a:'<b>CompletableFuture enables non-blocking async pipelines: thenApply(), thenCompose(), allOf(), exceptionally().</b> Compose multiple async ops without blocking threads while waiting.'},
+      {q:'What is the Java Memory Model (JMM)?', a:'<b>JMM defines how threads interact through memory and what values a thread can see written by others.</b> Without synchronization/volatile, a thread may read stale cached values. Happens-before guarantees visibility.'},
+      {q:'What is garbage collection?', a:'<b>GC automatically reclaims heap memory for objects with no live references.</b> Young Gen (Eden+Survivor): frequent Minor GC. Old Gen: infrequent Major GC. Modern GCs (G1, ZGC) minimize pause times.'},
+      {q:'What causes a memory leak in Java?', a:'<b>Objects still referenced but no longer needed — GC cannot collect them.</b> Common: ThreadLocal without remove(), unclosed streams, static collections growing unbounded, listener registration without deregistration.'},
+      {q:'What is the difference between stack and heap?', a:'<b>Stack: per-thread, local variables and call frames, automatic LIFO cleanup. Heap: shared, all objects, managed by GC.</b> Primitives in local vars → stack. All objects → heap.'},
+      {q:'What is StackOverflowError?', a:'<b>Thrown when the call stack exceeds its limit — typically unbounded recursion.</b> Fix: add base case, convert recursion to iteration using explicit Stack data structure.'},
+      {q:'What is OutOfMemoryError?', a:'<b>Thrown when GC cannot free enough heap for a new object.</b> Diagnose with -XX:+HeapDumpOnOutOfMemoryError. Common causes: memory leaks, oversized in-memory caches.'},
+      {q:'What is try-with-resources?', a:'<b>try(Resource r = new Resource()) {} auto-closes AutoCloseable resources after the block, even on exception.</b> Cleaner than explicit finally blocks for I/O, DB connections, browser contexts.'},
+      {q:'What is the difference between process and thread?', a:'<b>Process: independent execution unit with its own memory space. Thread: lightweight execution unit sharing the process\'s memory.</b> Multiple threads in one JVM process share the heap but have independent stacks.'},
+      {q:'What is context switching?', a:'<b>Context switching is the OS saving one thread\'s state and loading another\'s to resume.</b> Too many threads cause excessive switching overhead — use thread pools sized to workload, not one-thread-per-task.'},
+    ]},
+    { title:'⚠️ Exceptions & I/O', qs:[
+      {q:'What is the difference between checked and unchecked exceptions?', a:'<b>Checked: must be caught or declared (IOException, SQLException) — compiler enforces. Unchecked (RuntimeException): no compile-time enforcement (NPE, IllegalArgumentException).</b>'},
+      {q:'What is the exception hierarchy?', a:'<b>Throwable → Error (JVM-level, do not catch) and Exception. Exception → RuntimeException (unchecked) and checked exceptions.</b>'},
+      {q:'What is NullPointerException and how to prevent?', a:'<b>NPE: calling a method on a null reference.</b> Prevention: Optional<T>, null checks, Objects.requireNonNull(), defensive initialization, Java 14+ helpful NPE messages naming the null variable.'},
+      {q:'What is the difference between throw and throws?', a:'<b>throw: actually throws an exception instance at runtime. throws: declares in method signature that a checked exception may be thrown.</b>'},
+      {q:'How do you create a custom exception?', a:'<b>Extend RuntimeException for unchecked or Exception for checked; add a message+cause constructor.</b> class FrameworkException extends RuntimeException { FrameworkException(String msg, Throwable cause) { super(msg,cause); } }'},
+      {q:'What is multi-catch?', a:'<b>catch(IOException | SQLException e) catches multiple types in one block (Java 7+).</b> The caught variable is effectively final in multi-catch.'},
+      {q:'What is exception chaining?', a:'<b>throw new MyException("context", originalException) wraps the root cause preserving its stack trace.</b> Never drop the original exception — it contains the real cause.'},
+      {q:'What is the finally block?', a:'<b>finally always executes after try/catch regardless of outcome.</b> Use for cleanup. try-with-resources is now preferred for AutoCloseable resources.'},
+      {q:'What is Files.readAllLines()?', a:'<b>Files.readAllLines(Paths.get("data.csv")) reads all lines into List<String>.</b> For large files use Files.lines() which returns a lazy Stream<String> avoiding full load into memory.'},
+      {q:'What is the difference between FileInputStream and FileReader?', a:'<b>FileInputStream: raw bytes for binary data (images, PDFs). FileReader: characters via charset decoder for text files.</b> Wrap both with Buffered variants for performance.'},
+      {q:'What is serialization?', a:'<b>Serialization converts an object to a byte stream for persistence/transmission; deserialization is the reverse.</b> Implement Serializable; use serialVersionUID to prevent version mismatch errors.'},
+      {q:'What is the Path API?', a:'<b>java.nio.file.Path (Java 7+) is the modern file API — flexible, symbolic link support, atomic operations.</b> Prefer Path/Files over legacy java.io.File for all new code.'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 4 — OOPS & DESIGN PATTERNS ══ */
+{
+  id:'oops', title:'🏗️ OOPs & Design Patterns',
+  sections:[
+    { title:'🔑 Four Pillars', qs:[
+      {q:'What are the four pillars of OOPs?', a:'<b>Encapsulation (hide state), Abstraction (hide complexity), Inheritance (reuse parent behavior), Polymorphism (one interface, many implementations).</b>'},
+      {q:'What is Encapsulation?', a:'<b>Bundling data and methods together while hiding internal state via private fields and public getters/setters.</b> POM is encapsulation applied to UI testing — locators are private, actions are public methods.'},
+      {q:'What is Abstraction?', a:'<b>Hiding complex implementation behind a simple interface — exposing WHAT, not HOW.</b> IBrowser interface abstracts ChromeDriver vs Playwright differences from the test layer.'},
+      {q:'What is Inheritance?', a:'<b>A subclass reuses state and behavior from a parent class via extends.</b> Limitation: tight coupling, fragile base class problem, single inheritance only in Java. Prefer composition when inheritance feels forced.'},
+      {q:'What is Runtime Polymorphism?', a:'<b>The correct method implementation is chosen at runtime based on actual object type (dynamic dispatch).</b> Animal a = new Dog(); a.speak() calls Dog.speak() — not Animal.speak().'},
+      {q:'What is Compile-time Polymorphism?', a:'<b>Method overloading — multiple methods with same name but different parameters, resolved at compile time.</b> login(String user) and login(String user, String pass) are overloads.'},
+      {q:'What is method overriding?', a:'<b>Subclass redefines a parent method with the same signature — resolved at runtime.</b> Always use @Override annotation to catch signature mistakes at compile time.'},
+      {q:'What is the IS-A vs HAS-A relationship?', a:'<b>IS-A: inheritance (Car IS-A Vehicle). HAS-A: composition (Car HAS-A Engine).</b> Prefer HAS-A for flexibility — composition allows swapping the Engine implementation without changing Car.'},
+      {q:'What is the diamond problem?', a:'<b>If class C extends A and B both providing the same method, which does C inherit?</b> Java forbids multiple class inheritance. Interface default method conflicts must be explicitly resolved by the implementing class.'},
+      {q:'What is covariant return type?', a:'<b>An overriding method can return a subtype of the parent return type (Java 5+).</b> Enables fluent builder patterns where each method returns the concrete subclass type.'},
+      {q:'What is the difference between super and this?', a:'<b>this: current instance; super: parent class reference.</b> super() calls parent constructor; super.method() calls parent implementation from an overriding method.'},
+      {q:'What is an abstract class?', a:'<b>An abstract class cannot be instantiated and may contain abstract methods that subclasses must implement, plus concrete shared methods.</b> Use for base types with shared implementation.'},
+      {q:'What is an abstract method?', a:'<b>An abstract method has no body — subclasses must provide the implementation.</b> Forces a contract without prescribing the implementation.'},
+      {q:'What is object casting?', a:'<b>Upcasting (implicit): child to parent reference — safe. Downcasting (explicit): parent to child — can throw ClassCastException.</b> Always check instanceof before downcasting.'},
+      {q:'What is instanceof (Java 16 pattern matching)?', a:'<b>if(obj instanceof String s) { use(s); } combines the type check and cast in one expression.</b> Eliminates explicit casts and separate instanceof checks.'},
+      {q:'What is dynamic dispatch?', a:'<b>JVM selects the method at runtime based on the actual object type, not the declared reference type.</b> The mechanism that makes polymorphism work.'},
+      {q:'Can constructors be overridden?', a:'<b>No — constructors are not inherited and cannot be overridden.</b> They can be overloaded within the same class.'},
+      {q:'What is the Object class?', a:'<b>Every Java class implicitly extends Object — the root of the class hierarchy.</b> Provides: equals(), hashCode(), toString(), clone(), getClass(), wait()/notify() for threads.'},
+      {q:'What is a concrete class?', a:'<b>A concrete class implements all methods (no abstract methods) and can be instantiated with new.</b> Contrast with abstract classes which cannot be instantiated.'},
+      {q:'What is static binding vs dynamic binding?', a:'<b>Static binding: method resolved at compile time (static, private, final methods, overloaded methods). Dynamic binding: resolved at runtime (overridden instance methods).</b>'},
+    ]},
+    { title:'📐 Interfaces & Abstract Classes', qs:[
+      {q:'What is an Interface?', a:'<b>An interface defines a contract — what a class must do — via abstract method signatures.</b> Classes implement multiple interfaces. All fields are implicitly public static final.'},
+      {q:'What is the difference between Interface and Abstract Class?', a:'<b>Interface: pure contract, no state, multiple inheritance, all methods public. Abstract class: partial implementation, can have state/constructors, single inheritance.</b>'},
+      {q:'What are default methods in interfaces?', a:'<b>Default methods (Java 8) provide concrete implementations in interfaces without breaking existing implementors.</b> Conflict between two interfaces\' defaults must be explicitly resolved in the implementing class.'},
+      {q:'What are static methods in interfaces?', a:'<b>Static interface methods (Java 8) are utility methods belonging to the interface type, called as InterfaceName.method().</b> Not inherited by implementing classes.'},
+      {q:'What are private methods in interfaces?', a:'<b>Private interface methods (Java 9) allow default methods to share helper code without exposing it as part of the API.</b>'},
+      {q:'What is a Functional Interface?', a:'<b>Exactly one abstract method — usable as a lambda target.</b> @FunctionalInterface annotation enforces this. Built-ins: Runnable, Comparator, Predicate, Function, Consumer, Supplier.'},
+      {q:'What is a Marker Interface?', a:'<b>A marker interface has no methods — just marks a class as having a property (Serializable, Cloneable).</b> Modern Java prefers annotations for most marker scenarios.'},
+      {q:'When do you choose Interface vs Abstract Class?', a:'<b>Interface: defining a shared capability for unrelated classes (Runnable, Comparable). Abstract class: defining a base type where subclasses share a real implementation.</b>'},
+      {q:'Can an abstract class implement an interface?', a:'<b>Yes — an abstract class can implement an interface and defer some/all methods to its concrete subclasses.</b> This is the Template Method pattern.'},
+      {q:'What is the Comparable interface?', a:'<b>Comparable<T> defines natural ordering via compareTo(T o) — negative, zero, or positive.</b> Implementing it allows objects to be sorted by Collections.sort() and used in TreeMap/TreeSet.'},
+      {q:'What is the Comparator interface?', a:'<b>Comparator<T> defines external ordering — useful when natural order is unavailable or multiple orderings are needed.</b> Comparator.comparing(Person::getAge).thenComparing(Person::getName).'},
+      {q:'What is the Iterable interface?', a:'<b>Iterable<T> enables the enhanced for-loop by requiring iterator().</b> Implement Iterable in custom data structures to make them usable in for-each loops.'},
+      {q:'What is AutoCloseable?', a:'<b>AutoCloseable has close() — implementing it allows use with try-with-resources for guaranteed cleanup.</b> All I/O Closeables extend AutoCloseable.'},
+      {q:'How do you resolve a default method conflict from two interfaces?', a:'<b>The implementing class must override and explicitly choose: InterfaceA.super.method() or InterfaceB.super.method().</b> Without explicit resolution the code does not compile.'},
+      {q:'What is the difference between shallow and deep copy?', a:'<b>Shallow copy: copies the object and references to its fields (not the objects those fields point to). Deep copy: recursively copies all objects.</b> Shallow is faster; deep is safer for mutable nested objects.'},
+      {q:'What is Cloneable?', a:'<b>Cloneable is a marker interface allowing Object.clone() to perform a shallow copy.</b> Prefer copy constructors over clone() — cleaner and safer.'},
+      {q:'What is interface default method vs abstract method?', a:'<b>Default method: concrete implementation — implementing classes optionally override. Abstract method: no implementation — implementing classes must provide one.</b>'},
+      {q:'Can interfaces extend other interfaces?', a:'<b>Yes — an interface can extend multiple interfaces: interface C extends A, B.</b> The implementing class must implement all methods from the entire hierarchy.'},
+      {q:'What is the Runnable interface?', a:'<b>Runnable has one method run() with no return and no checked exception.</b> Used for tasks submitted to ExecutorService or Thread. Functional interface — usable as a lambda.'},
+      {q:'What is the Callable interface?', a:'<b>Callable<T> has call() returning T and throwing Exception.</b> Richer than Runnable — used with ExecutorService.submit() to get a Future<T> with result and exception handling.'},
+    ]},
+    { title:'📏 SOLID Principles', qs:[
+      {q:'What is SRP?', a:'<b>Single Responsibility: a class has only one reason to change — does one thing well.</b> LoginPage handles login UI only, not config loading or reporting. Multiple responsibilities = multiple change triggers.'},
+      {q:'What is OCP?', a:'<b>Open for extension, closed for modification — add new behavior with new code, not by changing existing code.</b> New browser type = new strategy class, not modified switch statement.'},
+      {q:'What is LSP?', a:'<b>Subtypes must be substitutable for their base types without breaking correctness.</b> ReadOnlyList extending ArrayList but throwing on add() violates LSP — callers expecting ArrayList break.'},
+      {q:'What is ISP?', a:'<b>Clients should not be forced to implement methods they don\'t use — prefer many small interfaces over one large one.</b> Split IRepository into IReadRepository and IWriteRepository.'},
+      {q:'What is DIP?', a:'<b>High-level modules depend on abstractions, not concrete low-level modules.</b> Tests depend on IBrowser interface, not ChromeDriver directly — enables swapping implementations without changing tests.'},
+      {q:'How does DIP enable easier testing?', a:'<b>When a class depends on an interface, inject a mock implementation in unit tests without touching the real dependency.</b> Foundation of Mockito and test doubles.'},
+      {q:'What is Cohesion?', a:'<b>Cohesion measures how related a class\'s responsibilities are.</b> High cohesion = class does one well-defined thing (good). Low cohesion = class does many unrelated things (violates SRP).'},
+      {q:'What is Coupling?', a:'<b>Coupling measures how much classes depend on each other.</b> Loose coupling via interfaces means changes in one class don\'t cascade to others. Tight coupling = fragile, hard-to-test code.'},
+      {q:'What is Dependency Injection?', a:'<b>DI provides an object\'s dependencies from outside rather than creating them internally.</b> Constructor injection: class declares IBrowser in constructor; container/test provides it.'},
+      {q:'What is Inversion of Control?', a:'<b>IoC inverts who controls object creation — a container creates and injects dependencies instead of classes creating their own.</b> Spring, Guice, PicoContainer are IoC containers.'},
+      {q:'What is the Law of Demeter?', a:'<b>Only talk to your direct friends — call methods on your own fields, parameters, or objects you created, not on objects returned by those calls.</b> page.getNavBar().getMenu().click() violates it.'},
+      {q:'What is DRY?', a:'<b>Don\'t Repeat Yourself — every piece of knowledge has one authoritative location.</b> Duplicate locators in multiple page objects violate DRY. Centralize in one class.'},
+      {q:'What is YAGNI?', a:'<b>You Ain\'t Gonna Need It — don\'t implement features until actually needed.</b> Building a plugin system for one config option is YAGNI.'},
+      {q:'What is the principle of least surprise?', a:'<b>Code behaves as expected — no hidden side effects.</b> A method named getText() should not navigate or click.'},
+      {q:'What is Separation of Concerns?', a:'<b>Different concerns handled by different modules.</b> The 7-layer BDD architecture separates: behavior specs, step glue, UI interaction, browser lifecycle, config, utilities, reporting.'},
+      {q:'What is tight coupling and why is it bad?', a:'<b>Class A directly instantiates class B (new ChromeDriver()).</b> Can\'t swap B for a mock; changes to B require changes to A. Use interfaces and injection instead.'},
+      {q:'What is the difference between composition and inheritance?', a:'<b>Inheritance (IS-A): child extends parent — tight coupling. Composition (HAS-A): class holds a reference to another — flexible.</b> Favor composition: swap the composed object without changing the containing class.'},
+      {q:'How do you apply SRP to step definitions?', a:'<b>Group step definitions by domain (LoginSteps, CartSteps) — each class handles one area.</b> CommonSteps holds reusable cross-domain steps. 10-15 step classes serve hundreds of Scenarios.'},
+      {q:'What is the God Class antipattern?', a:'<b>A class that does everything — knows too much, does too much, is impossible to test independently.</b> Violates SRP. Break it into focused, single-purpose classes.'},
+      {q:'What is the Tell Don\'t Ask principle?', a:'<b>Tell objects what to do rather than querying their state and deciding for them.</b> page.login(user) is Tell. if(page.isLoggedOut()) { page.clickLoginButton(); page.enterUser(u); } is Ask — move logic into the method.'},
+    ]},
+    { title:'🎨 Creational Patterns', qs:[
+      {q:'What is the Singleton Pattern?', a:'<b>Ensures one instance exists globally with a single access point.</b> Used for ConfigManager, ReportManager. Risk: global state makes tests order-dependent — use carefully.'},
+      {q:'How do you implement a thread-safe Singleton (Bill Pugh)?', a:'<b>Static inner helper class — lazy, thread-safe, no synchronization overhead.</b> class Config { private static class H { static final Config I=new Config(); } public static Config get(){return H.I;} }'},
+      {q:'What is Enum Singleton?', a:'<b>enum Config { INSTANCE; } — simplest, thread-safe, reflection-proof, serialization-safe Singleton.</b> Best choice when you need a guaranteed single instance with minimal code.'},
+      {q:'What is Double-Checked Locking?', a:'<b>Check null twice — once without lock (fast path), once inside synchronized (safety) — volatile on the field prevents partial construction visibility.</b>'},
+      {q:'What is the Factory Method Pattern?', a:'<b>Encapsulates object creation — clients request by type without knowing the concrete class.</b> BrowserFactory.create("chrome") returns Chromium Page; "firefox" returns Firefox Page. OCP: new browser = new class.'},
+      {q:'What is the Abstract Factory?', a:'<b>Creates families of related objects — a factory of factories.</b> UIFactory creating platform-specific Button, Dialog, TextField without changing consumer code.'},
+      {q:'What is the Builder Pattern?', a:'<b>Constructs complex objects step by step via a fluent API.</b> TestConfig.builder().browser("chrome").headless(true).timeout(30000).build(). Avoids telescoping constructors with many optional parameters.'},
+      {q:'What is the Prototype Pattern?', a:'<b>Creates new objects by cloning an existing prototype instead of calling new.</b> Clone a pre-configured BrowserContext rather than re-initializing from scratch each time.'},
+      {q:'What is a static factory method?', a:'<b>Static method returning an instance as an alternative to constructors — can have descriptive names and return subtypes.</b> List.of(), Optional.of(), Stream.of() are static factory methods.'},
+      {q:'How does Builder improve immutability?', a:'<b>Builder collects all params then build() creates an immutable object with all fields set at construction.</b> No setters after construction — object is never partially initialized.'},
+      {q:'What problem does Factory solve?', a:'<b>new binds caller to a concrete class. Factory returns an interface — caller is decoupled from implementation.</b> Swap Chrome→Firefox by changing one Factory method, not every new call site.'},
+      {q:'What is lazy initialization?', a:'<b>Delays object creation until first use — saves resources when the object may never be needed.</b> Bill Pugh Singleton is lazy. Eager creates on class load.'},
+      {q:'When should you NOT use Singleton?', a:'<b>Avoid for mutable state — it becomes global state making tests order-dependent.</b> Use DI containers instead. Singleton is fine for immutable config or stateless registries.'},
+      {q:'What is the Object Pool Pattern?', a:'<b>Maintains a pool of reusable objects — take one, use it, return it.</b> Browser context pool: maintain N warm contexts, assign to tests, return after. Faster than creating new each time.'},
+      {q:'How does Builder differ from Factory?', a:'<b>Factory creates in one step by type. Builder assembles incrementally with many optional parameters.</b> Use Factory for simple typed creation; Builder for complex objects with many config options.'},
+      {q:'What is method chaining?', a:'<b>Each method returns this (or the builder) enabling fluent sequential calls.</b> builder.name("A").age(25).city("Delhi").build() — each setter returns the Builder.'},
+      {q:'What is a Registry Pattern?', a:'<b>A central map of named instances — PageRegistry["login"] → LoginPage instance.</b> Avoids Singleton proliferation while keeping instances centrally managed.'},
+      {q:'What is a Multiton?', a:'<b>Limits instances to a keyed set: one instance per key.</b> DriverPool["chrome"], DriverPool["firefox"] — one browser instance per type, reused across tests.'},
+      {q:'What is eager initialization of Singleton?', a:'<b>The instance is created when the class loads: private static final Config I = new Config().</b> Simple and thread-safe, but creates the object even if never used.'},
+      {q:'How does the Builder pattern help test data creation?', a:'<b>TestUser.builder().name("John").role(ADMIN).email("j@test.com").build() — each test builds exactly the data it needs.</b> No shared mutable test objects, no "setup method that sets everything" antipattern.'},
+    ]},
+    { title:'🔧 Structural & Behavioral Patterns', qs:[
+      {q:'What is the Page Object Model pattern?', a:'<b>POM encapsulates a page\'s locators and interactions — selectors are private, actions are public methods.</b> Tests call page methods only; UI changes require only the POM class update.'},
+      {q:'What is the Page Component pattern?', a:'<b>Page Component represents reusable UI sections (navigation, footer, data table) shared across multiple pages.</b> Prevents duplication of header/footer locators across every page class.'},
+      {q:'What is the Decorator Pattern?', a:'<b>Wraps an object to add behavior dynamically without changing its class.</b> LoggingPage wraps BasePage — every action logs before delegation. Stack decorators for multiple cross-cutting concerns.'},
+      {q:'What is the Adapter Pattern?', a:'<b>Converts an interface to one expected by the client.</b> Wrapping Playwright\'s Page to expose a Selenium WebDriver interface so legacy test code runs without changes.'},
+      {q:'What is the Facade Pattern?', a:'<b>Provides a simplified interface to a complex subsystem.</b> TestHelper.loginAsAdmin() hides: API call to create user, save token, configure context, navigate. Callers see one method.'},
+      {q:'What is the Proxy Pattern?', a:'<b>Controls access to an object with the same interface — adds lazy loading, access control, or logging.</b> Lazy-loading PageProxy creates the real page object only on first access.'},
+      {q:'What is the Observer Pattern?', a:'<b>One-to-many notification — when subject changes, all observers are notified.</b> Cucumber EventBus: test lifecycle events notify screenshot capturer, report writer, Slack notifier simultaneously.'},
+      {q:'What is the Strategy Pattern?', a:'<b>Family of algorithms behind a common interface, swappable at runtime.</b> ExecutionStrategy: LocalStrategy, GridStrategy, DockerStrategy — selected via config without changing test code.'},
+      {q:'What is the Template Method Pattern?', a:'<b>Defines algorithm skeleton in a base class, deferring steps to subclasses.</b> BasePage.executeTest() calls setUp(), runTest(), tearDown() — subclasses override specific steps.'},
+      {q:'What is the Command Pattern?', a:'<b>Encapsulates an action as an object — supports queuing, retry, and logging of operations.</b> Test steps as Command objects: queued for later execution or retried on failure.'},
+      {q:'What is the Chain of Responsibility?', a:'<b>Request passes through a chain of handlers until one handles it.</b> Test result processing: assertion error handler → infrastructure error handler → unknown error handler.'},
+      {q:'What is the State Pattern?', a:'<b>Object alters behavior when internal state changes.</b> TestExecution state machine: INIT → RUNNING → PASSED/FAILED/SKIPPED — each state handles events differently.'},
+      {q:'What is the Null Object Pattern?', a:'<b>Provides a do-nothing implementation instead of returning null.</b> NullLogger implements ILogger with empty methods — callers never null-check before calling logger.log().'},
+      {q:'What is the Iterator Pattern?', a:'<b>Standard traversal without exposing internal structure.</b> Java\'s Iterator/Iterable implement this. Custom iterators enable for-each on custom test data sources.'},
+      {q:'What is the Composite Pattern?', a:'<b>Composes objects into tree structures — both leaves and composites share the same interface.</b> Test suite tree: Suite contains Suites or Tests — all implement IExecutable.execute().'},
+      {q:'What is the Flyweight Pattern?', a:'<b>Shares fine-grained objects to minimize memory — stores only shared intrinsic state.</b> Browser binaries shared; test-specific data passed externally as context.'},
+      {q:'What is the Bridge Pattern?', a:'<b>Separates abstraction from implementation so both can vary independently.</b> TestRunner abstraction bridged to execution engine implementations (local, grid, docker) independently.'},
+      {q:'What is the Mediator Pattern?', a:'<b>Centralizes communication between objects — they interact through the mediator, not directly.</b> TestOrchestrator mediates between step definitions, page objects, and reporting components.'},
+      {q:'What is the Memento Pattern?', a:'<b>Captures object state for later restoration.</b> Playwright\'s storageState is a Memento — captures browser auth state, stored to JSON, restored to recreate the same session.'},
+      {q:'What is the Visitor Pattern?', a:'<b>Adds operations to objects without changing their classes.</b> TestResultVisitor traverses a suite tree collecting metrics without modifying the Suite/Test classes themselves.'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 5 — TESTNG & FRAMEWORK ══ */
+{
+  id:'testng', title:'🧪 TestNG & Framework',
+  sections:[
+    { title:'⚙️ TestNG Core', qs:[
+      {q:'What is TestNG?', a:'<b>TestNG is a testing framework with advanced features: parallel execution, data providers, test groups, suite XML config, and flexible dependencies.</b> More powerful than JUnit for enterprise test suites.'},
+      {q:'What is the TestNG annotation execution order?', a:'<b>@BeforeSuite → @BeforeTest → @BeforeClass → @BeforeMethod → @Test → @AfterMethod → @AfterClass → @AfterTest → @AfterSuite.</b> Critical for correct setup/teardown in parallel environments.'},
+      {q:'What is @BeforeSuite?', a:'<b>@BeforeSuite runs once before any test in the entire suite.</b> Use for: starting a test server, loading global config, initializing a shared report writer.'},
+      {q:'What is @BeforeMethod?', a:'<b>@BeforeMethod runs before every @Test method.</b> Use for: browser init, creating test-specific data, resetting state. In parallel suites, must use ThreadLocal for per-thread resources.'},
+      {q:'What is @AfterMethod?', a:'<b>@AfterMethod runs after every @Test method regardless of pass/fail.</b> Use for: browser teardown, ThreadLocal cleanup, deleting test data, capturing screenshots on failure.'},
+      {q:'How do you run tests in parallel with TestNG?', a:'<b>In testng.xml: parallel="methods" thread-count="4".</b> Each @Test method runs in its own thread. Ensure all per-test state (driver, data) is ThreadLocal-isolated.'},
+      {q:'What is parallel="methods" vs parallel="classes"?', a:'<b>methods: each @Test method in its own thread — most granular parallelism. classes: all methods in one class run on one thread — simpler for stateful test classes.</b>'},
+      {q:'What is a TestNG DataProvider?', a:'<b>@DataProvider(name="data") returns Object[][] — each row is one test invocation with those arguments.</b> @Test(dataProvider="data") receives each row as method parameters.'},
+      {q:'What are TestNG groups?', a:'<b>@Test(groups={"smoke","login"}) tags tests for filtering.</b> testng.xml includes/excludes groups. Run subsets in CI: smoke on every push, regression nightly.'},
+      {q:'What is test dependency in TestNG?', a:'<b>@Test(dependsOnMethods={"loginTest"}) skips this test if loginTest fails.</b> Use sparingly — hard dependencies reduce test isolation. Better: use @BeforeMethod to set up prerequisite state.'},
+      {q:'How do you implement IRetryAnalyzer?', a:'<b>Implement retry(ITestResult) returning true to retry, false to stop.</b> Apply via @Test(retryAnalyzer=Retry.class) or globally via IAnnotationTransformer listener. Max 1-2 retries.'},
+      {q:'What is ITestListener?', a:'<b>ITestListener provides hooks: onTestStart, onTestSuccess, onTestFailure, onTestSkipped, onTestSkippedByProvider.</b> Use for screenshots on failure, Slack alerts, external test management sync.'},
+      {q:'How do you implement soft assertions in TestNG?', a:'<b>SoftAssert sa = new SoftAssert(); sa.assertEquals(a,b); sa.assertTrue(c); sa.assertAll().</b> assertAll() at end reports all failures. Never omit assertAll() — failures are silently swallowed.'},
+      {q:'What is the @Parameters annotation in TestNG?', a:'<b>@Parameters("browserName") maps a parameter from testng.xml &lt;parameter name="browserName" value="chrome"&gt; to the method argument.</b> Enables per-suite config without code changes.'},
+      {q:'What is testng.xml?', a:'<b>testng.xml is the suite configuration file declaring suites, tests, groups, listeners, parameters, and parallel settings.</b> The entry point for test execution — mvn test runs the classes referenced here.'},
+      {q:'How do you include/exclude groups in testng.xml?', a:'<b>&lt;groups&gt;&lt;run&gt;&lt;include name="smoke"/&gt;&lt;exclude name="slow"/&gt;&lt;/run&gt;&lt;/groups&gt;.</b> Include/exclude work per &lt;test&gt; block — different tests can run different group subsets.'},
+      {q:'What is the @Listeners annotation?', a:'<b>@Listeners(ExtentReportListener.class) applies a listener to all tests in the class.</b> Or register globally in testng.xml &lt;listeners&gt;&lt;listener class-name="..."/&gt;&lt;/listeners&gt;.'},
+      {q:'What is IAnnotationTransformer?', a:'<b>IAnnotationTransformer modifies @Test annotations at runtime — e.g., apply retryAnalyzer to all tests without annotating each individually.</b> Register in testng.xml listeners.'},
+      {q:'What is @Test(enabled=false)?', a:'<b>Disables the test method — TestNG skips it and marks as SKIP in the report.</b> Equivalent to JUnit\'s @Ignore. Use @Test(groups="disabled") with group exclusion for more visibility.'},
+      {q:'What is @Test(timeOut=N)?', a:'<b>timeOut=5000 fails the test if it runs longer than 5000ms.</b> Use for tests that can hang on network calls. Playwright\'s setDefaultTimeout() is usually more appropriate.'},
+      {q:'How do you run a subset of tests with Maven?', a:'<b>mvn test -Dgroups="smoke" -Dsurefire.suiteXmlFiles=smoke.xml.</b> Combine Maven properties to select both group filter and suite configuration.'},
+      {q:'What is the TestNG factory annotation?', a:'<b>@Factory creates multiple test class instances — useful for data-driven class-level instantiation.</b> Returns Object[] of test instances; TestNG runs all @Test methods on each instance.'},
+      {q:'What is TestNG\'s priority attribute?', a:'<b>@Test(priority=1) runs before @Test(priority=2) within the same class.</b> Lower number = higher priority. Tests without priority have priority 0. Avoid over-relying on priority — tests should be independent.'},
+      {q:'How do you skip a test programmatically?', a:'<b>throw new SkipException("reason") inside a @Test or @BeforeMethod skips the test cleanly.</b> Appears as SKIP in the report. Use when a test\'s precondition is not met at runtime.'},
+      {q:'What is AssertJ and how does it compare to TestNG assert?', a:'<b>AssertJ provides a fluent assertion DSL: assertThat(list).hasSize(3).contains("apple").doesNotContain("banana").</b> More readable than TestNG\'s assertEquals(3, list.size()). Can be used alongside TestNG.'},
+    ]},
+    { title:'⚡ Parallel Execution', qs:[
+      {q:'What is the risk of static fields in parallel TestNG tests?', a:'<b>Static mutable fields are shared across all threads — Thread A\'s data overwrites Thread B\'s mid-execution causing random failures.</b> Fix: ThreadLocal for per-test state.'},
+      {q:'How do you configure the thread count for parallel execution?', a:'<b>testng.xml: parallel="methods" thread-count="4" data-provider-thread-count="4".</b> Match thread count to available CPU cores, not to total test count.'},
+      {q:'What is thread-count vs data-provider-thread-count?', a:'<b>thread-count: parallel @Test method threads. data-provider-thread-count: parallel DataProvider invocations for one @Test.</b> Set both when tests have DataProviders running in parallel.'},
+      {q:'How do you ensure teardown runs even on parallel failures?', a:'<b>@AfterMethod always runs after each @Test regardless of outcome.</b> Do not use @AfterClass for per-test cleanup — it runs after all methods in the class, missing individual test cleanup.'},
+      {q:'How do you collect results from parallel tests into one report?', a:'<b>Use a thread-safe ExtentReports adapter or ConcurrentHashMap to collect results.</b> synchronized write operations or concurrent collection classes ensure no result is lost.'},
+      {q:'What is a test data collision in parallel execution?', a:'<b>Two tests use the same test account or database record simultaneously — they overwrite each other\'s data causing false failures.</b> Fix: each test creates its own unique data via API.'},
+      {q:'How do you generate unique test data for parallel tests?', a:'<b>Use UUID.randomUUID() for email/username fields: "user_" + UUID.randomUUID().toString().substring(0,8) + "@test.com".</b> Guarantees no collision even at high thread count.'},
+      {q:'What is a thread-safe Singleton in the context of test frameworks?', a:'<b>A Singleton whose getInstance() is safe to call from multiple threads simultaneously without creating duplicate instances.</b> Bill Pugh or Enum Singleton — both are thread-safe.'},
+      {q:'How do you debug parallel test failures?', a:'<b>Tag every log line with Thread.currentThread().getId() or getName().</b> Without thread tags, parallel logs are interleaved and unreadable. Reproduce by running the failed test in isolation.'},
+      {q:'What is the difference between running tests in parallel vs running tests in series?', a:'<b>Parallel: faster but requires thread isolation, no shared mutable state, unique test data. Series: slower but simpler — no threading concerns.</b> Target: full regression parallel; debug single test series.'},
+      {q:'How do you set the base URL for all parallel tests?', a:'<b>Store in ConfigFactory Singleton (immutable after loading) — all threads read safely without synchronization since the config is read-only.</b>'},
+      {q:'What is fork count in Maven Surefire?', a:'<b>&lt;forkCount&gt;2&lt;/forkCount&gt; in Surefire launches 2 JVM processes each running their test subset in parallel.</b> Combine with TestNG thread-count for two levels of parallelism: process-level and thread-level.'},
+      {q:'How do you handle database tests in parallel?', a:'<b>Each test uses its own isolated schema, or creates uniquely-keyed records it cleans up in @AfterMethod.</b> Never share a database row between parallel tests — inevitable collision.'},
+      {q:'What causes ConcurrentModificationException in parallel tests?', a:'<b>A non-thread-safe collection (ArrayList, HashMap) modified by one thread while another iterates it.</b> Fix: CopyOnWriteArrayList for reads-dominant lists, ConcurrentHashMap for maps.'},
+      {q:'How do you verify test results are correct in parallel?', a:'<b>Run the same suite in both serial and parallel — if results differ, shared state is leaking between tests.</b> Every test that passes serial must also pass parallel with the same configuration.'},
+    ]},
+    { title:'🏛️ Framework Architecture', qs:[
+      {q:'What is a 7-layer BDD framework?', a:'<b>Layer 1: Feature Files → Layer 2: Step Definitions → Layer 3: Page Objects/Components → Layer 4: DriverManager (ThreadLocal browser) → Layer 5: ConfigFactory → Layer 6: Utils (API, DB) → Layer 7: Hooks/Listeners.</b>'},
+      {q:'How do you manage config across environments?', a:'<b>ConfigFactory Singleton reads env name from Maven -Denv=staging and loads config/staging.properties.</b> All tests read via Config.get("baseUrl") — zero code changes to switch environments.'},
+      {q:'What is the Page Component pattern?', a:'<b>Reusable UI sections (NavBar, DataTable, Toast) as separate classes composed into pages.</b> Prevents duplicating header/footer locators across every page class.'},
+      {q:'How do you handle test data management?', a:'<b>Three-tier: static JSON files for reference data, API calls in @Before for dynamic entities, Faker for randomized fields.</b> Never share mutable test data across parallel tests.'},
+      {q:'What is an ApiHelper utility class?', a:'<b>ApiHelper wraps REST Assured for common API operations: createUser(), deleteUser(), getAuthToken().</b> Called from @BeforeMethod to set up test state faster than UI navigation.'},
+      {q:'How do you ensure test isolation?', a:'<b>Each test: own BrowserContext (ThreadLocal), own user (created via API), own test data (UUID-keyed), cleanup in @AfterMethod.</b> Tests should run in any order and in parallel without flakiness.'},
+      {q:'What is a BasePage and what goes in it?', a:'<b>BasePage holds common actions used by all page objects: click(locator), fill(locator, text), waitForVisible(locator), getText(locator).</b> All page classes extend or compose BasePage to avoid method duplication.'},
+      {q:'How do you version control the test framework?', a:'<b>Test code lives in the same Git repo as the application, versioned together.</b> PRs changing behavior must update or add corresponding feature files. Code reviews enforce framework patterns.'},
+      {q:'How do you onboard a new SDET to the framework?', a:'<b>Layer-by-layer walkthrough: write a feature file → implement step definitions (most reuse existing) → update page objects for new UI.</b> New engineers are productive in 1-2 days with clear layer separation.'},
+      {q:'How do you handle framework dependency updates?', a:'<b>Lock versions in pom.xml; update in a dedicated dependency-update PR; run full regression before merging.</b> Never update multiple major dependencies in one PR — isolates breakage.'},
+      {q:'What is the Reporting layer?', a:'<b>The Reporting layer handles: Extent HTML report generation, screenshot embedding, step-level logging, CI artifact publishing.</b> Separate from test logic — a listener/plugin, not inline in step definitions.'},
+      {q:'How do you support multiple product variants from one codebase?', a:'<b>Config selects the active product variant; JSON data files per variant; tagged feature files per variant; same step definitions and page objects serve all.</b>'},
+      {q:'How do you handle dynamic locators that change based on data?', a:'<b>Parameterized locator templates: String.format("//tr[contains(.,\'%s\')]", name) at runtime.</b> Or store the template in a JSON config and format at step definition level.'},
+      {q:'What is the Configuration Management pattern?', a:'<b>One ConfigFactory class reads all properties at startup; provides typed accessors like getBaseUrl(), isBrowser("chrome"), isHeadless().</b> All framework code reads from ConfigFactory — never from System.getProperty() directly.'},
+      {q:'How do you handle timeouts across the framework?', a:'<b>Default timeout in ConfigFactory (e.g., 15 seconds); set in @Before via page.setDefaultTimeout().</b> Individual steps can override via locator action timeout parameter for known-slow operations.'},
+      {q:'What is the difference between framework setup and test setup?', a:'<b>Framework setup (suite-level): shared config, server start, global report init. Test setup (method-level): browser init, unique test data creation, navigation to start page.</b>'},
+      {q:'How do you handle logging in the framework?', a:'<b>Thread-tagged log entries: log.info("[Thread-{}] Step: {}", threadId, stepName).</b> Without thread IDs, parallel logs are interleaved and unreadable. Log to file and to Extent report simultaneously.'},
+      {q:'What is a test context object?', a:'<b>A POJO holding per-Scenario state: Page, BrowserContext, auth token, test user, test data.</b> Injected via PicoContainer or stored in ThreadLocal. Passed between step definition classes cleanly.'},
+      {q:'How do you implement cross-browser testing?', a:'<b>Config property sets browser type; BrowserFactory creates the corresponding browser.</b> Same tests run unchanged across Chrome, Firefox, WebKit. CI matrix tests all three in parallel.'},
+      {q:'What is the difference between test automation framework and test tool?', a:'<b>Tool: a library like Playwright or REST Assured that provides specific capabilities. Framework: the architecture that organizes how tools are used together — POM, hooks, config, reporting, step definitions.</b>'},
+    ]},
+    { title:'📊 Reporting & Debugging', qs:[
+      {q:'What is ExtentReports?', a:'<b>ExtentReports generates rich HTML reports with step-level pass/fail, screenshots, pie charts, test timeline, and tags.</b> Integrates via Cucumber adapter or TestNG listener — no code changes in tests.'},
+      {q:'How do you embed screenshots in Extent reports?', a:'<b>In @AfterMethod or Cucumber @After: capture screenshot bytes, call extent.getTest().addScreenCaptureFromBase64String(base64).</b> Screenshots appear inline in the report for every failed test.'},
+      {q:'What is the Allure Report?', a:'<b>Allure is a test reporting framework generating interactive HTML with step-level timelines, parameters, attachments, and trend charts.</b> allure-testng or allure-cucumber adapters auto-generate results.'},
+      {q:'How do you track test execution trends over time?', a:'<b>Archive cucumber.json or allure-results/ as Jenkins artifacts; trend charts show pass rate, duration, and flakiness per build.</b> Alerts on pass rate drops below threshold.'},
+      {q:'What metrics do you track in test reports?', a:'<b>Pass/fail/skip counts, execution time per scenario, failure categories (assertion vs infrastructure), browser/environment breakdown, flaky test frequency.</b>'},
+      {q:'How do you debug a test that only fails in CI?', a:'<b>Enable trace recording (Playwright) and archive it. Add verbose logging. Compare CI environment with local: headless mode, screen resolution, Docker image version, timezone.</b>'},
+      {q:'What is the retry mechanism and when do you use it?', a:'<b>Retry failed tests up to 2 times via IRetryAnalyzer.</b> Retries help with infrastructure flakiness (network blip, CI agent overload). If a test retries often, fix the root cause.'},
+      {q:'How do you identify which tests are flaky?', a:'<b>Track tests that have both PASS and FAIL results across recent runs without code changes.</b> Flakiness score = failures / total runs. Tools: Allure trend view, custom ConcurrentHashMap tracking per suite.'},
+      {q:'How do you distinguish assertion failures from infrastructure failures?', a:'<b>Assertion failures: wrong text, missing element — real bugs. Infrastructure failures: TimeoutException, connection refused — environment issues.</b> Categorize in listener\'s onTestFailure via exception type.'},
+      {q:'What is a test failure triage process?', a:'<b>1. Screenshot + trace. 2. Log analysis for root cause. 3. Reproduce locally. 4. Classify: product bug → file JIRA; framework bug → fix framework; infra flakiness → fix wait/retry.</b>'},
+      {q:'How do you make reports readable for non-technical stakeholders?', a:'<b>BDD Gherkin scenarios are readable by the business. ExtentReports shows feature-level pass/fail with green/red icons.</b> Executive summary: pass rate %, total tests, failures by feature area.'},
+      {q:'What is log4j / SLF4J in the context of test frameworks?', a:'<b>SLF4J is a logging facade; log4j/logback are implementations.</b> Use log.debug() for verbose step info, log.error() for failures. Configure log level per environment: DEBUG locally, INFO in CI.'},
+      {q:'How do you capture browser console logs in Playwright?', a:'<b>page.onConsoleMessage(msg -> log.info("BROWSER: {}", msg.text())) captures all console output.</b> Attach to report on failure for debugging JS errors that cause test failures.'},
+      {q:'How do you handle a test that is timing-out in CI but passes locally?', a:'<b>CI servers are slower — increase default timeout for CI env via config.</b> Also check: headless rendering differences, Docker resource limits, missing wait for async event only slow in headless.'},
+      {q:'What is a smoke report vs full regression report?', a:'<b>Smoke report: 20-30 critical tests, runs in 5 minutes on every PR — immediate pass/fail gate. Full regression: 500+ tests, runs nightly — comprehensive coverage with trend analysis.</b>'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 6 — REST ASSURED & API ══ */
+{
+  id:'api', title:'🌐 REST Assured & API',
+  sections:[
+    { title:'📡 REST Assured Fundamentals', qs:[
+      {q:'What is REST Assured?', a:'<b>REST Assured is a Java library for testing RESTful APIs using a fluent Given/When/Then DSL.</b> given().header().body().when().post("/url").then().statusCode(201).body("id", notNullValue()).'},
+      {q:'What is the given/when/then structure in REST Assured?', a:'<b>given(): request setup (headers, auth, body, params). when(): HTTP method (get, post, put, delete, patch). then(): response assertions (statusCode, body, headers).</b>'},
+      {q:'How do you set a base URI?', a:'<b>RestAssured.baseURI = "https://api.example.com" globally, or new RequestSpecBuilder().setBaseUri(...).build() for spec-scoped.</b>'},
+      {q:'What is RequestSpecification?', a:'<b>A reusable request template defining common headers, auth, base URI.</b> Build once with RequestSpecBuilder; pass to given(spec) in every test. Eliminates per-test header boilerplate.'},
+      {q:'What is ResponseSpecification?', a:'<b>A reusable response assertion template defining expected status, content type, headers.</b> Build with ResponseSpecBuilder; pass to then().spec(responseSpec). DRY for common assertions.'},
+      {q:'How do you log the request and response?', a:'<b>given().log().all() logs request; then().log().all() logs response.</b> Use then().log().ifError() in CI to log only on failure — keeps successful test output clean.'},
+      {q:'How do you extract a value from the response?', a:'<b>response.jsonPath().getString("data.token") or then().extract().path("data.token").</b> For the full response: then().extract().response() returns a Response object.'},
+      {q:'How do you extract a list from JSON response?', a:'<b>List&lt;String&gt; names = response.jsonPath().getList("products.name").</b> getList() traverses all elements and returns values of the named field across all array items.'},
+      {q:'How do you serialize a POJO to JSON in a request?', a:'<b>given().contentType(ContentType.JSON).body(pojoObject).when().post("/users").</b> Jackson is auto-detected on classpath — no explicit configuration needed.'},
+      {q:'How do you deserialize a JSON response to a POJO?', a:'<b>UserResponse user = then().extract().as(UserResponse.class).</b> The POJO needs a no-arg constructor and public setters, or Jackson annotations.'},
+      {q:'How do you assert a nested JSON field?', a:'<b>.body("data.user.email", equalTo("john@test.com")) for nested fields.</b> .body("products[0].name", equalTo("Laptop")) for array element. Uses JsonPath expression syntax.'},
+      {q:'How do you assert an array element count?', a:'<b>.body("products.size()", equalTo(5)) or .body("products", hasSize(5)).</b> hasSize() is a Hamcrest matcher requiring the list.'},
+      {q:'What is JsonPath in REST Assured?', a:'<b>JsonPath is an expression language for traversing JSON structures.</b> Dot notation for nested: "data.user.id". Bracket notation for arrays: "items[0].name". Wildcard: "items.*.name" returns all names.'},
+      {q:'How do you handle query parameters?', a:'<b>given().queryParam("page", 1).queryParam("size", 10).get("/products").</b> Or .params(Map.of("page",1,"size",10)) for multiple at once.'},
+      {q:'How do you handle path parameters?', a:'<b>given().pathParam("id", 42).get("/users/{id}").</b> The {id} in the path is replaced with 42 at runtime.'},
+      {q:'How do you set request headers?', a:'<b>given().header("Authorization","Bearer "+token).header("Accept","application/json").</b> Or .headers(Map.of(...)) for multiple. Set common headers in RequestSpecification.'},
+      {q:'How do you validate response headers?', a:'<b>.then().header("Content-Type", containsString("application/json")).header("Cache-Control", "no-cache").</b> Hamcrest matchers work for header values.'},
+      {q:'How do you send a PUT request?', a:'<b>given().contentType(JSON).body(updatePayload).when().put("/users/42").then().statusCode(200).</b> PUT replaces the entire resource; PATCH partially updates.'},
+      {q:'How do you send a DELETE request?', a:'<b>given().pathParam("id",42).when().delete("/users/{id}").then().statusCode(204).</b> 204 No Content is the standard success response for DELETE.'},
+      {q:'How do you perform multipart form upload in REST Assured?', a:'<b>given().multiPart("file", new File("doc.pdf")).multiPart("name","test").when().post("/upload").then().statusCode(200).</b>'},
+      {q:'How do you chain multiple assertions?', a:'<b>.then().statusCode(200).body("name", equalTo("John")).body("active", equalTo(true)).body("roles", hasItems("ADMIN")).</b> All assertions run before failing — no short-circuit on first failure.'},
+      {q:'How do you use Hamcrest matchers in REST Assured?', a:'<b>equalTo(), notNullValue(), hasItems(), hasSize(), containsString(), greaterThan(), is(), not().</b> Import static org.hamcrest.Matchers.* for concise usage.'},
+      {q:'How do you validate a response JSON schema?', a:'<b>.then().body(JsonSchemaValidator.matchesJsonSchemaInClasspath("schemas/user-schema.json")).</b> Add json-schema-validator dependency. Schema validation catches missing/wrong-typed fields.'},
+      {q:'How do you handle cookies in REST Assured?', a:'<b>given().cookie("session", "abc123") sets cookies. Response cookies: response.getCookie("session") or response.cookies() for all.</b>'},
+      {q:'How do you test PATCH requests?', a:'<b>given().contentType(JSON).body("{\"name\":\"NewName\"}").when().patch("/users/1").then().statusCode(200).body("name", equalTo("NewName")).</b>'},
+    ]},
+    { title:'🔐 Auth & Security Testing', qs:[
+      {q:'How do you handle Basic Authentication?', a:'<b>given().auth().basic("username","password").get("/secure").</b> REST Assured sends the Authorization: Basic header with base64-encoded credentials.'},
+      {q:'How do you handle Bearer Token auth?', a:'<b>given().header("Authorization","Bearer "+token).get("/api/users").</b> Or given().auth().oauth2(token) for the fluent API equivalent.'},
+      {q:'How do you obtain an auth token and reuse it?', a:'<b>In @BeforeSuite or @BeforeClass: POST /auth/login, extract token from response, store in a static field or ThreadLocal.</b> All subsequent requests use this token without re-authenticating.'},
+      {q:'How do you test with OAuth2 in REST Assured?', a:'<b>given().auth().oauth2(bearerToken) — REST Assured adds the Authorization header automatically.</b> For obtaining the token: POST to /oauth/token with client credentials and extract access_token.'},
+      {q:'How do you test API Key authentication?', a:'<b>given().header("X-API-Key","your-api-key").get("/data").</b> Or as query param: given().queryParam("api_key","your-key").'},
+      {q:'How do you test an API that requires a CSRF token?', a:'<b>First GET the page/form endpoint that sets the CSRF cookie, extract the token from the cookie or response body, then include it as a header in subsequent POST requests.</b>'},
+      {q:'How do you test unauthorized access (401)?', a:'<b>Call the endpoint with no auth header or an expired token; assert statusCode(401) and the error response body contains "Unauthorized".</b>'},
+      {q:'How do you test forbidden access (403)?', a:'<b>Use a valid token for a user without the required role; assert statusCode(403) and the error body indicates "Insufficient permissions".</b>'},
+      {q:'What is a JWT and how do you decode it in tests?', a:'<b>JWT (JSON Web Token) is a base64-encoded signed token with header.payload.signature.</b> Decode payload: new String(Base64.getDecoder().decode(token.split("\\.")[1])) — parse as JSON to assert claims.'},
+      {q:'How do you test token expiry?', a:'<b>Use an expired token (craft one or mock the time), call a protected endpoint, assert 401 with "Token expired" message.</b> Or use a short-lived token and sleep/wait past expiry in the test.'},
+      {q:'How do you test SQL injection prevention?', a:'<b>Send payloads like "1\' OR \'1\'=\'1" as input values; assert the API returns 400 or 422 (validation error), not 200 with unintended data.</b>'},
+      {q:'How do you test XSS prevention in API responses?', a:'<b>Submit &lt;script&gt;alert(1)&lt;/script&gt; as a field value; assert the stored/returned value is escaped: &amp;lt;script&amp;gt; — not raw HTML.</b>'},
+      {q:'How do you test for sensitive data in API responses?', a:'<b>Assert that responses do NOT contain fields like "password", "creditCardNumber", "ssn".</b> .body("password", nullValue()) or check that the field is absent entirely.'},
+      {q:'How do you test rate limiting?', a:'<b>Send N+1 requests in quick succession; assert the (N+1)th request returns 429 Too Many Requests with Retry-After header.</b>'},
+      {q:'How do you test idempotency of PUT requests?', a:'<b>Send the same PUT request twice; assert both return 200 and the second produces the same state as the first.</b> Idempotent means N identical requests have the same effect as 1.'},
+      {q:'How do you test concurrent API requests?', a:'<b>Submit N requests in parallel using ExecutorService; collect all responses; assert all return expected status codes without data corruption.</b>'},
+      {q:'What is a Security Vulnerability and how do you test APIs for them?', a:'<b>OWASP API Security Top 10: Broken Object Authorization, Auth bypass, Excessive Data Exposure, Rate limiting, SSRF.</b> Write targeted tests for each: access another user\'s resource, expose unfiltered object fields, etc.'},
+      {q:'How do you handle HTTPS/SSL certificate issues in test environments?', a:'<b>RestAssured.useRelaxedHTTPSValidation() disables SSL cert verification.</b> Only use in test environments — never in production. For proper cert handling use a custom SSLContext.'},
+      {q:'How do you test API versioning?', a:'<b>Test v1 endpoints still return expected behavior after v2 is deployed; assert the version header or path is correct: given().header("Accept-Version","v2").get("/api/users").</b>'},
+      {q:'How do you test API response time SLA?', a:'<b>long time = response.time(); assertThat(time, lessThan(2000L)).</b> Or use REST Assured\'s .then().time(lessThan(2000L)). Set realistic SLAs based on production P99.'},
+    ]},
+    { title:'🔧 HTTP & API Concepts', qs:[
+      {q:'What are the HTTP methods?', a:'<b>GET (read, idempotent), POST (create, non-idempotent), PUT (replace all, idempotent), PATCH (partial update, idempotent), DELETE (remove, idempotent), HEAD (headers only), OPTIONS (CORS preflight).</b>'},
+      {q:'What do 2xx status codes mean?', a:'<b>200 OK, 201 Created (POST success), 202 Accepted (async processing started), 204 No Content (DELETE/PUT with no body).</b> Assert the specific code — 200 vs 201 both matter.'},
+      {q:'What do 4xx status codes mean?', a:'<b>400 Bad Request, 401 Unauthorized (not authenticated), 403 Forbidden (authenticated but not permitted), 404 Not Found, 409 Conflict (duplicate), 422 Unprocessable (validation failed), 429 Too Many Requests.</b>'},
+      {q:'What do 5xx status codes mean?', a:'<b>500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout.</b> Test these: mock the backend to return 5xx and assert the client handles them gracefully.'},
+      {q:'What is idempotency?', a:'<b>An operation is idempotent if N identical requests have the same effect as one request.</b> GET, PUT, DELETE are idempotent. POST is not. Test idempotency by sending the same request twice and asserting the same final state.'},
+      {q:'What is REST?', a:'<b>REST (Representational State Transfer) is an architectural style for distributed systems with constraints: stateless, client-server, cacheable, uniform interface, layered system.</b>'},
+      {q:'What is the difference between authentication and authorization?', a:'<b>Authentication: proving who you are (login, token). Authorization: what you are allowed to do (role-based access).</b> Test both: valid auth wrong role → 403; no auth → 401.'},
+      {q:'What is JSON Schema validation?', a:'<b>JSON Schema defines the structure, types, required fields, and constraints of a JSON document.</b> Validate API responses against a schema to catch missing fields, type changes, or added unintended fields.'},
+      {q:'What is API contract testing?', a:'<b>Contract testing verifies producer and consumer agree on the API format — field names, types, required fields.</b> Tools: Pact for consumer-driven contracts; JSON Schema validator for response structure.'},
+      {q:'What is the difference between REST and SOAP?', a:'<b>REST: lightweight, JSON/XML over HTTP, stateless, resource-based URLs. SOAP: heavyweight, XML envelope, WS-* standards, operation-based.</b> SOAP has built-in error handling (SOAP Fault); REST uses HTTP status codes.'},
+      {q:'What is GraphQL and how do you test it?', a:'<b>GraphQL is a query language where clients request exactly the fields they need in one request.</b> Test via POST to /graphql with a query body; assert the returned data shape matches the query.'},
+      {q:'What are HTTP headers important to test?', a:'<b>Content-Type, Accept, Authorization, Cache-Control, ETag, Location (for 201/302), X-Request-ID, CORS headers (Access-Control-Allow-Origin).</b>'},
+      {q:'What is pagination testing?', a:'<b>Assert: first page returns correct count, has nextPage link; navigate via offset/token; last page has no next; out-of-range page returns empty array not 404.</b>'},
+      {q:'What is API mocking?', a:'<b>Returning pre-defined responses without hitting the real backend.</b> Used to: test error states (500), test slow network (delay in mock), test third-party APIs without real credentials, enable frontend dev before backend is ready.'},
+      {q:'What is a 204 No Content response?', a:'<b>204 indicates success with no response body — typical for DELETE and PUT operations.</b> Assert statusCode(204) and that response body is empty.'},
+      {q:'What is a 201 Created response?', a:'<b>201 indicates a new resource was created — typically by POST.</b> Assert: statusCode(201), Location header contains the new resource URL, response body contains the created resource with server-assigned ID.'},
+      {q:'What is HATEOAS?', a:'<b>Hypermedia As The Engine Of Application State — REST responses include links to related actions.</b> Test that response links are correct: {links:{self:"/users/1", orders:"/users/1/orders"}}.'},
+      {q:'What is caching in HTTP APIs?', a:'<b>Cache-Control headers (max-age, no-cache, no-store) control caching behavior.</b> Test: assert Cache-Control headers are appropriate; assert ETag is returned; assert conditional GET with If-None-Match returns 304.'},
+      {q:'What is a webhook and how do you test it?', a:'<b>Webhook is an HTTP callback — when an event occurs, the server POSTs to a registered URL.</b> Test by registering a local test server URL, triggering the event, and asserting the webhook POST body was received correctly.'},
+      {q:'What is an API gateway and how does it affect testing?', a:'<b>API Gateway handles routing, auth, rate limiting, logging in front of microservices.</b> In testing: gateway may add/strip headers, enforce rate limits, handle auth differently — test at gateway level, not just service level.'},
+      {q:'What is a correlation ID and why test for it?', a:'<b>A correlation ID (X-Request-ID or X-Correlation-ID) is a unique ID attached to every request for distributed tracing.</b> Assert it is present in responses and matches what was sent for end-to-end trace linking.'},
+    ]},
+    { title:'⚡ Advanced API Testing', qs:[
+      {q:'How do you test eventual consistency in APIs?', a:'<b>POST to create resource; poll GET with exponential backoff until resource appears (eventual consistency); assert it appears within SLA.</b> Never use Thread.sleep() — poll with configurable max attempts.'},
+      {q:'How do you test API performance?', a:'<b>Send N requests sequentially or parallel; measure average, P90, P99 response times.</b> REST Assured provides response.time(). For load testing use Gatling/k6 — not REST Assured.'},
+      {q:'What is data-driven API testing?', a:'<b>Run the same API test with multiple data sets via DataProvider.</b> @DataProvider returns Object[][] with different payloads; @Test(dataProvider="api-data") runs N times with N test reports.'},
+      {q:'How do you test long-running async APIs (202 Accepted)?', a:'<b>POST returns 202 Accepted with a job ID; poll GET /jobs/{id} until status is COMPLETED or FAILED; assert final result.</b> Implement with retry loop and timeout.'},
+      {q:'How do you test file upload APIs?', a:'<b>given().multiPart("file", new File("test.pdf"), "application/pdf").when().post("/upload").then().statusCode(200).body("filename", equalTo("test.pdf")).</b>'},
+      {q:'How do you test APIs with dependencies on other services?', a:'<b>Mock the dependent service responses (WireMock, Mockito for unit tests) to isolate the service under test.</b> Test the integration with real services in a separate integration test suite.'},
+      {q:'What is WireMock?', a:'<b>WireMock is a mock HTTP server — configure stub responses for specific request patterns.</b> Run locally or in CI to simulate external dependencies without real network calls.'},
+      {q:'How do you validate API documentation accuracy?', a:'<b>Run your REST Assured tests against the API and compare actual response structure to the OpenAPI/Swagger spec.</b> swagger-validator and dredd generate tests from the spec to detect discrepancies.'},
+      {q:'How do you test backward compatibility of APIs?', a:'<b>Run the existing test suite against the new API version — any test failure indicates a breaking change.</b> Contract tests (Pact) specifically verify consumer expectations are still met.'},
+      {q:'How do you handle flaky API tests?', a:'<b>Common causes: eventual consistency (add polling), rate limiting (add delay between calls), test data collision (unique IDs), token expiry (refresh before test).</b>'},
+      {q:'How do you test API error messages?', a:'<b>Assert both the status code AND the error response body: message text, error code field, no sensitive data leakage.</b> .body("error.code", equalTo("USER_NOT_FOUND")).body("error.message", containsString("not found")).'},
+      {q:'What is a test pyramid for API testing?', a:'<b>Bottom: unit tests on business logic. Middle: API integration tests (your REST Assured suite). Top: E2E tests through UI.</b> Most coverage should be at the API layer — faster and more stable than UI tests.'},
+      {q:'How do you test GraphQL APIs?', a:'<b>POST to /graphql with Content-Type application/json body: {query: "{ users { id name } }"}.</b> Assert the data field in the response. Use graphql-java-client or plain REST Assured.'},
+      {q:'How do you organize API tests in a large project?', a:'<b>By service/domain: UserApiTests, OrderApiTests, ProductApiTests.</b> Shared RequestSpec in a BaseApiTest class. DataProviders in separate data classes. Schema files in src/test/resources/schemas/.'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 7 — CI/CD & DEVOPS ══ */
+{
+  id:'cicd', title:'🚀 CI/CD & DevOps',
+  sections:[
+    { title:'🔧 Jenkins Core', qs:[
+      {q:'What is Jenkins?', a:'<b>Jenkins is an open-source CI/CD automation server that orchestrates build, test, and deploy pipelines.</b> It reads a Jenkinsfile from the repo, distributes work to agents, and reports results.'},
+      {q:'What is the difference between Freestyle and Pipeline jobs?', a:'<b>Freestyle: UI-configured, limited scripting, hard to version-control. Pipeline: pipeline-as-code in Jenkinsfile, checked into Git, version-controlled, supports parallel stages.</b> Always use Pipeline.'},
+      {q:'What is a Jenkinsfile?', a:'<b>A Jenkinsfile is a text file in the repo root defining the entire CI/CD pipeline as code.</b> Sections: agent (where to run), stages, steps, post (success/failure cleanup), environment, parameters.'},
+      {q:'What is Declarative vs Scripted Pipeline?', a:'<b>Declarative: structured pipeline{} block, readable, enforced schema. Scripted: Groovy node{} block, maximum flexibility.</b> Prefer Declarative — easier to read, maintain, and lint.'},
+      {q:'What is a Jenkins Agent?', a:'<b>An Agent is a machine (physical, VM, or Docker container) that executes pipeline stages.</b> Docker agents provide a clean, consistent environment for every build — no "works on my machine" issues.'},
+      {q:'How do you run parallel stages in Jenkins?', a:'<b>parallel { stage("Smoke"){ steps{ sh "mvn test -Dgroups=smoke" } } stage("API"){ steps{ sh "mvn test -Dgroups=api" } } }.</b> Both run simultaneously on available agents.'},
+      {q:'How do you manage secrets in Jenkins?', a:'<b>Store in Jenkins Credentials Store; inject via environment { API_KEY = credentials("api-key-id") }.</b> Jenkins masks credential values in logs. Never hardcode secrets in Jenkinsfile.'},
+      {q:'How do you trigger a pipeline on a GitHub push?', a:'<b>Install GitHub plugin, add webhook in GitHub repo → Jenkins URL/github-webhook/, add triggers { githubPush() } in Jenkinsfile.</b>'},
+      {q:'How do you archive test artifacts?', a:'<b>post { always { archiveArtifacts "target/reports/**, target/screenshots/**"; junit "target/surefire-reports/*.xml" } }.</b> JUnit XML enables Jenkins pass/fail trend charts per test method.'},
+      {q:'What is the post section in Jenkinsfile?', a:'<b>post runs after all stages: always (always runs), success (only on success), failure (only on failure), unstable (non-zero exit but not abort).</b> Use for cleanup, notifications, artifact publishing.'},
+      {q:'How do you publish HTML reports in Jenkins?', a:'<b>publishHTML(target: [reportDir: "target/extent-report", reportFiles: "index.html", reportName: "Extent Report"]).</b> Requires HTML Publisher Plugin. Reports appear as a link on the build page.'},
+      {q:'How do you run a pipeline on a schedule (cron)?', a:'<b>triggers { cron("0 2 * * *") } in Jenkinsfile runs at 2 AM daily.</b> H syntax for distributed load: H(0,30) 1 * * * runs between 1:00-1:30 AM randomly to avoid thundering herd.'},
+      {q:'What is the when directive in Jenkins?', a:'<b>when { branch "main" } or when { expression { params.RUN_REGRESSION == "true" } } conditionally runs a stage.</b> Prevents regression from running on every feature branch push.'},
+      {q:'How do you pass parameters to a Jenkins pipeline?', a:'<b>parameters { string(name:"ENV", defaultValue:"staging") choice(name:"BROWSER", choices:["chrome","firefox"]) }.</b> Access as params.ENV in steps.'},
+      {q:'What is a shared library in Jenkins?', a:'<b>Shared libraries are reusable Groovy code (steps, utility functions) shared across multiple Jenkinsfiles.</b> Define in a Git repo; load with @Library("shared-lib") in Jenkinsfile.'},
+      {q:'What is the stash/unstash in Jenkins?', a:'<b>stash name:"reports" includes:"target/reports/**" saves files between stages. unstash "reports" retrieves them.</b> Used to pass artifacts between stages running on different agents.'},
+      {q:'How do you handle build failures in Jenkins?', a:'<b>post { failure { emailext to:"team@co.com", subject:"FAILED: ${env.JOB_NAME}", body:"${env.BUILD_URL}" } }.</b> Or Slack notifications via Slack Notify plugin.'},
+      {q:'What is the withCredentials block?', a:'<b>withCredentials([string(credentialsId:"api-key", variable:"API_KEY")]) { sh "curl -H \'X-Key: ${API_KEY}\' ..." }.</b> Credentials are masked in logs automatically.'},
+      {q:'What is Blue Ocean in Jenkins?', a:'<b>Blue Ocean is Jenkins\'s modern UI for visualizing pipeline execution — shows parallel stages, logs, test results as a visual graph.</b> Available as a plugin alongside the classic Jenkins UI.'},
+      {q:'What is Jenkins\'s workspace?', a:'<b>The workspace is the directory on the agent where the pipeline runs — source code is checked out here.</b> Clean workspace with deleteDir() in post to prevent artifact bleed between builds.'},
+      {q:'How do you handle flaky test results in Jenkins gates?', a:'<b>Use a pass rate threshold rather than zero-failure gate: fail build if pass rate drops below 95%.</b> Separate thresholds: smoke 100%, regression 95%. Track flaky tests in a separate quarantine stage.'},
+      {q:'What is matrix in Jenkins Pipelines?', a:'<b>matrix { axes { axis { name "BROWSER"; values "chrome","firefox","webkit" } } stages { ... } } runs all combinations in parallel.</b> Eliminates writing one stage block per browser.'},
+      {q:'How do you limit concurrent builds in Jenkins?', a:'<b>options { disableConcurrentBuilds() } prevents a second build starting while one is running.</b> Use for deployment pipelines where concurrent deploys would conflict.'},
+      {q:'What is the Jenkins job DSL?', a:'<b>Job DSL is a Groovy-based DSL for programmatically creating Jenkins jobs via a seed job.</b> Manages hundreds of job configs as code rather than through the Jenkins UI.'},
+      {q:'How do you validate a Jenkinsfile without running it?', a:'<b>Use Jenkins\'s Replay feature to edit and re-run; use the Declarative Linter at /pipeline-model-converter/validate endpoint; use pipeline-syntax tool in Jenkins UI.</b>'},
+    ]},
+    { title:'🔄 CI/CD Concepts', qs:[
+      {q:'What is CI (Continuous Integration)?', a:'<b>CI automatically builds and tests code on every commit — catches integration bugs within minutes instead of days.</b> Every developer\'s push triggers: compile → unit test → integration test → report.'},
+      {q:'What is CD (Continuous Delivery)?', a:'<b>CI + automated release packaging to staging, but production deployment requires manual approval.</b> The software is always deployable; a human decides when to ship.'},
+      {q:'What is Continuous Deployment?', a:'<b>Every green build goes straight to production automatically — no human approval step.</b> Requires near-100% test coverage, feature flags for risky changes, and robust rollback.'},
+      {q:'What is the test pyramid in CI/CD?', a:'<b>Many unit tests (seconds) on every commit → fewer integration tests (minutes) on PR → few E2E tests (hours) on nightly.</b> Inverting this (mostly E2E) makes CI slow and brittle.'},
+      {q:'What is shift-left testing?', a:'<b>Moving tests earlier in development — unit tests at commit, API tests at PR, E2E tests pre-release.</b> Catching bugs earlier is 10x cheaper than finding them in production.'},
+      {q:'What is a deployment gate?', a:'<b>A condition that must pass before proceeding to the next stage — typically test pass rate threshold.</b> Smoke: 100% must pass. Regression: ≥95% must pass. Gate failure blocks the pipeline.'},
+      {q:'What is a feature flag?', a:'<b>A feature flag (toggle) enables/disables features at runtime without code deployment.</b> Use to: gradually roll out risky features, A/B test, enable for QA before GA, instantly roll back without redeploy.'},
+      {q:'What is a canary deployment?', a:'<b>Deploy the new version to 5-10% of production traffic; monitor errors/latency; gradually increase if healthy.</b> Limits blast radius of a bad deploy — only 5% of users affected before rollback.'},
+      {q:'What is blue-green deployment?', a:'<b>Two identical production environments: blue (current), green (new version). Switch traffic from blue to green; rollback = switch back.</b> Zero downtime; instant rollback.'},
+      {q:'What is rolling deployment?', a:'<b>Replace old instances with new ones gradually — a few at a time.</b> If failures appear, stop rolling and rollback the already-updated instances.'},
+      {q:'What is the difference between CI/CD for microservices vs monolith?', a:'<b>Monolith: one pipeline builds and tests everything together. Microservices: each service has its own pipeline; contract tests verify inter-service compatibility.</b>'},
+      {q:'What is infrastructure as code (IaC)?', a:'<b>IaC manages infrastructure (servers, networks, databases) via code (Terraform, Ansible) instead of manual clicks.</b> Version-controlled, reproducible, reviewable — same principles as application code.'},
+      {q:'What is a build artifact?', a:'<b>A build artifact is the output of a build step — JAR, Docker image, ZIP, test report.</b> Artifacts are versioned and stored in Nexus/Artifactory; deployed to environments; referenced by downstream pipeline steps.'},
+      {q:'What is a smoke test in CI/CD?', a:'<b>Smoke tests are the most critical 20-30 tests covering the happy path — run on every PR in 5 minutes.</b> If smoke fails, the PR is blocked. Regression runs nightly for comprehensive coverage.'},
+      {q:'What is a quality gate?', a:'<b>A quality gate is a pass/fail condition on code quality metrics: test coverage, code duplication, code smells, vulnerability count.</b> SonarQube quality gates block merges when metrics drop below thresholds.'},
+      {q:'What is SonarQube?', a:'<b>SonarQube is a static code analysis platform detecting bugs, vulnerabilities, code smells, and measuring coverage.</b> Integrate in CI: mvn sonar:sonar after tests; quality gate blocks the build on violations.'},
+      {q:'What is Docker in the context of CI/CD?', a:'<b>Docker packages the app and its environment into an image that runs identically everywhere.</b> In CI: run tests inside the official Playwright Docker image — consistent browser versions, no install steps.'},
+      {q:'What is Kubernetes in the context of testing?', a:'<b>Kubernetes orchestrates Docker containers at scale.</b> Spin up test databases, mock services, and the app under test as K8s pods; tear them down post-test. Enables isolated, reproducible test environments.'},
+      {q:'What is GitHub Actions and how does it compare to Jenkins?', a:'<b>GitHub Actions is a cloud-native CI/CD system built into GitHub — no server to maintain, YAML-based workflows.</b> Jenkins: self-hosted, more plugins, more complex. GitHub Actions: simpler, integrated with PRs, free for public repos.'},
+      {q:'What is a .github/workflows YAML file?', a:'<b>GitHub Actions workflow file defining triggers (on: push, pull_request), jobs, steps, and environment variables.</b> Each job runs on a runner (ubuntu-latest); steps run sequentially within a job.'},
+      {q:'What is caching in CI/CD pipelines?', a:'<b>Cache Maven/npm dependencies between builds to avoid re-downloading on every run.</b> Jenkins: cache ~/.m2 directory. GitHub Actions: actions/cache step. Reduces build time by 2-5 minutes.'},
+      {q:'What is a rollback and how do you test it?', a:'<b>Rollback: revert to the previous working version when a deployment fails.</b> Test rollback in CI by: deploying a known-bad version, asserting smoke tests fail, triggering rollback, asserting smoke tests pass.'},
+      {q:'What is observability in the context of CI/CD?', a:'<b>Observability = logs + metrics + traces — knowing what\'s happening inside your pipeline and deployed app.</b> Instrument test pipelines with execution time metrics, flakiness rates, and coverage trends.'},
+      {q:'What is a pre-commit hook?', a:'<b>A pre-commit hook runs scripts before git commit completes — used to enforce code style, run fast unit tests, or lint Gherkin.</b> Catches issues at the earliest possible point before they enter the repo.'},
+    ]},
+    { title:'🐳 Docker & Environments', qs:[
+      {q:'What is Docker?', a:'<b>Docker packages applications and dependencies into portable containers that run identically on any machine.</b> Eliminates "works on my machine" — the test environment in CI matches the developer\'s exactly.'},
+      {q:'What is a Dockerfile?', a:'<b>A Dockerfile is a text script defining how to build a Docker image: base image, dependencies, application code, startup command.</b> FROM mcr.microsoft.com/playwright/java:v1.45.0 is the base for Playwright Java suites.'},
+      {q:'What is a Docker image vs a container?', a:'<b>Image: immutable template (like a class). Container: running instance of an image (like an object).</b> Multiple containers can run from one image simultaneously.'},
+      {q:'What is Docker Compose?', a:'<b>Docker Compose defines multi-container applications in a docker-compose.yml — start the app, database, and mock server together with one command.</b> Ideal for integration test environments.'},
+      {q:'How do you run Playwright tests in Docker?', a:'<b>Use mcr.microsoft.com/playwright/java image — all browsers pre-installed.</b> Mount test code, run mvn test headless=true inside the container. Consistent execution across all CI agents.'},
+      {q:'What is environment parity?', a:'<b>Environment parity: dev, staging, and production environments are as similar as possible — same OS, same versions, same config structure.</b> Differences between envs cause "passes in staging, fails in production" bugs.'},
+      {q:'How do you manage config across environments?', a:'<b>Environment variables injected at runtime (not baked into the image) via -e ENV=staging or Kubernetes ConfigMaps/Secrets.</b> The same Docker image runs in all environments with different config.'},
+      {q:'What is a staging environment?', a:'<b>Staging is a production-like environment for final validation before release — same infrastructure, same data structure, different data.</b> Run full regression here before promoting to production.'},
+      {q:'What is a test environment?', a:'<b>A dedicated, isolated environment for running automated tests — resets state between test runs.</b> May use docker-compose to spin up the app + dependencies fresh for each pipeline run.'},
+      {q:'What is ephemeral test environment?', a:'<b>A short-lived environment created on demand for a PR, used for testing, then destroyed.</b> Kubernetes makes this practical: helm install on PR open, helm uninstall on PR merge.'},
+      {q:'How do you handle database state in CI tests?', a:'<b>Start a fresh database container per pipeline run; run migration scripts; seed test data; destroy after.</b> No persistent state between CI runs — every build starts from a clean slate.'},
+      {q:'What is a Docker volume?', a:'<b>A Docker volume persists data outside the container\'s filesystem — survives container restarts and removes.</b> Mount test result directories as volumes to retrieve reports after the container exits.'},
+      {q:'What is container networking in Docker?', a:'<b>Docker creates virtual networks; containers on the same network reach each other by container name.</b> In docker-compose: app container calls database container as "db:5432" — no IP addresses needed.'},
+      {q:'What is a Docker registry?', a:'<b>A Docker registry stores and distributes images: Docker Hub (public), AWS ECR, Azure ACR, GitHub Container Registry (private).</b> CI pulls the test runner image from the registry on every build.'},
+      {q:'What is a multi-stage Docker build?', a:'<b>Multi-stage: build in a large image (JDK + Maven), copy artifacts to a smaller runtime image (JRE only).</b> Reduces final image size — security and pull speed benefit.'},
+    ]},
+    { title:'🐞 Flaky Tests & Production', qs:[
+      {q:'What is a flaky test?', a:'<b>A flaky test produces non-deterministic results — passes and fails on the same code without changes.</b> Destroys CI trust: teams start re-running until green, missing real failures.'},
+      {q:'What are the most common causes of flaky UI tests?', a:'<b>Hard sleeps instead of state-based waits, unstable locators, test data collisions in parallel, shared browser state between tests, animation timing issues.</b>'},
+      {q:'What are the most common causes of flaky API tests?', a:'<b>Eventual consistency (data not queryable yet), rate limiting triggering 429, test data creation race conditions, token expiry mid-test.</b>'},
+      {q:'How do you detect flaky tests?', a:'<b>Track tests with both PASS and FAIL results across recent builds without code changes.</b> Flakiness score = failure rate over last 50 runs. Flag any test with >5% flakiness for investigation.'},
+      {q:'How do you fix UI flakiness caused by timing?', a:'<b>Replace Thread.sleep() with Playwright\'s built-in auto-wait or explicit waitFor(state=VISIBLE).</b> Never assert on time — assert on state. If the element isn\'t ready, the test shouldn\'t proceed.'},
+      {q:'How do you quarantine a flaky test?', a:'<b>Tag with @flaky or @quarantine; exclude from the main gate (run in a separate job).</b> Track in a flakiness register; fix within SLA (48-72 hours); reinstate to main suite after passing 20 consecutive runs.'},
+      {q:'Should you auto-retry flaky tests?', a:'<b>Retry for infrastructure flakiness (network blip, CI agent overload) — max 2 retries.</b> Never retry for assertion failures — that hides real bugs. Track retry counts; high retries = unfixed root cause.'},
+      {q:'How do you test in production safely?', a:'<b>Canary testing (5% traffic), feature flags for gradual rollout, read-only synthetic monitoring tests that don\'t write data, shadowing (duplicate real traffic to test environment).</b>'},
+      {q:'A test passes in staging but fails in production — how do you investigate?', a:'<b>Compare: data differences (prod has edge cases staging doesn\'t), config differences (SSL, proxy, timeout), traffic differences (higher load), third-party integrations (real payment gateway vs mock).</b>'},
+      {q:'A bug reached production that your test suite missed — what do you do?', a:'<b>Add a regression test for the exact scenario that failed. Investigate why existing tests didn\'t catch it — missing edge case coverage, wrong environment assumption, or wrong assertion level.</b>'},
+      {q:'What is synthetic monitoring?', a:'<b>Running automated tests against production continuously to detect outages and regressions in real-time.</b> Synthetic monitors run every 5-15 minutes checking critical paths — alert on first failure.'},
+      {q:'What is error budgeting in SRE and how does it relate to testing?', a:'<b>Error budget is the acceptable downtime/error rate (100% - SLA).</b> Tests protect the error budget — failures in CI before deploy prevent burning the budget in production.'},
+      {q:'How do you manage test environments in an enterprise?', a:'<b>Named environments with versioned configurations: dev, test, integration, staging, production.</b> Promotion gates between environments: test → integration requires smoke pass; integration → staging requires regression pass.'},
+      {q:'What is chaos engineering and how does it relate to testing?', a:'<b>Chaos engineering deliberately injects failures (kill services, throttle network) to verify system resilience.</b> Test automation verifies the system recovers correctly within SLA after chaos injection.'},
+      {q:'How do you handle a CI pipeline that takes too long?', a:'<b>Parallelize: split tests across multiple agents. Optimize: run fast unit tests first, gate on them before E2E. Cache: Maven dependencies. Prioritize: only run affected tests on PR, full suite nightly.</b>'},
+      {q:'What is test impact analysis?', a:'<b>Identifying which tests are relevant to a code change — run only those tests on PR instead of the full suite.</b> Reduces PR feedback time from 30 minutes to 5 minutes. Tools: Bazel, Gradle test-impact plugins.'},
+      {q:'How do you prevent environment-specific test failures?', a:'<b>Use environment abstraction: ConfigFactory resolves env-specific values. Never hardcode URLs. Verify tests work in all environments before merging. Maintain environment parity.</b>'},
+      {q:'What is a test health dashboard?', a:'<b>A dashboard tracking: pass rate trend, average execution time, flakiness rate, coverage, failing test names.</b> Teams review it daily — early warning system for deteriorating suite health.'},
+    ]},
+  ]
+},
+/* ══ CHAPTER 8 — CODING CHALLENGES ══ */
+{
+  id:'coding', title:'💻 Coding Challenges',
+  sections:[
+    { title:'📊 Arrays & Strings', qs:[
+      {q:'How do you find two numbers that sum to a target? (Two Sum)', a:'<b>HashMap approach: store complement as key, index as value — single pass O(n).</b><div class="wi-code-block">public int[] twoSum(int[] nums, int target) {\n  Map&lt;Integer,Integer&gt; map = new HashMap&lt;&gt;();\n  for(int i=0;i&lt;nums.length;i++){\n    int c=target-nums[i];\n    if(map.containsKey(c)) return new int[]{map.get(c),i};\n    map.put(nums[i],i);\n  }\n  return new int[]{};\n} // O(n) time O(n) space</div>', coding:true},
+      {q:'How do you check if a string is a palindrome?', a:'<b>Two-pointer from both ends — compare chars moving inward.</b><div class="wi-code-block">public boolean isPalindrome(String s) {\n  s=s.toLowerCase().replaceAll("[^a-z0-9]","");\n  int l=0,r=s.length()-1;\n  while(l&lt;r){\n    if(s.charAt(l)!=s.charAt(r)) return false;\n    l++;r--;\n  }\n  return true;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the maximum subarray sum? (Kadane\'s)', a:'<b>Track current sum and global max — reset current sum if it goes negative.</b><div class="wi-code-block">public int maxSubArray(int[] nums) {\n  int max=nums[0],cur=nums[0];\n  for(int i=1;i&lt;nums.length;i++){\n    cur=Math.max(nums[i],cur+nums[i]);\n    max=Math.max(max,cur);\n  }\n  return max;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you check if two strings are anagrams?', a:'<b>Count char frequencies with int[26] array — one pass each string.</b><div class="wi-code-block">public boolean isAnagram(String s,String t){\n  if(s.length()!=t.length()) return false;\n  int[] c=new int[26];\n  for(char ch:s.toCharArray()) c[ch-\'a\']++;\n  for(char ch:t.toCharArray()) c[ch-\'a\']--;\n  for(int n:c) if(n!=0) return false;\n  return true;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the longest substring without repeating characters?', a:'<b>Sliding window with HashMap tracking last seen index.</b><div class="wi-code-block">public int lengthOfLongestSubstring(String s){\n  Map&lt;Character,Integer&gt; map=new HashMap&lt;&gt;();\n  int max=0,left=0;\n  for(int r=0;r&lt;s.length();r++){\n    char c=s.charAt(r);\n    if(map.containsKey(c)) left=Math.max(left,map.get(c)+1);\n    map.put(c,r);\n    max=Math.max(max,r-left+1);\n  }\n  return max;\n} // O(n) time O(min(n,charset)) space</div>', coding:true},
+      {q:'How do you find all duplicates in an array?', a:'<b>HashSet — add() returns false if already present (duplicate).</b><div class="wi-code-block">public List&lt;Integer&gt; findDuplicates(int[] nums){\n  Set&lt;Integer&gt; seen=new HashSet&lt;&gt;();\n  List&lt;Integer&gt; result=new ArrayList&lt;&gt;();\n  for(int n:nums) if(!seen.add(n)) result.add(n);\n  return result;\n} // O(n) time O(n) space</div>', coding:true},
+      {q:'How do you find the missing number in 0..n?', a:'<b>Gauss formula: expected=n*(n+1)/2, subtract actual sum.</b><div class="wi-code-block">public int missingNumber(int[] nums){\n  int n=nums.length, sum=0;\n  for(int x:nums) sum+=x;\n  return n*(n+1)/2-sum;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you rotate an array by k positions?', a:'<b>Three-reverse trick: reverse all, reverse first k, reverse rest.</b><div class="wi-code-block">public void rotate(int[] nums,int k){\n  k%=nums.length;\n  rev(nums,0,nums.length-1);\n  rev(nums,0,k-1);\n  rev(nums,k,nums.length-1);\n}\nvoid rev(int[] a,int l,int r){\n  while(l&lt;r){int t=a[l];a[l++]=a[r];a[r--]=t;}\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the longest common prefix in an array of strings?', a:'<b>Use first string as reference; shorten until all strings start with it.</b><div class="wi-code-block">public String longestCommonPrefix(String[] strs){\n  String p=strs[0];\n  for(int i=1;i&lt;strs.length;i++)\n    while(!strs[i].startsWith(p)) p=p.substring(0,p.length()-1);\n  return p;\n} // O(S) where S = total chars</div>', coding:true},
+      {q:'How do you count characters in a string?', a:'<b>Use int[26] for lowercase letters or HashMap for arbitrary characters.</b><div class="wi-code-block">public Map&lt;Character,Integer&gt; countChars(String s){\n  Map&lt;Character,Integer&gt; map=new HashMap&lt;&gt;();\n  for(char c:s.toCharArray())\n    map.merge(c,1,Integer::sum);\n  return map;\n} // map.merge is cleaner than getOrDefault+put</div>', coding:true},
+      {q:'How do you find the first non-repeating character?', a:'<b>Two passes: count frequencies, find first with count=1.</b><div class="wi-code-block">public int firstUniqChar(String s){\n  int[] c=new int[26];\n  for(char ch:s.toCharArray()) c[ch-\'a\']++;\n  for(int i=0;i&lt;s.length();i++)\n    if(c[s.charAt(i)-\'a\']==1) return i;\n  return -1;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the maximum sum subarray of size k?', a:'<b>Sliding window — add new element, subtract element leaving the window.</b><div class="wi-code-block">public int maxSum(int[] nums,int k){\n  int win=0,max=0;\n  for(int i=0;i&lt;k;i++) win+=nums[i];\n  max=win;\n  for(int i=k;i&lt;nums.length;i++){\n    win+=nums[i]-nums[i-k];\n    max=Math.max(max,win);\n  }\n  return max;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you group anagrams together?', a:'<b>Sort each string as the HashMap key — anagrams share the same sorted form.</b><div class="wi-code-block">public List&lt;List&lt;String&gt;&gt; groupAnagrams(String[] strs){\n  Map&lt;String,List&lt;String&gt;&gt; map=new HashMap&lt;&gt;();\n  for(String s:strs){\n    char[] ca=s.toCharArray(); Arrays.sort(ca);\n    map.computeIfAbsent(new String(ca),k->new ArrayList&lt;&gt;()).add(s);\n  }\n  return new ArrayList&lt;&gt;(map.values());\n} // O(n*k log k) time</div>', coding:true},
+      {q:'How do you find the product of all elements except self?', a:'<b>Two-pass prefix and suffix product — no division needed.</b><div class="wi-code-block">public int[] productExceptSelf(int[] nums){\n  int n=nums.length;\n  int[] res=new int[n]; res[0]=1;\n  for(int i=1;i&lt;n;i++) res[i]=res[i-1]*nums[i-1];\n  int suffix=1;\n  for(int i=n-1;i&gt;=0;i--){\n    res[i]*=suffix; suffix*=nums[i];\n  }\n  return res;\n} // O(n) time O(1) extra space</div>', coding:true},
+      {q:'How do you find if an array contains a subarray with sum equal to k?', a:'<b>Prefix sum + HashMap: if (prefixSum - k) exists in map, found a subarray.</b><div class="wi-code-block">public boolean subarraySum(int[] nums,int k){\n  Map&lt;Integer,Integer&gt; map=new HashMap&lt;&gt;();\n  map.put(0,1); int sum=0;\n  for(int n:nums){\n    sum+=n;\n    if(map.containsKey(sum-k)) return true;\n    map.put(sum,map.getOrDefault(sum,0)+1);\n  }\n  return false;\n} // O(n) time O(n) space</div>', coding:true},
+      {q:'How do you implement binary search?', a:'<b>Divide and conquer on sorted array — halve the search space each iteration.</b><div class="wi-code-block">public int binarySearch(int[] nums,int target){\n  int l=0,r=nums.length-1;\n  while(l&lt;=r){\n    int mid=l+(r-l)/2;\n    if(nums[mid]==target) return mid;\n    if(nums[mid]&lt;target) l=mid+1;\n    else r=mid-1;\n  }\n  return -1;\n} // O(log n) time O(1) space</div>', coding:true},
+      {q:'How do you find the peak element in an array?', a:'<b>Binary search: if mid > mid+1, peak is on left; else right.</b><div class="wi-code-block">public int findPeakElement(int[] nums){\n  int l=0,r=nums.length-1;\n  while(l&lt;r){\n    int mid=l+(r-l)/2;\n    if(nums[mid]&lt;nums[mid+1]) l=mid+1;\n    else r=mid;\n  }\n  return l;\n} // O(log n) time O(1) space</div>', coding:true},
+      {q:'How do you remove duplicates from a sorted array in-place?', a:'<b>Two-pointer — write pointer tracks next write position.</b><div class="wi-code-block">public int removeDuplicates(int[] nums){\n  int k=1;\n  for(int i=1;i&lt;nums.length;i++)\n    if(nums[i]!=nums[i-1]) nums[k++]=nums[i];\n  return k;\n} // O(n) time O(1) space — modifies in place</div>', coding:true},
+      {q:'How do you move all zeros to the end of an array?', a:'<b>Two-pointer: write non-zeros forward, fill remaining with zeros.</b><div class="wi-code-block">public void moveZeroes(int[] nums){\n  int k=0;\n  for(int n:nums) if(n!=0) nums[k++]=n;\n  while(k&lt;nums.length) nums[k++]=0;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the majority element (appears > n/2 times)?', a:'<b>Boyer-Moore Voting: maintain candidate and count — opposing elements cancel.</b><div class="wi-code-block">public int majorityElement(int[] nums){\n  int cand=nums[0],count=1;\n  for(int i=1;i&lt;nums.length;i++){\n    if(count==0) cand=nums[i];\n    count+=(nums[i]==cand)?1:-1;\n  }\n  return cand;\n} // O(n) time O(1) space</div>', coding:true},
+    ]},
+    { title:'🔗 Linked Lists', qs:[
+      {q:'How do you reverse a singly linked list?', a:'<b>Iterative three-pointer: prev, curr, next.</b><div class="wi-code-block">public ListNode reverseList(ListNode head){\n  ListNode prev=null,curr=head;\n  while(curr!=null){\n    ListNode next=curr.next;\n    curr.next=prev;\n    prev=curr;\n    curr=next;\n  }\n  return prev;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you detect a cycle in a linked list? (Floyd\'s)', a:'<b>Slow moves 1 step, fast moves 2 steps — if they meet, cycle exists.</b><div class="wi-code-block">public boolean hasCycle(ListNode head){\n  ListNode slow=head,fast=head;\n  while(fast!=null&&fast.next!=null){\n    slow=slow.next; fast=fast.next.next;\n    if(slow==fast) return true;\n  }\n  return false;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the middle of a linked list?', a:'<b>Slow/fast pointer — when fast reaches end, slow is at middle.</b><div class="wi-code-block">public ListNode middleNode(ListNode head){\n  ListNode slow=head,fast=head;\n  while(fast!=null&&fast.next!=null){\n    slow=slow.next; fast=fast.next.next;\n  }\n  return slow; // returns 2nd middle for even-length list\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you merge two sorted linked lists?', a:'<b>Dummy head + compare nodes from both lists iteratively.</b><div class="wi-code-block">public ListNode mergeTwoLists(ListNode l1,ListNode l2){\n  ListNode dummy=new ListNode(0),cur=dummy;\n  while(l1!=null&&l2!=null){\n    if(l1.val&lt;=l2.val){cur.next=l1;l1=l1.next;}\n    else{cur.next=l2;l2=l2.next;}\n    cur=cur.next;\n  }\n  cur.next=l1!=null?l1:l2;\n  return dummy.next;\n} // O(n+m) time O(1) space</div>', coding:true},
+      {q:'How do you remove the nth node from the end?', a:'<b>Two-pointer: advance fast n steps, then move both until fast reaches end.</b><div class="wi-code-block">public ListNode removeNthFromEnd(ListNode head,int n){\n  ListNode dummy=new ListNode(0); dummy.next=head;\n  ListNode fast=dummy,slow=dummy;\n  for(int i=0;i&lt;=n;i++) fast=fast.next;\n  while(fast!=null){slow=slow.next;fast=fast.next;}\n  slow.next=slow.next.next;\n  return dummy.next;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you check if a linked list is a palindrome?', a:'<b>Find middle, reverse second half, compare both halves, restore.</b><div class="wi-code-block">public boolean isPalindrome(ListNode head){\n  ListNode mid=middleNode(head);\n  ListNode rev=reverseList(mid);\n  ListNode p1=head,p2=rev;\n  while(p2!=null){\n    if(p1.val!=p2.val) return false;\n    p1=p1.next; p2=p2.next;\n  }\n  return true;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you find the intersection of two linked lists?', a:'<b>Two pointers switch lists when they reach end — they meet at intersection.</b><div class="wi-code-block">public ListNode getIntersectionNode(ListNode a,ListNode b){\n  ListNode p=a,q=b;\n  while(p!=q){\n    p=p==null?b:p.next;\n    q=q==null?a:q.next;\n  }\n  return p; // null if no intersection\n} // O(m+n) time O(1) space</div>', coding:true},
+      {q:'How do you add two numbers represented as linked lists?', a:'<b>Iterate both lists simultaneously with a carry variable.</b><div class="wi-code-block">public ListNode addTwoNumbers(ListNode l1,ListNode l2){\n  ListNode dummy=new ListNode(0),cur=dummy;\n  int carry=0;\n  while(l1!=null||l2!=null||carry!=0){\n    int sum=(l1!=null?l1.val:0)+(l2!=null?l2.val:0)+carry;\n    carry=sum/10;\n    cur.next=new ListNode(sum%10); cur=cur.next;\n    if(l1!=null) l1=l1.next;\n    if(l2!=null) l2=l2.next;\n  }\n  return dummy.next;\n} // O(max(m,n)) time</div>', coding:true},
+      {q:'How do you delete a node given only that node (no head)?', a:'<b>Copy next node\'s value into current, then skip next node.</b><div class="wi-code-block">public void deleteNode(ListNode node){\n  node.val=node.next.val;\n  node.next=node.next.next;\n} // Only works when node is not the tail</div>', coding:true},
+      {q:'How do you sort a linked list?', a:'<b>Merge sort on linked list — find middle, split, sort halves, merge.</b><div class="wi-code-block">public ListNode sortList(ListNode head){\n  if(head==null||head.next==null) return head;\n  ListNode mid=getMiddle(head);\n  ListNode right=mid.next; mid.next=null;\n  return merge(sortList(head),sortList(right));\n} // O(n log n) time O(log n) stack space</div>', coding:true},
+      {q:'How do you rotate a linked list by k positions?', a:'<b>Find tail, connect to head forming a circle, then cut at (length-k%length-1).</b><div class="wi-code-block">public ListNode rotateRight(ListNode head,int k){\n  if(head==null) return null;\n  int len=1; ListNode tail=head;\n  while(tail.next!=null){tail=tail.next;len++;}\n  tail.next=head;\n  int cut=len-k%len;\n  ListNode newTail=head;\n  for(int i=1;i&lt;cut;i++) newTail=newTail.next;\n  ListNode newHead=newTail.next;\n  newTail.next=null;\n  return newHead;\n}</div>', coding:true},
+      {q:'How do you reorder a linked list L0→Ln→L1→Ln-1...?', a:'<b>Find middle, reverse second half, merge alternately.</b><div class="wi-code-block">public void reorderList(ListNode head){\n  ListNode mid=middleNode(head);\n  ListNode second=reverseList(mid.next);\n  mid.next=null;\n  ListNode first=head;\n  while(second!=null){\n    ListNode tmp1=first.next,tmp2=second.next;\n    first.next=second; second.next=tmp1;\n    first=tmp1; second=tmp2;\n  }\n} // O(n) time O(1) space</div>', coding:true},
+    ]},
+    { title:'🌳 Trees & Graphs', qs:[
+      {q:'How do you find the max depth of a binary tree?', a:'<b>Recursive DFS: depth = 1 + max(left, right).</b><div class="wi-code-block">public int maxDepth(TreeNode root){\n  if(root==null) return 0;\n  return 1+Math.max(maxDepth(root.left),maxDepth(root.right));\n} // O(n) time O(h) space where h=height</div>', coding:true},
+      {q:'How do you check if a binary tree is balanced?', a:'<b>Return -1 to signal unbalanced subtree from bottom-up height calculation.</b><div class="wi-code-block">public boolean isBalanced(TreeNode root){return h(root)!=-1;}\nint h(TreeNode n){\n  if(n==null) return 0;\n  int l=h(n.left),r=h(n.right);\n  if(l==-1||r==-1||Math.abs(l-r)>1) return -1;\n  return 1+Math.max(l,r);\n} // O(n) time single pass</div>', coding:true},
+      {q:'How do you do level-order traversal (BFS)?', a:'<b>Queue-based BFS: process current level by iterating over its current size.</b><div class="wi-code-block">public List&lt;List&lt;Integer&gt;&gt; levelOrder(TreeNode root){\n  List&lt;List&lt;Integer&gt;&gt; res=new ArrayList&lt;&gt;();\n  if(root==null) return res;\n  Queue&lt;TreeNode&gt; q=new LinkedList&lt;&gt;(); q.offer(root);\n  while(!q.isEmpty()){\n    int sz=q.size(); List&lt;Integer&gt; lv=new ArrayList&lt;&gt;();\n    for(int i=0;i&lt;sz;i++){\n      TreeNode n=q.poll(); lv.add(n.val);\n      if(n.left!=null) q.offer(n.left);\n      if(n.right!=null) q.offer(n.right);\n    }\n    res.add(lv);\n  }\n  return res;\n} // O(n) time O(w) space w=max width</div>', coding:true},
+      {q:'How do you validate a Binary Search Tree?', a:'<b>Pass valid min/max bounds down recursion — every node must be within its range.</b><div class="wi-code-block">public boolean isValidBST(TreeNode root){\n  return valid(root,Long.MIN_VALUE,Long.MAX_VALUE);\n}\nboolean valid(TreeNode n,long min,long max){\n  if(n==null) return true;\n  if(n.val&lt;=min||n.val&gt;=max) return false;\n  return valid(n.left,min,n.val)&&valid(n.right,n.val,max);\n} // O(n) time O(h) space</div>', coding:true},
+      {q:'How do you find the lowest common ancestor in a BST?', a:'<b>Navigate: if both nodes are smaller go left, both larger go right, else current node is LCA.</b><div class="wi-code-block">public TreeNode lowestCommonAncestor(TreeNode root,TreeNode p,TreeNode q){\n  while(root!=null){\n    if(p.val&lt;root.val&&q.val&lt;root.val) root=root.left;\n    else if(p.val>root.val&&q.val>root.val) root=root.right;\n    else return root;\n  }\n  return null;\n} // O(h) time O(1) space</div>', coding:true},
+      {q:'How do you do inorder traversal iteratively?', a:'<b>Use a stack — push all left nodes, pop, add to result, move to right.</b><div class="wi-code-block">public List&lt;Integer&gt; inorderTraversal(TreeNode root){\n  List&lt;Integer&gt; res=new ArrayList&lt;&gt;();\n  Deque&lt;TreeNode&gt; stack=new ArrayDeque&lt;&gt;();\n  TreeNode cur=root;\n  while(cur!=null||!stack.isEmpty()){\n    while(cur!=null){stack.push(cur);cur=cur.left;}\n    cur=stack.pop(); res.add(cur.val); cur=cur.right;\n  }\n  return res;\n} // O(n) time O(h) space</div>', coding:true},
+      {q:'How do you find the diameter of a binary tree?', a:'<b>Track max left+right depth at each node; return max seen across all nodes.</b><div class="wi-code-block">int max=0;\npublic int diameterOfBinaryTree(TreeNode root){depth(root);return max;}\nint depth(TreeNode n){\n  if(n==null) return 0;\n  int l=depth(n.left),r=depth(n.right);\n  max=Math.max(max,l+r);\n  return 1+Math.max(l,r);\n} // O(n) time</div>', coding:true},
+      {q:'How do you count the number of islands? (Graph BFS/DFS)', a:'<b>DFS from every unvisited land cell, mark visited — count DFS calls.</b><div class="wi-code-block">public int numIslands(char[][] g){\n  int count=0;\n  for(int i=0;i&lt;g.length;i++)\n    for(int j=0;j&lt;g[0].length;j++)\n      if(g[i][j]==\'1\'){dfs(g,i,j);count++;}\n  return count;\n}\nvoid dfs(char[][] g,int i,int j){\n  if(i&lt;0||i>=g.length||j&lt;0||j>=g[0].length||g[i][j]!=\'1\') return;\n  g[i][j]=\'0\';\n  dfs(g,i+1,j);dfs(g,i-1,j);dfs(g,i,j+1);dfs(g,i,j-1);\n} // O(m*n) time</div>', coding:true},
+      {q:'How do you do BFS on a graph?', a:'<b>Start from source, use Queue + visited set, process neighbors level by level.</b><div class="wi-code-block">public int bfs(int[][] adj,int src,int target){\n  Queue&lt;Integer&gt; q=new LinkedList&lt;&gt;();\n  Set&lt;Integer&gt; visited=new HashSet&lt;&gt;();\n  q.offer(src); visited.add(src); int dist=0;\n  while(!q.isEmpty()){\n    int sz=q.size();\n    for(int i=0;i&lt;sz;i++){\n      int node=q.poll();\n      if(node==target) return dist;\n      for(int nb:adj[node]) if(!visited.contains(nb)){q.offer(nb);visited.add(nb);}\n    }\n    dist++;\n  }\n  return -1;\n} // O(V+E) time</div>', coding:true},
+      {q:'How do you detect a cycle in a directed graph?', a:'<b>DFS with three colors: WHITE (unvisited), GRAY (in stack), BLACK (done). Gray→Gray = cycle.</b><div class="wi-code-block">public boolean hasCycle(int n,int[][] edges){\n  int[] color=new int[n]; // 0=white 1=gray 2=black\n  for(int i=0;i&lt;n;i++) if(color[i]==0&&dfs(edges,color,i)) return true;\n  return false;\n}\nboolean dfs(int[][] adj,int[] color,int u){\n  color[u]=1;\n  for(int v:adj[u]) if(color[v]==1||(color[v]==0&&dfs(adj,color,v))) return true;\n  color[u]=2; return false;\n}</div>', coding:true},
+    ]},
+    { title:'🔢 Stacks, Queues & Dynamic Programming', qs:[
+      {q:'How do you implement a stack using queues?', a:'<b>Push to first queue; on pop: move all but last to second queue, return last, swap queues.</b><div class="wi-code-block">class MyStack {\n  Queue&lt;Integer&gt; q1=new LinkedList&lt;&gt;(),q2=new LinkedList&lt;&gt;();\n  public void push(int x){q1.offer(x);}\n  public int pop(){\n    while(q1.size()>1) q2.offer(q1.poll());\n    int top=q1.poll();\n    Queue&lt;Integer&gt; tmp=q1;q1=q2;q2=tmp;\n    return top;\n  }\n  public int top(){ int t=pop(); push(t); return t; }\n}</div>', coding:true},
+      {q:'How do you implement a valid parentheses checker?', a:'<b>Stack: push open brackets; on close bracket, check if top matches — empty at end = valid.</b><div class="wi-code-block">public boolean isValid(String s){\n  Deque&lt;Character&gt; stack=new ArrayDeque&lt;&gt;();\n  for(char c:s.toCharArray()){\n    if("({[".indexOf(c)>=0) stack.push(c);\n    else{\n      if(stack.isEmpty()) return false;\n      char t=stack.pop();\n      if((c==\')\' &&t!=\'(\')||(c==\'}\' &&t!=\'{\')|| (c==\']\' &&t!=\'[\')) return false;\n    }\n  }\n  return stack.isEmpty();\n} // O(n) time O(n) space</div>', coding:true},
+      {q:'How do you find the minimum in a stack in O(1)?', a:'<b>Maintain a parallel min-stack that tracks the minimum at each level.</b><div class="wi-code-block">class MinStack {\n  Deque&lt;Integer&gt; stack=new ArrayDeque&lt;&gt;(), mins=new ArrayDeque&lt;&gt;();\n  public void push(int v){stack.push(v); mins.push(mins.isEmpty()?v:Math.min(mins.peek(),v));}\n  public void pop(){stack.pop();mins.pop();}\n  public int top(){return stack.peek();}\n  public int getMin(){return mins.peek();}\n} // O(1) all ops</div>', coding:true},
+      {q:'How do you implement a circular queue?', a:'<b>Array with head and tail pointers that wrap around using modulo.</b><div class="wi-code-block">class MyCircularQueue {\n  int[] arr; int head=0,tail=0,size=0,cap;\n  MyCircularQueue(int k){arr=new int[k];cap=k;}\n  boolean enQueue(int v){if(size==cap) return false;arr[tail]=v;tail=(tail+1)%cap;size++;return true;}\n  boolean deQueue(){if(size==0) return false;head=(head+1)%cap;size--;return true;}\n  int Front(){return size==0?-1:arr[head];}\n  int Rear(){return size==0?-1:arr[(tail-1+cap)%cap];}\n} // O(1) all ops</div>', coding:true},
+      {q:'What is memoization and how do you implement it?', a:'<b>Memoization caches function results to avoid redundant recomputation.</b><div class="wi-code-block">Map&lt;Integer,Integer&gt; memo=new HashMap&lt;&gt;();\npublic int fib(int n){\n  if(n&lt;=1) return n;\n  if(memo.containsKey(n)) return memo.get(n);\n  int result=fib(n-1)+fib(n-2);\n  memo.put(n,result);\n  return result;\n} // O(n) time vs O(2^n) without memoization</div>', coding:true},
+      {q:'How do you solve the coin change problem?', a:'<b>DP bottom-up: dp[amount] = min coins to make that amount.</b><div class="wi-code-block">public int coinChange(int[] coins,int amount){\n  int[] dp=new int[amount+1];\n  Arrays.fill(dp,amount+1);\n  dp[0]=0;\n  for(int a=1;a&lt;=amount;a++)\n    for(int c:coins)\n      if(c&lt;=a) dp[a]=Math.min(dp[a],dp[a-c]+1);\n  return dp[amount]>amount?-1:dp[amount];\n} // O(amount*coins) time O(amount) space</div>', coding:true},
+      {q:'How do you find the longest increasing subsequence?', a:'<b>DP: dp[i] = length of LIS ending at index i.</b><div class="wi-code-block">public int lengthOfLIS(int[] nums){\n  int[] dp=new int[nums.length];\n  Arrays.fill(dp,1);\n  int max=1;\n  for(int i=1;i&lt;nums.length;i++){\n    for(int j=0;j&lt;i;j++)\n      if(nums[j]&lt;nums[i]) dp[i]=Math.max(dp[i],dp[j]+1);\n    max=Math.max(max,dp[i]);\n  }\n  return max;\n} // O(n²) time — O(n log n) with patience sort</div>', coding:true},
+      {q:'How do you find the number of ways to climb n stairs (1 or 2 steps)?', a:'<b>Fibonacci pattern: ways(n) = ways(n-1) + ways(n-2).</b><div class="wi-code-block">public int climbStairs(int n){\n  if(n&lt;=2) return n;\n  int a=1,b=2;\n  for(int i=3;i&lt;=n;i++){\n    int c=a+b; a=b; b=c;\n  }\n  return b;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you solve 0/1 knapsack?', a:'<b>DP 2D array: dp[i][w] = max value using first i items with weight limit w.</b><div class="wi-code-block">public int knapsack(int[] wt,int[] val,int W){\n  int n=wt.length;\n  int[][] dp=new int[n+1][W+1];\n  for(int i=1;i&lt;=n;i++)\n    for(int w=0;w&lt;=W;w++){\n      dp[i][w]=dp[i-1][w];\n      if(wt[i-1]&lt;=w)\n        dp[i][w]=Math.max(dp[i][w],dp[i-1][w-wt[i-1]]+val[i-1]);\n    }\n  return dp[n][W];\n} // O(n*W) time and space</div>', coding:true},
+      {q:'How do you check if a string can be segmented into dictionary words?', a:'<b>DP: dp[i] = true if substring(0,i) can be segmented using the dictionary.</b><div class="wi-code-block">public boolean wordBreak(String s,List&lt;String&gt; dict){\n  Set&lt;String&gt; set=new HashSet&lt;&gt;(dict);\n  boolean[] dp=new boolean[s.length()+1];\n  dp[0]=true;\n  for(int i=1;i&lt;=s.length();i++)\n    for(int j=0;j&lt;i;j++)\n      if(dp[j]&&set.contains(s.substring(j,i))){dp[i]=true;break;}\n  return dp[s.length()];\n} // O(n²) time O(n) space</div>', coding:true},
+      {q:'How do you find the maximum profit from stock prices (one transaction)?', a:'<b>Track minimum price seen so far; max profit = current price - min so far.</b><div class="wi-code-block">public int maxProfit(int[] prices){\n  int minP=Integer.MAX_VALUE,maxP=0;\n  for(int p:prices){\n    minP=Math.min(minP,p);\n    maxP=Math.max(maxP,p-minP);\n  }\n  return maxP;\n} // O(n) time O(1) space</div>', coding:true},
+      {q:'How do you generate all permutations of an array?', a:'<b>Backtracking: swap element to current position, recurse, swap back.</b><div class="wi-code-block">public List&lt;List&lt;Integer&gt;&gt; permute(int[] nums){\n  List&lt;List&lt;Integer&gt;&gt; res=new ArrayList&lt;&gt;();\n  backtrack(nums,0,res);\n  return res;\n}\nvoid backtrack(int[] nums,int start,List&lt;List&lt;Integer&gt;&gt; res){\n  if(start==nums.length){\n    List&lt;Integer&gt; p=new ArrayList&lt;&gt;();\n    for(int n:nums) p.add(n); res.add(p); return;\n  }\n  for(int i=start;i&lt;nums.length;i++){\n    swap(nums,start,i); backtrack(nums,start+1,res); swap(nums,start,i);\n  }\n}</div>', coding:true},
+      {q:'How do you sort an array using merge sort?', a:'<b>Divide array in half recursively; merge sorted halves.</b><div class="wi-code-block">public void mergeSort(int[] arr,int l,int r){\n  if(l&gt;=r) return;\n  int mid=l+(r-l)/2;\n  mergeSort(arr,l,mid); mergeSort(arr,mid+1,r);\n  merge(arr,l,mid,r);\n}\nvoid merge(int[] a,int l,int m,int r){\n  int[] tmp=Arrays.copyOfRange(a,l,r+1);\n  int i=0,j=m-l+1,k=l;\n  while(i&lt;=m-l&&j&lt;=r-l) a[k++]=(tmp[i]&lt;=tmp[j])?tmp[i++]:tmp[j++];\n  while(i&lt;=m-l) a[k++]=tmp[i++];\n} // O(n log n) time O(n) space</div>', coding:true},
+    ]},
+  ]
+},
+]; /* end WI_CHAPTERS */
 
-/* ═══════ RENDERER ═══════ */
-(function() {
-  const STORAGE_KEY = 'wi_revealed';
+/* ═══════════════════════════════════════════
+   RENDERER
+═══════════════════════════════════════════ */
+(function(){
+  const SK='wi_rev';
+  function getRev(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){return{}}}
+  function saveRev(o){try{localStorage.setItem(SK,JSON.stringify(o))}catch(e){}}
+  function totalQs(ch){return ch.sections.reduce((a,s)=>a+s.qs.length,0)}
+  function doneCh(ch,ci,rev){return ch.sections.reduce((a,s,si)=>a+s.qs.filter((_,qi)=>rev[ci+'-'+si+'-'+qi]).length,0)}
 
-  function getRevealed() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-    catch(e) { return {}; }
-  }
-  function saveRevealed(obj) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch(e){}
-  }
-
-  function countQs(chapter) {
-    return chapter.sections.reduce((a, s) => a + s.qs.length, 0);
-  }
-
-  function renderChapterTabs(container) {
-    const revealed = getRevealed();
-    WI_CHAPTERS.forEach((ch, ci) => {
-      const total = countQs(ch);
-      const done = WI_CHAPTERS[ci].sections.reduce((a, s, si) =>
-        a + s.qs.filter((_, qi) => revealed[`${ci}-${si}-${qi}`]).length, 0);
-      const btn = document.createElement('button');
-      btn.className = 'wi-chapter-tab' + (ci === 0 ? ' active' : '');
-      btn.dataset.ci = ci;
-      btn.innerHTML = `${ch.title} <span class="wi-tab-count">${done}/${total}</span>`;
-      container.appendChild(btn);
-    });
-  }
-
-  function renderChapter(chapter, ci, revealed) {
-    const div = document.createElement('div');
-    div.className = 'wi-chapter-body' + (ci === 0 ? ' active' : '');
-    div.id = `wi-ch-${ci}`;
-
-    chapter.sections.forEach((sec, si) => {
-      const secEl = document.createElement('div');
-      secEl.className = 'wi-section open';
-
-      const doneInSec = sec.qs.filter((_, qi) => revealed[`${ci}-${si}-${qi}`]).length;
-      secEl.innerHTML = `
-        <div class="wi-section-header">
-          <span class="wi-section-title">${sec.title}</span>
-          <span class="wi-section-meta">
-            <span class="wi-section-count">${doneInSec}/${sec.qs.length} revealed</span>
-            <span class="wi-section-arrow">▲</span>
-          </span>
-        </div>
-        <div class="wi-section-body"></div>`;
-
-      const body = secEl.querySelector('.wi-section-body');
-      sec.qs.forEach((qa, qi) => {
-        const key = `${ci}-${si}-${qi}`;
-        const isRevealed = !!revealed[key];
-        const card = document.createElement('div');
-        card.className = `wi-qa-card${qa.coding ? ' coding-q' : ''}${isRevealed ? ' revealed' : ''}`;
-        card.dataset.key = key;
-        card.innerHTML = `
-          <div class="wi-qa-question">
-            <span class="wi-q-num">Q${qi + 1}</span>
-            <span class="wi-q-text">${qa.q}</span>
-            <span class="wi-q-toggle">▼</span>
-          </div>
-          <div class="wi-qa-answer">${qa.a}</div>`;
-        body.appendChild(card);
-      });
-
-      secEl.querySelector('.wi-section-header').addEventListener('click', () => {
-        secEl.classList.toggle('open');
-      });
-
-      div.appendChild(secEl);
-    });
-
-    div.innerHTML += `<div class="wi-chapter-complete" id="wi-complete-${ci}">🎉 All questions revealed for this chapter! Great work.</div>`;
-    return div;
-  }
-
-  function updateProgress(container, ci) {
-    const revealed = getRevealed();
-    const chapter = WI_CHAPTERS[ci];
-    const total = countQs(chapter);
-    const done = chapter.sections.reduce((a, s, si) =>
-      a + s.qs.filter((_, qi) => revealed[`${ci}-${si}-${qi}`]).length, 0);
-
-    const fill = container.querySelector('#wi-progress-fill');
-    const label = container.querySelector('#wi-progress-label');
-    if (fill) fill.style.width = total ? `${(done/total)*100}%` : '0%';
-    if (label) label.textContent = `${done} / ${total} revealed`;
-
-    // Update chapter tab count
-    const tab = container.querySelector(`.wi-chapter-tab[data-ci="${ci}"]`);
-    if (tab) tab.querySelector('.wi-tab-count').textContent = `${done}/${total}`;
-
-    // Update section counts
-    const chBody = container.querySelector(`#wi-ch-${ci}`);
-    if (chBody) {
-      chapter.sections.forEach((sec, si) => {
-        const counts = chBody.querySelectorAll('.wi-section-count');
-        if (counts[si]) {
-          const secDone = sec.qs.filter((_, qi) => revealed[`${ci}-${si}-${qi}`]).length;
-          counts[si].textContent = `${secDone}/${sec.qs.length} revealed`;
-        }
-      });
-    }
-
-    // Show completion banner
-    const banner = container.querySelector(`#wi-complete-${ci}`);
-    if (banner) banner.classList.toggle('show', done === total && total > 0);
-  }
-
-  function filterCards(container, ci, query) {
-    const chBody = container.querySelector(`#wi-ch-${ci}`);
-    if (!chBody) return;
-    const q = query.toLowerCase().trim();
-    let visible = 0;
-    chBody.querySelectorAll('.wi-qa-card').forEach(card => {
-      const text = card.querySelector('.wi-q-text').textContent.toLowerCase();
-      const show = !q || text.includes(q);
-      card.style.display = show ? '' : 'none';
-      if (show) visible++;
-    });
-    const count = container.querySelector('.wi-search-count');
-    if (count) count.textContent = q ? `${visible} match${visible !== 1 ? 'es' : ''}` : '';
-
-    // Show no-results
-    let nr = chBody.querySelector('.wi-no-results');
-    if (!nr) { nr = document.createElement('div'); nr.className = 'wi-no-results'; chBody.appendChild(nr); }
-    nr.style.display = (q && visible === 0) ? '' : 'none';
-    nr.textContent = `No questions matching "${query}"`;
-  }
-
-  function mount() {
-    const root = document.getElementById('wi-root');
-    if (!root) return;
-    const revealed = getRevealed();
-
-    root.innerHTML = `
+  function mount(){
+    const root=document.getElementById('wi-root');
+    if(!root)return;
+    const rev=getRev();
+    root.innerHTML=`
       <div class="tab-header wi-header">
-        <h1>📋 What Is — Interview Q&A Bank</h1>
-        <p>Click any question to reveal the best answer. Yellow highlight = what the interviewer wants to hear. Track your progress per chapter.</p>
+        <h1>📋 What Is — Interview Q&amp;A Bank</h1>
+        <p>Click any question to reveal the best answer. Yellow = what the interviewer wants to hear. Track progress per chapter.</p>
         <div class="wi-progress-bar-wrap">
-          <div class="wi-progress-bar-bg"><div class="wi-progress-bar-fill" id="wi-progress-fill" style="width:0%"></div></div>
-          <span class="wi-progress-label" id="wi-progress-label">0 / 0 revealed</span>
+          <div class="wi-progress-bar-bg"><div class="wi-progress-bar-fill" id="wi-pf" style="width:0%"></div></div>
+          <span class="wi-progress-label" id="wi-pl">0 / 0 revealed</span>
         </div>
       </div>
       <div class="wi-search-wrap">
         <span class="wi-search-icon">🔍</span>
-        <input type="text" class="wi-search-input" placeholder="Search questions across this chapter..." id="wi-search">
-        <span class="wi-search-count"></span>
+        <input class="wi-search-input" id="wi-search" placeholder="Search questions in this chapter…">
+        <span class="wi-search-count" id="wi-sc"></span>
       </div>
-      <div class="wi-chapter-tabs" id="wi-chapter-tabs"></div>
-      <div id="wi-chapter-bodies"></div>`;
+      <div class="wi-chapter-tabs" id="wi-tabs"></div>
+      <div id="wi-bodies"></div>`;
 
-    const tabsContainer = root.querySelector('#wi-chapter-tabs');
-    const bodiesContainer = root.querySelector('#wi-chapter-bodies');
+    const tabs=root.querySelector('#wi-tabs');
+    const bodies=root.querySelector('#wi-bodies');
 
-    renderChapterTabs(tabsContainer);
-    WI_CHAPTERS.forEach((ch, ci) => {
-      bodiesContainer.appendChild(renderChapter(ch, ci, revealed));
+    WI_CHAPTERS.forEach((ch,ci)=>{
+      const total=totalQs(ch);
+      const done=doneCh(ch,ci,rev);
+      const btn=document.createElement('button');
+      btn.className='wi-chapter-tab'+(ci===0?' active':'');
+      btn.dataset.ci=ci;
+      btn.innerHTML=ch.title+'<span class="wi-tab-count">'+done+'/'+total+'</span>';
+      tabs.appendChild(btn);
+
+      const div=document.createElement('div');
+      div.className='wi-chapter-body'+(ci===0?' active':'');
+      div.id='wi-ch-'+ci;
+      ch.sections.forEach((sec,si)=>{
+        const secEl=document.createElement('div');
+        secEl.className='wi-section open';
+        const sdone=sec.qs.filter((_,qi)=>rev[ci+'-'+si+'-'+qi]).length;
+        secEl.innerHTML=`<div class="wi-section-header"><span class="wi-section-title">${sec.title}</span><span class="wi-section-meta"><span class="wi-section-count">${sdone}/${sec.qs.length} revealed</span><span class="wi-section-arrow">▲</span></span></div><div class="wi-section-body"></div>`;
+        const body=secEl.querySelector('.wi-section-body');
+        sec.qs.forEach((qa,qi)=>{
+          const key=ci+'-'+si+'-'+qi;
+          const card=document.createElement('div');
+          card.className='wi-qa-card'+(qa.coding?' coding-q':'')+(rev[key]?' revealed':'');
+          card.dataset.key=key;
+          card.innerHTML=`<div class="wi-qa-question"><span class="wi-q-num">Q${qi+1}</span><span class="wi-q-text">${qa.q}</span><span class="wi-q-toggle">▼</span></div><div class="wi-qa-answer">${qa.a}</div>`;
+          body.appendChild(card);
+        });
+        secEl.querySelector('.wi-section-header').addEventListener('click',()=>secEl.classList.toggle('open'));
+        div.appendChild(secEl);
+      });
+      div.innerHTML+=`<div class="wi-chapter-complete" id="wi-done-${ci}">🎉 All questions revealed for this chapter!</div>`;
+      bodies.appendChild(div);
     });
 
-    let activeCi = 0;
-    updateProgress(root, activeCi);
-
-    // Chapter tab switching
-    tabsContainer.addEventListener('click', e => {
-      const btn = e.target.closest('.wi-chapter-tab');
-      if (!btn) return;
-      activeCi = parseInt(btn.dataset.ci);
-      tabsContainer.querySelectorAll('.wi-chapter-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      bodiesContainer.querySelectorAll('.wi-chapter-body').forEach(b => b.classList.remove('active'));
-      bodiesContainer.querySelector(`#wi-ch-${activeCi}`).classList.add('active');
-      root.querySelector('#wi-search').value = '';
-      root.querySelector('.wi-search-count').textContent = '';
-      updateProgress(root, activeCi);
-    });
-
-    // Card reveal on click
-    bodiesContainer.addEventListener('click', e => {
-      const card = e.target.closest('.wi-qa-card');
-      if (!card) return;
-      const key = card.dataset.key;
-      const rev = getRevealed();
-      if (card.classList.toggle('revealed')) {
-        rev[key] = true;
-      } else {
-        delete rev[key];
+    let activeCi=0;
+    function updateProgress(){
+      const r=getRev();
+      const ch=WI_CHAPTERS[activeCi];
+      const total=totalQs(ch);
+      const done=doneCh(ch,activeCi,r);
+      root.querySelector('#wi-pf').style.width=total?(done/total*100)+'%':'0%';
+      root.querySelector('#wi-pl').textContent=done+' / '+total+' revealed';
+      const tab=tabs.querySelector('[data-ci="'+activeCi+'"]');
+      if(tab)tab.querySelector('.wi-tab-count').textContent=done+'/'+total;
+      const chBody=bodies.querySelector('#wi-ch-'+activeCi);
+      if(chBody){
+        WI_CHAPTERS[activeCi].sections.forEach((sec,si)=>{
+          const sdone=sec.qs.filter((_,qi)=>r[activeCi+'-'+si+'-'+qi]).length;
+          const counts=chBody.querySelectorAll('.wi-section-count');
+          if(counts[si])counts[si].textContent=sdone+'/'+sec.qs.length+' revealed';
+        });
       }
-      saveRevealed(rev);
-      updateProgress(root, activeCi);
+      const banner=root.querySelector('#wi-done-'+activeCi);
+      if(banner)banner.classList.toggle('show',done===total&&total>0);
+    }
+
+    updateProgress();
+
+    tabs.addEventListener('click',e=>{
+      const btn=e.target.closest('.wi-chapter-tab');
+      if(!btn)return;
+      activeCi=parseInt(btn.dataset.ci);
+      tabs.querySelectorAll('.wi-chapter-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      bodies.querySelectorAll('.wi-chapter-body').forEach(b=>b.classList.remove('active'));
+      bodies.querySelector('#wi-ch-'+activeCi).classList.add('active');
+      root.querySelector('#wi-search').value='';
+      root.querySelector('#wi-sc').textContent='';
+      updateProgress();
     });
 
-    // Search
-    root.querySelector('#wi-search').addEventListener('input', e => {
-      filterCards(root, activeCi, e.target.value);
+    bodies.addEventListener('click',e=>{
+      const card=e.target.closest('.wi-qa-card');
+      if(!card)return;
+      const r=getRev();
+      if(card.classList.toggle('revealed'))r[card.dataset.key]=true;
+      else delete r[card.dataset.key];
+      saveRev(r);
+      updateProgress();
+    });
+
+    root.querySelector('#wi-search').addEventListener('input',e=>{
+      const q=e.target.value.toLowerCase().trim();
+      const chBody=bodies.querySelector('#wi-ch-'+activeCi);
+      if(!chBody)return;
+      let vis=0;
+      chBody.querySelectorAll('.wi-qa-card').forEach(card=>{
+        const show=!q||card.querySelector('.wi-q-text').textContent.toLowerCase().includes(q);
+        card.style.display=show?'':'none';
+        if(show)vis++;
+      });
+      root.querySelector('#wi-sc').textContent=q?vis+' match'+(vis!==1?'es':''):'';
+      let nr=chBody.querySelector('.wi-no-results');
+      if(!nr){nr=document.createElement('div');nr.className='wi-no-results';chBody.appendChild(nr);}
+      nr.style.display=(q&&vis===0)?'':'none';
+      nr.textContent='No questions matching "'+e.target.value+'"';
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mount);
-  } else {
-    mount();
-  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);
+  else mount();
 })();
