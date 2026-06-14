@@ -3896,6 +3896,7 @@ body.eli-active .eli-toggle-text {
 .co-prep-q {
   padding: 14px 18px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px;
   font-size: 0.88rem; color: #e2e8f0; font-weight: 500;
+  white-space: pre-wrap;
 }
 .co-prep-q:hover { background: rgba(251,191,36,0.05); }
 .co-q-num { color: #fbbf24; font-weight: 700; min-width: 28px; font-size: 0.8rem; }
