@@ -1265,6 +1265,191 @@ function mount() {
       </div>`).join('');
   }
 
+  function formatScenarioQuestion(qStr) {
+    const lines = qStr.split('\n');
+    let title = '';
+    let url = '';
+    let site = '';
+    let auth = '';
+    let headers = '';
+    let requestBody = '';
+    let response = '';
+    let steps = [];
+    let task = '';
+    
+    let currentSection = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      
+      if (i === 0 && (trimmedLine.toUpperCase().startsWith('SCENARIO') || trimmedLine.toUpperCase().startsWith('Q'))) {
+        title = trimmedLine;
+        continue;
+      }
+      
+      if (trimmedLine.toLowerCase().startsWith('url:')) {
+        url = trimmedLine.substring(4).trim();
+        currentSection = '';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('site:')) {
+        site = trimmedLine.substring(5).trim();
+        currentSection = '';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('auth:')) {
+        auth = trimmedLine.substring(5).trim();
+        currentSection = '';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('headers:')) {
+        headers = trimmedLine.substring(8).trim();
+        currentSection = '';
+        continue;
+      }
+      
+      if (trimmedLine.toLowerCase().startsWith('request body:') || trimmedLine.toLowerCase().startsWith('request body')) {
+        currentSection = 'requestBody';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('response (') || 
+          trimmedLine.toLowerCase().startsWith('expected response') || 
+          trimmedLine.toLowerCase().startsWith('response:') ||
+          trimmedLine.toLowerCase().startsWith('the api response')) {
+        currentSection = 'response';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('steps:')) {
+        currentSection = 'steps';
+        continue;
+      }
+      if (trimmedLine.toLowerCase().startsWith('task:')) {
+        task = trimmedLine.substring(5).trim();
+        currentSection = 'task';
+        continue;
+      }
+      
+      if (currentSection === 'requestBody') {
+        requestBody += line + '\n';
+      } else if (currentSection === 'response') {
+        response += line + '\n';
+      } else if (currentSection === 'steps') {
+        if (trimmedLine) {
+          const stepMatch = trimmedLine.match(/^\d+\.\s*(.*)$/);
+          if (stepMatch) {
+            steps.push(stepMatch[1]);
+          } else {
+            steps.push(trimmedLine);
+          }
+        }
+      } else if (currentSection === 'task') {
+        task += (task ? '\n' : '') + line;
+      } else {
+        if (trimmedLine) {
+          if (!title) title = trimmedLine;
+          else task += (task ? '\n' : '') + line;
+        }
+      }
+    }
+    
+    if (!url && !site && !requestBody && !response && !steps.length && !task) {
+      return `<div class="co-q-raw">${qStr}</div>`;
+    }
+    
+    let html = '';
+    
+    if (title) {
+      const titleMatch = title.match(/^(SCENARIO \d+)(?:\s*[\-—:]\s*(.*))?$/i);
+      if (titleMatch) {
+        const num = titleMatch[1];
+        const desc = titleMatch[2] || '';
+        html += `<div class="co-q-header">
+          <span class="co-q-badge">${num}</span>
+          <span class="co-q-title">${desc}</span>
+        </div>`;
+      } else {
+        html += `<div class="co-q-header"><span class="co-q-title">${title}</span></div>`;
+      }
+    }
+    
+    if (url || site || auth || headers) {
+      html += `<div class="co-q-meta-grid">`;
+      
+      if (url) {
+        const parts = url.split(' ');
+        const method = parts[0].toUpperCase();
+        const path = parts.slice(1).join(' ');
+        
+        let methodClass = 'co-method-other';
+        if (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+          methodClass = `co-method-${method.toLowerCase()}`;
+        }
+        
+        html += `<div class="co-meta-row co-endpoint-row">
+          <span class="co-meta-label">Endpoint:</span>
+          <div class="co-endpoint-val">
+            <span class="co-method-badge ${methodClass}">${method}</span>
+            <code class="co-path-code">${path}</code>
+          </div>
+        </div>`;
+      } else if (site) {
+        html += `<div class="co-meta-row">
+          <span class="co-meta-label">Site:</span>
+          <span class="co-meta-val"><code class="co-path-code">${site}</code></span>
+        </div>`;
+      }
+      
+      if (auth) {
+        html += `<div class="co-meta-row">
+          <span class="co-meta-label">Auth:</span>
+          <span class="co-meta-val"><span class="co-auth-badge">${auth}</span></span>
+        </div>`;
+      }
+      
+      if (headers) {
+        html += `<div class="co-meta-row">
+          <span class="co-meta-label">Headers:</span>
+          <span class="co-meta-val"><code class="co-header-code">${headers}</code></span>
+        </div>`;
+      }
+      
+      html += `</div>`;
+    }
+    
+    if (requestBody.trim()) {
+      html += `<div class="co-q-body-block">
+        <div class="co-block-label">Request Body (JSON)</div>
+        <pre class="co-q-json-code">${escapeHtml(requestBody.trim())}</pre>
+      </div>`;
+    }
+    
+    if (response.trim()) {
+      html += `<div class="co-q-body-block">
+        <div class="co-block-label">Expected Response (JSON)</div>
+        <pre class="co-q-json-code">${escapeHtml(response.trim())}</pre>
+      </div>`;
+    }
+    
+    if (steps.length) {
+      html += `<div class="co-q-steps-block">
+        <div class="co-block-label">Interaction Steps</div>
+        <ol class="co-q-steps">
+          ${steps.map(step => `<li>${step}</li>`).join('')}
+        </ol>
+      </div>`;
+    }
+    
+    if (task.trim()) {
+      html += `<div class="co-q-task-box">
+        <span class="co-task-icon">🎯</span>
+        <div class="co-task-desc"><b>Task:</b> ${task.trim().replace(/\n/g, '<br>')}</div>
+      </div>`;
+    }
+    
+    return html;
+  }
+
   function renderPrepBank() {
     let html = `<div class="co-prep-header">
       <h2>📚 LTIM R2 Prep Bank — Playwright JS</h2>
@@ -1283,7 +1468,13 @@ function mount() {
         <div class="co-prep-cat-body" id="co-pb-${ci}">`;
       cat.qs.forEach((qa, qi) => {
         html += `<div class="co-prep-card-qa" data-cat="${ci}" data-qi="${qi}">
-          <div class="co-prep-q"><span class="co-q-num">Q${qi+1}</span> ${qa.q} <span class="co-prep-toggle">▼</span></div>
+          <div class="co-prep-q">
+            <div class="co-prep-q-header">
+              <span class="co-q-num">Q${qi+1}</span>
+              <span class="co-prep-toggle">▼</span>
+            </div>
+            <div class="co-prep-q-content">${formatScenarioQuestion(qa.q)}</div>
+          </div>
           <div class="co-prep-a">
             <div class="co-prep-answer-text">${qa.a}</div>
             ${qa.code ? `<pre class="co-code">${escapeHtml(qa.code)}</pre>` : ''}
@@ -1306,9 +1497,9 @@ function mount() {
       });
     });
 
-    // Click to reveal answer
+    // Click to reveal answer (clicking header reveals answer)
     content.querySelectorAll('.co-prep-card-qa').forEach(card => {
-      card.querySelector('.co-prep-q').addEventListener('click', () => {
+      card.querySelector('.co-prep-q-header').addEventListener('click', () => {
         card.classList.toggle('revealed');
         card.querySelector('.co-prep-toggle').textContent = card.classList.contains('revealed') ? '▲' : '▼';
       });
