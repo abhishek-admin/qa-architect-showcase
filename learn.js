@@ -1577,16 +1577,9 @@ docker compose down -v`,
      ================================================================ */
   function renderHome() {
     var q = state.searchQuery.toLowerCase();
-    var cat = state.activeCategory;
     var filtered = TOPIC_LIST.filter(function(k) {
-      var t = CONTENT[k];
-      var tCat = t.category || 'core';
-      
-      // Filter by category
-      if (cat !== 'all' && tCat !== cat) return false;
-
-      // Filter by search query
       if (!q) return true;
+      var t = CONTENT[k];
       return (t.title + t.tagline).toLowerCase().includes(q) ||
         t.sections.some(function(s) { return s.h.toLowerCase().includes(q); });
     });
@@ -1626,14 +1619,8 @@ docker compose down -v`,
           '</div>' +
           '<input id="learn-search" class="quiz-input" style="max-width:280px" placeholder="🔍 Search topics..." value="' + escHtml(state.searchQuery) + '">' +
         '</div>' +
-        '<div class="lhome-categories">' +
-          '<button class="lcat-pill' + (cat === 'all' ? ' active' : '') + '" data-cat="all">All</button>' +
-          '<button class="lcat-pill' + (cat === 'core' ? ' active' : '') + '" data-cat="core">Core Automation & JS</button>' +
-          '<button class="lcat-pill' + (cat === 'ts' ? ' active' : '') + '" data-cat="ts">TypeScript Ground Up</button>' +
-          '<button class="lcat-pill' + (cat === 'dsa' ? ' active' : '') + '" data-cat="dsa">DSA Interview Prep</button>' +
-        '</div>' +
         '<div class="ltopic-grid">' +
-          (cards || '<p class="lno-results">No topics match current filter and search query</p>') +
+          (cards || '<p class="lno-results">No topics match "' + escHtml(state.searchQuery) + '"</p>') +
         '</div>' +
       '</div>';
 
@@ -1778,13 +1765,6 @@ docker compose down -v`,
 
     if (!root.contains(e.target)) return;
 
-    /* Category pill click */
-    var pillCat = e.target.closest('[data-cat]');
-    if (pillCat) {
-      state.activeCategory = pillCat.getAttribute('data-cat');
-      render();
-      return;
-    }
 
     /* Section pill jump */
     var pill = e.target.closest('[data-sec-jump]');
