@@ -4208,3 +4208,32 @@ body.eli-active .eli-toggle-text {
 .co-prep-card-qa.revealed .co-prep-a { display: block; }
 .co-prep-answer-text { background: rgba(251,191,36,0.08); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
 .co-prep-answer-text b { color: #fbbf24; }
+
+/* Learning Lab Category Filters */
+.lhome-categories {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.lcat-pill {
+  background: var(--bg-card, #2d3748);
+  border: 1px solid var(--border, #4a5568);
+  color: var(--text-secondary, #a0aec0);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.lcat-pill:hover {
+  background: var(--border, #4a5568);
+  color: var(--text-primary, #fff);
+}
+.lcat-pill.active {
+  background: linear-gradient(135deg, #4299e1, #9f7aea);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+}

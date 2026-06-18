@@ -1541,6 +1541,15 @@ docker compose down -v`,
 
   }; // end CONTENT
 
+  // Merge external TS/DSA content if available
+  if (typeof TS_LEARN_CONTENT !== 'undefined') {
+    for (var key in TS_LEARN_CONTENT) {
+      if (TS_LEARN_CONTENT.hasOwnProperty(key)) {
+        CONTENT[key] = TS_LEARN_CONTENT[key];
+      }
+    }
+  }
+
   /* ================================================================
      STATE
      ================================================================ */
@@ -1549,6 +1558,7 @@ docker compose down -v`,
     topicKey: null,
     sectionIdx: 0,
     searchQuery: '',
+    activeCategory: 'all',  // 'all' | 'core' | 'ts' | 'dsa'
     understood: {}  // topicKey → Set of understood section indices
   };
 
@@ -1567,9 +1577,16 @@ docker compose down -v`,
      ================================================================ */
   function renderHome() {
     var q = state.searchQuery.toLowerCase();
+    var cat = state.activeCategory;
     var filtered = TOPIC_LIST.filter(function(k) {
-      if (!q) return true;
       var t = CONTENT[k];
+      var tCat = t.category || 'core';
+      
+      // Filter by category
+      if (cat !== 'all' && tCat !== cat) return false;
+
+      // Filter by search query
+      if (!q) return true;
       return (t.title + t.tagline).toLowerCase().includes(q) ||
         t.sections.some(function(s) { return s.h.toLowerCase().includes(q); });
     });
@@ -1609,8 +1626,14 @@ docker compose down -v`,
           '</div>' +
           '<input id="learn-search" class="quiz-input" style="max-width:280px" placeholder="🔍 Search topics..." value="' + escHtml(state.searchQuery) + '">' +
         '</div>' +
+        '<div class="lhome-categories">' +
+          '<button class="lcat-pill' + (cat === 'all' ? ' active' : '') + '" data-cat="all">All</button>' +
+          '<button class="lcat-pill' + (cat === 'core' ? ' active' : '') + '" data-cat="core">Core Automation & JS</button>' +
+          '<button class="lcat-pill' + (cat === 'ts' ? ' active' : '') + '" data-cat="ts">TypeScript Ground Up</button>' +
+          '<button class="lcat-pill' + (cat === 'dsa' ? ' active' : '') + '" data-cat="dsa">DSA Interview Prep</button>' +
+        '</div>' +
         '<div class="ltopic-grid">' +
-          (cards || '<p class="lno-results">No topics match "' + escHtml(state.searchQuery) + '"</p>') +
+          (cards || '<p class="lno-results">No topics match current filter and search query</p>') +
         '</div>' +
       '</div>';
 
@@ -1713,9 +1736,9 @@ docker compose down -v`,
       html += '<div class="lsteps-wrap">';
       sec.steps.forEach(function(step, i) {
         html += '<div class="lstep-card" data-step="' + i + '">' +
-          '<div class="lstep-q"><span class="lstep-num">Q' + (i + 1) + '</span> ' + escHtml(step.q) + '</div>' +
+          '<div class="lstep-q"><span class="lstep-num">Q' + (i + 1) + '</span> ' + step.q + '</div>' +
           '<button class="lstep-reveal-btn" data-reveal="' + i + '">👁 Show Answer</button>' +
-          '<div class="lstep-answer" id="step-ans-' + i + '" style="display:none"><span class="lstep-a-label">Answer:</span> ' + escHtml(step.a) + '</div>' +
+          '<div class="lstep-answer" id="step-ans-' + i + '" style="display:none"><span class="lstep-a-label">Answer:</span> ' + step.a + '</div>' +
         '</div>';
       });
       html += '</div>';
@@ -1754,6 +1777,14 @@ docker compose down -v`,
     }
 
     if (!root.contains(e.target)) return;
+
+    /* Category pill click */
+    var pillCat = e.target.closest('[data-cat]');
+    if (pillCat) {
+      state.activeCategory = pillCat.getAttribute('data-cat');
+      render();
+      return;
+    }
 
     /* Section pill jump */
     var pill = e.target.closest('[data-sec-jump]');
