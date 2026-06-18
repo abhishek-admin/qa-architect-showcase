@@ -19,7 +19,7 @@
 Review this checklist before your interview to ensure no knowledge gaps exist.
 
 ### 🟢 OOPs & Design Patterns (50 Topics)
-- [ ] 4 Pillars of OOPs: Abstraction, Encapsulation, Inheritance, Polymorphism
+- [x] 4 Pillars of OOPs: Abstraction, Encapsulation, Inheritance, Polymorphism
 - [ ] Abstract Class vs Interface (Java 8+ changes)
 - [ ] Multiple Inheritance of behavior via default methods
 - [ ] Interface default, static, and private methods

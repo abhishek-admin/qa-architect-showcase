@@ -1642,6 +1642,67 @@ body.eli-active .eli-toggle-text {
 .md-body a:hover { text-decoration: underline; }
 .md-body ul, .md-body ol { padding-left: 28px; margin: 10px 0; }
 .md-body li { margin: 5px 0; }
+
+/* Premium GFM Task List Checkboxes */
+.md-body li.task-list-item {
+  list-style-type: none !important;
+  position: relative;
+  padding-left: 28px;
+  min-height: 22px;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  transition: var(--transition-smooth);
+}
+
+.md-body li.task-list-item .task-list-checkbox {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--accent-indigo, #818cf8);
+  border-radius: 4px;
+  background: rgba(129, 140, 248, 0.05);
+  cursor: default;
+  transition: var(--transition-fast, all 0.15s ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-body li.task-list-item .task-list-checkbox.checked {
+  background: var(--accent-indigo, #818cf8);
+  border-color: var(--accent-indigo, #818cf8);
+  box-shadow: 0 0 8px var(--accent-indigo-glow, rgba(129, 140, 248, 0.25));
+}
+
+.md-body li.task-list-item .task-list-checkbox.checked::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 8px;
+  border: solid #080b11;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-0.5px, -0.5px);
+}
+
+.md-body li.task-list-item.checked {
+  color: var(--color-text-muted, #64748b);
+  opacity: 0.65;
+}
+
+.md-body li.task-list-item:hover .task-list-checkbox {
+  border-color: var(--accent-cyan, #22d3ee);
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 6px var(--accent-cyan-glow, rgba(34, 211, 238, 0.25));
+}
+
+.md-body li.task-list-item:hover .task-list-checkbox.checked {
+  background: var(--accent-cyan, #22d3ee);
+  border-color: var(--accent-cyan, #22d3ee);
+  box-shadow: 0 0 8px var(--accent-cyan-glow, rgba(34, 211, 238, 0.25));
+}
 .md-body hr { border: none; border-top: 1px solid var(--border-glow); margin: 24px 0; }
 .md-body blockquote {
   border-left: 3px solid var(--accent-indigo);
@@ -3911,7 +3972,7 @@ body.eli-active .eli-toggle-text {
 
 .co-prep-q {
   padding: 16px 20px;
-  cursor: default;
+  cursor: pointer;
 }
 
 .co-prep-q-header {

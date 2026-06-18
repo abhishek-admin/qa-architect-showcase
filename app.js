@@ -1411,13 +1411,27 @@ function renderMarkdown(md) {
     const ol = line.match(/^\s*(\d+)\.\s+(.*)$/);
     if (ol) {
       if (listType !== "ol") { closeList(); html += "<ol>"; listType = "ol"; }
-      html += `<li data-num="${ol[1]}">${inline(ol[2])}</li>`; continue;
+      const taskMatch = ol[2].match(/^\[([ xX])\]\s*(.*)$/);
+      if (taskMatch) {
+        const isChecked = taskMatch[1].toLowerCase() === "x";
+        html += `<li class="task-list-item${isChecked ? ' checked' : ''}" data-num="${ol[1]}"><span class="task-list-checkbox${isChecked ? ' checked' : ''}"></span>${inline(taskMatch[2])}</li>`;
+      } else {
+        html += `<li data-num="${ol[1]}">${inline(ol[2])}</li>`;
+      }
+      continue;
     }
     // Unordered list
     const ul = line.match(/^\s*[-*+]\s+(.*)$/);
     if (ul) {
       if (listType !== "ul") { closeList(); html += "<ul>"; listType = "ul"; }
-      html += `<li>${inline(ul[1])}</li>`; continue;
+      const taskMatch = ul[1].match(/^\[([ xX])\]\s*(.*)$/);
+      if (taskMatch) {
+        const isChecked = taskMatch[1].toLowerCase() === "x";
+        html += `<li class="task-list-item${isChecked ? ' checked' : ''}"><span class="task-list-checkbox${isChecked ? ' checked' : ''}"></span>${inline(taskMatch[2])}</li>`;
+      } else {
+        html += `<li>${inline(ul[1])}</li>`;
+      }
+      continue;
     }
 
     // Paragraph
