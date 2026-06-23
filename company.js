@@ -1326,70 +1326,66 @@ function mount() {
   }
 
   function renderPatternPrep() {
-    let html = `<div class="co-prep-header">
-      <h2>✏️ LTIM R2 — Pattern Prep Sprint</h2>
-      <p>Write each <b>Practice Snippet 2×</b> on paper to build muscle memory. Then do the Rapid Fire 60 Q&amp;A at the bottom.</p>
-      <div class="co-pat-meta">⏱ Estimated: ~20 min writing patterns · ~30 min rapid fire = 1 hour total</div>
-    </div>`;
-
+    // ── Pill nav ──
+    let pillsHtml = `<div class="co-pat-nav" id="co-pat-nav">`;
     PLAYWRIGHT_PATTERNS.forEach((pat, pi) => {
-      html += `<div class="co-pattern-section">
-        <div class="co-pattern-header" data-pat="${pi}">
-          <span class="co-pat-icon">${pat.icon}</span>
-          <span class="co-pat-title">${pat.title}</span>
-          <span class="co-pat-arrow">▲</span>
-        </div>
-        <div class="co-pattern-body" id="co-pat-body-${pi}">
-          <div class="co-pat-tip">💡 <b>Key Insight:</b> ${pat.tip}</div>
-          <div class="co-pat-practice-label">✏️ WRITE THIS 2× — core practice snippet:</div>
-          <pre class="co-code co-practice-code">${escapeHtml(pat.practice)}</pre>
-          <div class="co-pat-snippets-label">📌 Quick Reference:</div>
-          <div class="co-pat-snippets">`;
+      pillsHtml += `<button class="co-pat-pill${pi === 0 ? ' active' : ''}" data-target="${pi}">${pat.icon} ${pat.id.toUpperCase()}</button>`;
+    });
+    pillsHtml += `<button class="co-pat-pill co-rf-pill" data-target="rf">🔥 RAPID FIRE</button></div>`;
+
+    // ── Pattern panels (only first shown) ──
+    let patternsHtml = '';
+    PLAYWRIGHT_PATTERNS.forEach((pat, pi) => {
+      patternsHtml += `<div class="co-pattern-panel" id="co-panel-${pi}" style="${pi !== 0 ? 'display:none' : ''}">
+        <div class="co-pat-panel-title">${pat.icon} ${pat.title}</div>
+        <div class="co-pat-tip">💡 <b>Key Insight:</b> ${pat.tip}</div>
+        <div class="co-pat-practice-label">✏️ WRITE THIS 2× — core practice snippet:</div>
+        <pre class="co-code co-practice-code">${escapeHtml(pat.practice)}</pre>
+        <div class="co-pat-snippets-label">📌 Quick Reference:</div>
+        <div class="co-pat-snippets">`;
       pat.snippets.forEach(sn => {
-        html += `<div class="co-snippet-row">
+        patternsHtml += `<div class="co-snippet-row">
           <span class="co-snip-label">${sn.label}</span>
           <pre class="co-snip-code">${escapeHtml(sn.code)}</pre>
         </div>`;
       });
-      html += `</div></div></div>`;
+      patternsHtml += `</div></div>`;
     });
 
-    html += `<div class="co-rf-section">
-      <div class="co-rf-header" id="co-rf-toggle">
-        <span>🔥 Rapid Fire — 60 Q&amp;A</span>
-        <span class="co-rf-count">${RAPID_FIRE.length} questions covering all patterns</span>
-        <span class="co-rf-arrow">▼</span>
-      </div>
-      <div class="co-rf-body" id="co-rf-body" style="display:none">
-        <p class="co-rf-hint">Click any question card to reveal the answer.</p>
-        <div class="co-rf-grid">`;
+    // ── Rapid fire panel (hidden by default) ──
+    let rfHtml = `<div class="co-pattern-panel" id="co-panel-rf" style="display:none">
+      <div class="co-pat-panel-title">🔥 Rapid Fire — ${RAPID_FIRE.length} Q&amp;A</div>
+      <p class="co-rf-hint">Click any card to reveal the answer. Work through all 60.</p>
+      <div class="co-rf-grid">`;
     RAPID_FIRE.forEach((item, i) => {
-      html += `<div class="co-rf-card" id="co-rfc-${i}">
+      rfHtml += `<div class="co-rf-card" id="co-rfc-${i}">
         <div class="co-rf-q">${escapeHtml(item.q)}</div>
         <div class="co-rf-a">${escapeHtml(item.a)}</div>
       </div>`;
     });
-    html += `</div></div></div>`;
+    rfHtml += `</div></div>`;
 
-    content.innerHTML = html;
+    content.innerHTML = `
+      <div class="co-prep-header co-prep-header-compact">
+        <h2>✏️ LTIM R2 — Pattern Prep Sprint</h2>
+        <div class="co-pat-meta">⏱ ~20 min patterns (write 2×) · ~30 min rapid fire · Use pills to jump instantly</div>
+      </div>
+      ${pillsHtml}
+      <div id="co-pat-panels">${patternsHtml}${rfHtml}</div>`;
 
-    content.querySelectorAll('.co-pattern-header').forEach(hdr => {
-      hdr.addEventListener('click', () => {
-        const idx = hdr.dataset.pat;
-        const body = content.querySelector('#co-pat-body-' + idx);
-        const open = !hdr.classList.contains('collapsed');
-        hdr.classList.toggle('collapsed', open);
-        body.style.display = open ? 'none' : '';
-        hdr.querySelector('.co-pat-arrow').textContent = open ? '▼' : '▲';
-      });
-    });
+    // ── Pill click: switch panel ──
+    function showPanel(target) {
+      content.querySelectorAll('.co-pattern-panel').forEach(p => p.style.display = 'none');
+      content.querySelectorAll('.co-pat-pill').forEach(p => p.classList.remove('active'));
+      const panel = content.querySelector(target === 'rf' ? '#co-panel-rf' : `#co-panel-${target}`);
+      if (panel) panel.style.display = '';
+      const pill = content.querySelector(`[data-target="${target}"]`);
+      if (pill) pill.classList.add('active');
+      content.scrollTop = 0;
+    }
 
-    content.querySelector('#co-rf-toggle').addEventListener('click', () => {
-      const body = content.querySelector('#co-rf-body');
-      const arrow = content.querySelector('.co-rf-arrow');
-      const hidden = body.style.display === 'none';
-      body.style.display = hidden ? '' : 'none';
-      arrow.textContent = hidden ? '▲' : '▼';
+    content.querySelectorAll('.co-pat-pill').forEach(pill => {
+      pill.addEventListener('click', () => showPanel(pill.dataset.target));
     });
 
     content.querySelectorAll('.co-rf-card').forEach(card => {
