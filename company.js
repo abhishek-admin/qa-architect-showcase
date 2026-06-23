@@ -940,6 +940,78 @@ const RAPID_FIRE = [
   { q: "60. What is an isolated browser context?", a: "A fresh browser session with its own cookies/localStorage. Each test gets its own context — no state leaks between tests. Like a new incognito window." }
 ]
 
+/* ══════════════════════════════════════
+   SYNTAX COMFORT DRILLS
+══════════════════════════════════════ */
+const SYNTAX_DRILLS = [
+  {
+    id: 'api-anatomy', title: '🔷 API Test — Full Anatomy',
+    tip: 'request fixture for API. .status() is SYNC (no await). .json() is ASYNC (needs await). data:{} auto-serializes to JSON.',
+    type: 'anatomy',
+    code: "test('POST creates user', async ({ request }) => {\n//                               ↑\n//                   fixture: 'request' for API, 'page' for UI\n\n  const res = await request.post('/api/users', {\n//  ↑              ↑      ↑        ↑\n//  store it     fixture method   endpoint\n\n    headers: {\n      'Content-Type': 'application/json',    // ← always for POST\n      'Authorization': 'Bearer TOKEN'         // ← if auth required\n    },\n    data: { name: 'Test', email: 'a@b.com' }  // ← auto-serialized to JSON\n  })\n\n  expect(res.status()).toBe(201)   // ← NO await — .status() is SYNC\n//        ↑    ↑          ↑  ↑\n//      result sync    matcher expected\n\n  const body = await res.json()   // ← NEEDS await — .json() is ASYNC\n\n  expect(body.name).toBe('Test')                    // exact match\n  expect(body).toMatchObject({ name: 'Test' })      // partial match OK\n  expect(body.id).toBeTruthy()                      // dynamic/unknown values\n})"
+  },
+  {
+    id: 'ui-anatomy', title: '🌐 UI Test — Full Anatomy',
+    tip: 'page fixture for UI. EVERY action (goto/fill/click) needs await. EVERY UI assertion needs await. URL assertion is on page, not locator.',
+    type: 'anatomy',
+    code: "test('login redirects', async ({ page }) => {\n//                              ↑\n//                      fixture: 'page' for UI\n\n  await page.goto('/login')\n//  ↑    ↑      ↑\n// async fixture path  (baseURL prepended from config)\n\n  await page.getByLabel('Email').fill('user@test.com')\n//  ↑    ↑       ↑        ↑      ↑          ↑\n// async page  method   label  action      value\n\n  await page.getByRole('button', { name: 'Login' }).click()\n//                        ↑               ↑\n//                     ARIA role     accessible name\n\n  await expect(page).toHaveURL(/dashboard/)\n//  ↑      ↑    ↑        ↑\n// async wrapper page  assertion  (page-level URL check)\n\n  await expect(page.getByRole('heading', { name: 'Welcome' })).toBeVisible()\n//  ↑                   ↑                                          ↑\n// async             locator                              element assertion\n})"
+  },
+  {
+    id: 'route-anatomy', title: '🕸 Route Mock — Anatomy',
+    tip: 'page.route() intercepts. route.fulfill() mocks. route.abort() blocks. JSON.stringify() — capital JSON, always.',
+    type: 'anatomy',
+    code: "await page.route('**/api/users', route => {\n//            ↑       ↑              ↑\n//           method  URL glob      callback arg\n\n  route.fulfill({\n//   ↑\n//  method on the route object (NOT on page)\n\n    status: 200,\n    contentType: 'application/json',             // ← required for JSON\n    body: JSON.stringify([{ id: 1, name: 'Mock User' }])\n//           ↑\n//     capital JSON — NOT Json.stringify()\n  })\n})\n\n// ── Block a request ──\nawait page.route('**analytics**', route => route.abort())\n\n// ── Modify real response ──\nawait page.route('**/api/user', async route => {\n  const resp = await route.fetch()\n  const json = await resp.json()\n  json.role = 'ADMIN'\n  await route.fulfill({ response: resp, json })\n})"
+  },
+  {
+    id: 'pom-anatomy', title: '🏗 POM Class — Anatomy',
+    tip: 'constructor takes page. this.page stores it. Locators declared as this.xxx = page.getBy*() — lazy, never stale. Methods are async.',
+    type: 'anatomy',
+    code: "class LoginPage {\n  constructor(page) {\n//             ↑\n//     always takes 'page' as argument\n\n    this.page = page\n//   ↑              ↑\n//  property    store the fixture\n\n    this.emailInput = page.getByLabel('Email')\n//       ↑                    ↑\n//  locator prop         lazy — re-queries DOM on each use\n\n    this.loginBtn = page.getByRole('button', { name: 'Login' })\n  }\n\n  async navigate() {\n//  ↑\n// always async\n    await this.page.goto('/login')\n//              ↑\n//         use this.page, not bare 'page'\n  }\n\n  async login(email, pass) {\n    await this.emailInput.fill(email)\n    await this.loginBtn.click()\n  }\n}\nmodule.exports = { LoginPage }\n//                     ↑\n//              export for import in tests"
+  },
+  {
+    id: 'sync-async', title: '⚡ SYNC vs ASYNC — The Golden Rule',
+    tip: 'Talks to browser / returns Promise? → await. Reading from already-complete response? → no await.',
+    type: 'anatomy',
+    code: "// ✅ NEEDS await  (browser interaction / returns Promise)\nawait page.goto('/url')\nawait page.getByLabel('x').fill('y')\nawait page.getByRole('button').click()\nawait expect(page).toHaveURL('/dashboard')   // UI assertions\nawait expect(locator).toBeVisible()           // UI assertions\nawait page.route('**', route => ...)\nawait page.waitForURL('**/dashboard')\nconst body = await response.json()            // .json() is async\nconst text = await response.text()            // .text() is async\n\n// ❌ NO await  (synchronous — already resolved)\nexpect(response.status()).toBe(200)   // .status() sync getter\nexpect(response.ok()).toBe(true)      // .ok() sync getter\nresponse.url()                        // sync\npage.url()                            // sync\n\n// 🔑 TRICK: if it starts with 'response.' and reads a scalar → no await\n//           if it reads body (json/text) → await"
+  },
+  {
+    id: 'gotchas', title: '💥 Gotchas — Wrong → Right',
+    tip: 'Every single one has cost marks in real interviews. Keep drilling until the right version feels automatic.',
+    type: 'gotchas',
+    gotchas: [
+      { wrong: "Json.stringify({...})",               right: "JSON.stringify({...})",                        why: "Built-in is ALL CAPS" },
+      { wrong: "await response.status()",              right: "response.status()",                           why: ".status() is synchronous" },
+      { wrong: "response.json()",                      right: "const body = await response.json()",          why: ".json() returns a Promise" },
+      { wrong: "expect(body.toEqual({...}))",          right: "expect(body).toEqual({...})",                 why: "body is the argument, not chained" },
+      { wrong: "page.goto('www.site.com')",            right: "page.goto('https://www.site.com')",           why: "Protocol is required" },
+      { wrong: "page.fill('[placeholder:email]','x')", right: "page.getByPlaceholder('email').fill('x')",   why: "Wrong CSS attribute syntax" },
+      { wrong: "page.click(['name=\"Login\"'])",        right: "page.getByRole('button',{name:'Login'}).click()", why: "Arrays not valid selectors" },
+      { wrong: "page.waitforNavigation()",              right: "page.waitForURL('**/path')",                 why: "Deprecated + capital F" },
+      { wrong: "expect username.toBe('x')",             right: "expect(username).toBe('x')",                why: "Missing () around argument" },
+      { wrong: "route.fulfill(status: 200)",            right: "route.fulfill({ status: 200, ... })",       why: "Must be an object literal" },
+      { wrong: "request.post(url, data:{...})",         right: "request.post(url, { data:{...} })",         why: "Options need outer { }" },
+      { wrong: "context.storageState('auth.json')",     right: "context().storageState({ path:'auth.json' })", why: "Needs { path: } key" }
+    ]
+  },
+  {
+    id: 'shapes', title: '📐 Shape Templates — Write From Memory',
+    tip: 'Read each shape → close your eyes → write it from memory. These are the templates your brain must auto-produce under pressure.',
+    type: 'shapes',
+    shapes: [
+      { label: 'API POST test',
+        code: "test('POST ...', async ({ request }) => {\n  const res = await request.post('/api/endpoint', {\n    headers: { 'Content-Type': 'application/json' },\n    data: { key: 'value' }\n  })\n  expect(res.status()).toBe(201)\n  const body = await res.json()\n  expect(body.field).toBe('expected')\n  expect(body.id).toBeTruthy()\n})" },
+      { label: 'UI login test',
+        code: "test('login ...', async ({ page }) => {\n  await page.goto('/login')\n  await page.getByLabel('Email').fill('user@test.com')\n  await page.getByLabel('Password').fill('Pass@123')\n  await page.getByRole('button', { name: 'Login' }).click()\n  await expect(page).toHaveURL(/dashboard/)\n  await expect(page.getByRole('heading',{ name:'Welcome' })).toBeVisible()\n})" },
+      { label: 'Route mock',
+        code: "await page.route('**/api/path', route =>\n  route.fulfill({\n    status: 200,\n    contentType: 'application/json',\n    body: JSON.stringify([{ id: 1, name: 'Mock' }])\n  })\n)" },
+      { label: 'POM class',
+        code: "class MyPage {\n  constructor(page) {\n    this.page      = page\n    this.inputEl   = page.getByLabel('Label')\n    this.submitBtn = page.getByRole('button', { name: 'Submit' })\n  }\n  async navigate() { await this.page.goto('/path') }\n  async submit(val) {\n    await this.inputEl.fill(val)\n    await this.submitBtn.click()\n  }\n}\nmodule.exports = { MyPage }" },
+      { label: 'describe + beforeEach',
+        code: "const { test, expect } = require('@playwright/test')\ntest.describe('Feature', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('/page')\n  })\n  test('@smoke happy path', async ({ page }) => {\n    await page.getByLabel('X').fill('Y')\n    await page.getByRole('button', { name: 'Z' }).click()\n    await expect(page).toHaveURL('/success')\n  })\n})" }
+    ]
+  }
+]
+
 function mount() {
   const root = document.getElementById('company-root');
   if (!root) return;
@@ -1326,17 +1398,55 @@ function mount() {
   }
 
   function renderPatternPrep() {
-    // ── Pill nav ──
-    let pillsHtml = `<div class="co-pat-nav" id="co-pat-nav">`;
+
+    // ── Build SYNTAX panel HTML ──
+    function buildSyntaxPanel() {
+      let h = `<div class="co-pattern-panel" id="co-panel-syntax">
+        <div class="co-pat-panel-title">🔤 Syntax Comfort — What Goes Where</div>`;
+      SYNTAX_DRILLS.forEach((drill) => {
+        h += `<div class="co-syn-card">
+          <div class="co-syn-card-title">${drill.title}</div>
+          <div class="co-pat-tip">💡 ${drill.tip}</div>`;
+        if (drill.type === 'anatomy') {
+          h += `<pre class="co-anatomy-code">${escapeHtml(drill.code)}</pre>`;
+        } else if (drill.type === 'gotchas') {
+          h += `<div class="co-gotcha-grid">`;
+          drill.gotchas.forEach(g => {
+            h += `<div class="co-gotcha-row">
+              <div class="co-gotcha-wrong"><span class="co-gotcha-badge wrong">✗ Wrong</span><code>${escapeHtml(g.wrong)}</code></div>
+              <div class="co-gotcha-right"><span class="co-gotcha-badge right">✓ Right</span><code>${escapeHtml(g.right)}</code></div>
+              <div class="co-gotcha-why">💬 ${escapeHtml(g.why)}</div>
+            </div>`;
+          });
+          h += `</div>`;
+        } else if (drill.type === 'shapes') {
+          h += `<div class="co-shapes-grid">`;
+          drill.shapes.forEach(s => {
+            h += `<div class="co-shape-block">
+              <div class="co-shape-label">${escapeHtml(s.label)}</div>
+              <pre class="co-shape-code">${escapeHtml(s.code)}</pre>
+            </div>`;
+          });
+          h += `</div>`;
+        }
+        h += `</div>`;
+      });
+      h += `</div>`;
+      return h;
+    }
+
+    // ── Build pill nav ──
+    let pillsHtml = `<div class="co-pat-nav" id="co-pat-nav">
+      <button class="co-pat-pill co-syn-pill active" data-target="syntax">🔤 SYNTAX</button>`;
     PLAYWRIGHT_PATTERNS.forEach((pat, pi) => {
-      pillsHtml += `<button class="co-pat-pill${pi === 0 ? ' active' : ''}" data-target="${pi}">${pat.icon} ${pat.id.toUpperCase()}</button>`;
+      pillsHtml += `<button class="co-pat-pill" data-target="${pi}">${pat.icon} ${pat.id.toUpperCase()}</button>`;
     });
     pillsHtml += `<button class="co-pat-pill co-rf-pill" data-target="rf">🔥 RAPID FIRE</button></div>`;
 
-    // ── Pattern panels (only first shown) ──
+    // ── Build pattern panels (all hidden — SYNTAX is default) ──
     let patternsHtml = '';
     PLAYWRIGHT_PATTERNS.forEach((pat, pi) => {
-      patternsHtml += `<div class="co-pattern-panel" id="co-panel-${pi}" style="${pi !== 0 ? 'display:none' : ''}">
+      patternsHtml += `<div class="co-pattern-panel" id="co-panel-${pi}" style="display:none">
         <div class="co-pat-panel-title">${pat.icon} ${pat.title}</div>
         <div class="co-pat-tip">💡 <b>Key Insight:</b> ${pat.tip}</div>
         <div class="co-pat-practice-label">✏️ WRITE THIS 2× — core practice snippet:</div>
@@ -1352,7 +1462,7 @@ function mount() {
       patternsHtml += `</div></div>`;
     });
 
-    // ── Rapid fire panel (hidden by default) ──
+    // ── Build rapid fire panel ──
     let rfHtml = `<div class="co-pattern-panel" id="co-panel-rf" style="display:none">
       <div class="co-pat-panel-title">🔥 Rapid Fire — ${RAPID_FIRE.length} Q&amp;A</div>
       <p class="co-rf-hint">Click any card to reveal the answer. Work through all 60.</p>
@@ -1368,16 +1478,16 @@ function mount() {
     content.innerHTML = `
       <div class="co-prep-header co-prep-header-compact">
         <h2>✏️ LTIM R2 — Pattern Prep Sprint</h2>
-        <div class="co-pat-meta">⏱ ~20 min patterns (write 2×) · ~30 min rapid fire · Use pills to jump instantly</div>
+        <div class="co-pat-meta">⏱ Start with SYNTAX → then patterns (write 2×) → finish with Rapid Fire</div>
       </div>
       ${pillsHtml}
-      <div id="co-pat-panels">${patternsHtml}${rfHtml}</div>`;
+      <div id="co-pat-panels">${buildSyntaxPanel()}${patternsHtml}${rfHtml}</div>`;
 
     // ── Pill click: switch panel ──
     function showPanel(target) {
       content.querySelectorAll('.co-pattern-panel').forEach(p => p.style.display = 'none');
       content.querySelectorAll('.co-pat-pill').forEach(p => p.classList.remove('active'));
-      const panel = content.querySelector(target === 'rf' ? '#co-panel-rf' : `#co-panel-${target}`);
+      const panel = content.querySelector(`#co-panel-${target}`);
       if (panel) panel.style.display = '';
       const pill = content.querySelector(`[data-target="${target}"]`);
       if (pill) pill.classList.add('active');

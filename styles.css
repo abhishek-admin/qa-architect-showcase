@@ -4276,6 +4276,33 @@ body.eli-active .eli-toggle-text {
 .co-snip-label { font-size: 0.73rem; color: #94a3b8; padding-top: 5px; font-weight: 500; }
 .co-snip-code { margin: 0; font-size: 0.73rem; line-height: 1.5; background: rgba(15,17,23,0.7); border: 1px solid rgba(100,116,139,0.2); border-radius: 5px; padding: 4px 8px; white-space: pre; overflow-x: auto; color: #93c5fd; }
 
+/* ── Syntax pill ── */
+.co-syn-pill { border-color: rgba(167,139,250,0.4); color: #a78bfa; }
+.co-syn-pill:hover { border-color: #a78bfa; background: rgba(167,139,250,0.08); color: #a78bfa; }
+.co-syn-pill.active { background: rgba(167,139,250,0.15); border-color: #a78bfa; color: #a78bfa; box-shadow: 0 0 8px rgba(167,139,250,0.2); }
+
+/* ── Syntax comfort panel ── */
+.co-syn-card { margin-bottom: 20px; background: rgba(15,17,23,0.4); border: 1px solid rgba(167,139,250,0.12); border-radius: 10px; padding: 16px; }
+.co-syn-card-title { font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(167,139,250,0.15); }
+.co-anatomy-code { font-size: 0.77rem; line-height: 1.65; background: rgba(10,12,18,0.85); border: 1px solid rgba(167,139,250,0.2); border-radius: 8px; padding: 14px; margin-top: 10px; white-space: pre; overflow-x: auto; color: #e2e8f0; }
+
+/* ── Gotcha grid ── */
+.co-gotcha-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.co-gotcha-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; background: rgba(22,33,54,0.4); border-radius: 8px; padding: 10px 12px; border: 1px solid rgba(100,116,139,0.15); }
+.co-gotcha-wrong, .co-gotcha-right { display: flex; flex-direction: column; gap: 4px; }
+.co-gotcha-wrong code { font-size: 0.74rem; color: #fca5a5; background: rgba(239,68,68,0.08); padding: 3px 7px; border-radius: 4px; word-break: break-all; }
+.co-gotcha-right code { font-size: 0.74rem; color: #86efac; background: rgba(74,222,128,0.08); padding: 3px 7px; border-radius: 4px; word-break: break-all; }
+.co-gotcha-badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; padding: 1px 6px; border-radius: 3px; display: inline-block; }
+.co-gotcha-badge.wrong { background: rgba(239,68,68,0.2); color: #f87171; }
+.co-gotcha-badge.right { background: rgba(74,222,128,0.2); color: #4ade80; }
+.co-gotcha-why { grid-column: 1 / -1; font-size: 0.74rem; color: #94a3b8; padding-top: 4px; border-top: 1px solid rgba(100,116,139,0.15); margin-top: 2px; }
+
+/* ── Shapes grid ── */
+.co-shapes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 12px; margin-top: 10px; }
+.co-shape-block { background: rgba(10,12,18,0.7); border: 1px solid rgba(251,191,36,0.15); border-radius: 8px; overflow: hidden; }
+.co-shape-label { font-size: 0.72rem; font-weight: 700; color: #fbbf24; background: rgba(251,191,36,0.08); padding: 5px 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+.co-shape-code { margin: 0; font-size: 0.74rem; line-height: 1.6; padding: 10px 12px; white-space: pre; overflow-x: auto; color: #bfdbfe; }
+
 /* ── Rapid Fire panel ── */
 .co-rf-hint { font-size: 0.8rem; color: #64748b; margin: 0 0 14px; font-style: italic; }
 .co-rf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
